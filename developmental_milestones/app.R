@@ -14,7 +14,10 @@ milestones <- readRDS("Milestones.RDS")
 genpop <- readRDS("GenPop_Milestones.RDS")
 indiv_percentiles <- readRDS("Individual_Percentiles.RDS")
 
+
+# Pull general population 90th percentile into the individual percentiles data
 indiv_percentiles$norms_90th <- genpop$Q90[match(indiv_percentiles$milestone, genpop$milestone)]
+# Format ID to display number and SCT
 indiv_percentiles$study_id_extraordinary <- paste0(indiv_percentiles$study_id_extraordinary, " (", 
                                                    indiv_percentiles$sca_condition, ")")
 
@@ -37,22 +40,23 @@ ui <- fluidPage(
     )
   ),
   
-  # Main content with tab navigation
-  # Conditional filters ABOVE the tabs
   
   # ID filter: only shown in Individual summaries
   conditionalPanel(
     condition = "input.tabs == 'Individual summaries'",
     fluidRow(
+      # ID : dropdown
       column(4,
              selectInput("selected_id", "Select Individual ID",
-                         choices = unique(indiv_percentiles$study_id_extraordinary))  # Or update dynamically
+                         choices = unique(indiv_percentiles$study_id_extraordinary))
       ),
+      # Percentile : sliderbar
       column(4,
              sliderInput("percentile", "Percentile Range:",
                          min = 0, max = 100,
                          value = c(0, 100))
       ),
+      # Data Points : Radio
       column(4,
              radioButtons("overlay", "Overlay All Data Points:",
                           choices = list("No", "Yes"), 
@@ -65,6 +69,7 @@ ui <- fluidPage(
   conditionalPanel(
     condition = "input.tabs == 'SCT Comparisons'",
     fluidRow(
+      # SCT : dropdown
       column(4,
              selectInput("sca_condition", label = "Select SCT",
                          choices = c("All SCTs", unique(milestones$sca_condition)), 
@@ -76,11 +81,13 @@ ui <- fluidPage(
   conditionalPanel(
     condition = "input.tabs == 'SCT Comparisons' || input.tabs == 'Individual summaries'",
     fluidRow(
+      # Domain : dropdown
       column(4,
              selectInput("domain", label = "Domain",
                          choices = c("Language and Motor", unique(indiv_percentiles$domain)), 
                          selected = "Language and Motor")
       ),
+      # Age Range : dropdown
       column(4,
              sliderInput("age", "Age Range:",
                          min = 0, max = 50,
@@ -89,10 +96,13 @@ ui <- fluidPage(
     )
   ),
   
+  
   # Tabs with ID to control visibility of filters
   tabsetPanel(id = "tabs",
               
+              # Panel 1 of overview
               tabPanel("Milestones Overview",
+                # Put plot on the left and text on the right using column command
                 fluidRow(
                   column(
                     width = 6,
@@ -101,6 +111,7 @@ ui <- fluidPage(
                       tags$img(src = "Milestones_fig.jpg", height = "800px")
                     )
                   ),
+                  # Summary text formatting
                   column(
                     width = 6,
                     div(
@@ -117,6 +128,7 @@ ui <- fluidPage(
                 )
               ),
               
+              # Panel 2 : SCT specific data
               tabPanel("SCT Comparisons",
                        fluidRow(
                          column(6, plotlyOutput("scaPlot", height = "650px", width = "100%")),
@@ -135,6 +147,7 @@ ui <- fluidPage(
                        )
               ),
               
+              # Panel 3 : Individual summary data
               tabPanel("Individual summaries",
                        fluidPage(
                          column(6, plotlyOutput("indiv", height = "650px", width = "100%")),
@@ -144,7 +157,7 @@ ui <- fluidPage(
   )
 )
 
-# Define server logic required to draw a histogram
+# Define server logic
 server <- function(input, output) {
   
     output$counts <- renderUI({
