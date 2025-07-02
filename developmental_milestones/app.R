@@ -159,7 +159,8 @@ ui <- fluidPage(
 
 # Define server logic
 server <- function(input, output) {
-  
+    
+    # Table showing counts for each SCT for Panel 1
     output$counts <- renderUI({
       
       tbl_counts <- data.frame(`Total` = length(unique(indiv_percentiles$study_id_extraordinary)),
@@ -174,6 +175,8 @@ server <- function(input, output) {
       
     })
 
+    
+    # SCT Boxplots for Panel 2
     output$scaPlot <- renderPlotly({
       
       #Subset domain
@@ -305,6 +308,8 @@ server <- function(input, output) {
 
     })
     
+    
+    # Percentile summary for Panel 2
     output$summary <- renderUI({
       #Subset domain
       if(input$domain == "Motor"){
@@ -361,7 +366,7 @@ server <- function(input, output) {
     })
     
     
-    # Small multiples view
+    # Small multiples view of comparison to GP 90th percentile for Panel 2
     output$over90plot <- renderPlotly({
       #Subset domain
       if(input$domain == "Motor"){
@@ -470,7 +475,10 @@ server <- function(input, output) {
       
     })
     
+    
+    
     ############ Individual data 
+    # Age boxplot for Panel 3
     output$indiv <- renderPlotly({
       
       #Subset domain
@@ -564,6 +572,7 @@ server <- function(input, output) {
     })
     
     
+    # Percentile boxplot for Panel 3
     output$indiv_perc <- renderPlotly({
       
       #Subset domain
@@ -605,19 +614,19 @@ server <- function(input, output) {
                           sca == "XXX" ~ "#4B0082")
       
       
+      # Sort individual data by percentile
       ordered_levels <- indiv_dat %>%
         group_by(milestone) %>%
         summarise(median_percentile = median(Percentile, na.rm = TRUE)) %>%
         arrange(median_percentile) %>%
         pull(milestone)
       
+      # make sure datasets are ordered  by percentiles
       sca_milestones$milestone <- factor(sca_milestones$milestone, levels = ordered_levels)
       indiv_dat$milestone <- factor(indiv_dat$milestone, levels = ordered_levels)
+
       
-      sca_milestones <- sca_milestones %>%
-        mutate(milestone_num = as.numeric(milestone),
-               jittered_y = milestone_num + runif(n(), -0.2, 0.2))  # adjust jitter as needed
-      
+      # Overlay all points for a better comparison
       if(input$overlay == "Yes"){
         p <- plot_ly(sca_milestones, 
                      y = ~milestone, 
@@ -629,6 +638,8 @@ server <- function(input, output) {
                      jitter = 0.6,
                      pointpos = 0,
                      hoverinfo = "skip")
+        
+      # plots without scatter
       }else{
         p <- plot_ly(sca_milestones, 
                      y = ~milestone, 
@@ -639,6 +650,7 @@ server <- function(input, output) {
                      hoverinfo = "skip")
       }
       
+      # Specify the information that is shown when hovering over points
       p <- p %>% add_trace(data = indiv_dat,
                   x = ~Percentile,
                   y = ~milestone,
@@ -672,3 +684,5 @@ server <- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
+
