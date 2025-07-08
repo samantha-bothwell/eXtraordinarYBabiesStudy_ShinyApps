@@ -155,6 +155,13 @@ ui <- fluidPage(
                        )
               )
   )
+),
+          # Panel 4: Entering numeric data
+          tabPanel("Entering Your Data",
+                   fluidPage(column(6, plotlyOutput("score", height = "650px", width = "100%")),
+                             column(6, plotlyOutput("score_perc", height = "650px", width = "100%"))
+                             )
+                   )
 )
 
 # Define server logic
