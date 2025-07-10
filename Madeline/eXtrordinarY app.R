@@ -8,9 +8,9 @@ library(kableExtra)
 library(DT)
 
 # Load datasets
-#milestones <- readRDS("Milestones.RDS")
-#genpop <- readRDS("GenPop_Milestones.RDS")
-#indiv_percentiles <- readRDS("Individual_Percentiles.RDS")
+milestones <- readRDS("Milestones.RDS")
+genpop <- readRDS("GenPop_Milestones.RDS")
+indiv_percentiles <- readRDS("Individual_Percentiles.RDS")
 
 # Prepare data
 indiv_percentiles$norms_90th <- genpop$Q90[match(indiv_percentiles$milestone, genpop$milestone)]
@@ -90,9 +90,8 @@ ui <- fluidPage(
           
               tabPanel("User Input",
                        fluidRow(
-                         column(4, textInput("user_id", "Study ID")),
-                         column(4, selectInput("user_sca", "SCA Condition", choices = unique(indiv_percentiles$sca_condition))),
-                         column(4, selectInput("user_domain", "Domain", choices = unique(indiv_percentiles$domain)))
+                         column(6, selectInput("user_milestone", "Milestone", choices = unique(indiv_percentiles$milestone))),
+                         column(6, selectInput("user_sca", "SCA Condition", choices = unique(indiv_percentiles$sca_condition)))
                        ),
                        fluidRow(
                          column(6, selectInput("user_id", "Study ID", choices = unique(indiv_percentiles$study_id_extraordinary))),
@@ -114,7 +113,6 @@ server <- function(input, output, session) {
   user_data <- reactiveVal(data.frame(
     study_id = character(),
     sca_condition = character(),
-    domain = character(),
     milestone = character(),
     Age = numeric(),
     stringsAsFactors = FALSE
@@ -122,11 +120,10 @@ server <- function(input, output, session) {
   
   # Observe when user clicks "Add Milestone"
   observeEvent(input$submit_data, {
-    req(input$user_id, input$user_sca, input$user_domain, input$user_milestone, !is.na(input$user_age))
+    req(input$user_id, input$user_sca, input$user_milestone, !is.na(input$user_age))
     new_row <- data.frame(
       study_id = input$user_id,
       sca_condition = input$user_sca,
-      domain = input$user_domain,
       milestone = input$user_milestone,
       Age = input$user_age,
       stringsAsFactors = FALSE
