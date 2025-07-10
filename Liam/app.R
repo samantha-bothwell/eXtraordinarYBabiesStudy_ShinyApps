@@ -1,4 +1,7 @@
 
+########################## NOT FULLY FUNCTIONAL
+
+
 ### Libraries 
 library(shiny)
 library(shinythemes)
@@ -7,12 +10,15 @@ library(ggplot2)
 library(ggrepel)
 library(plotly)
 library(kableExtra)
+library(stringr)
 
 
 ### Datasets
 milestones <- readRDS("Milestones.RDS")
 genpop <- readRDS("GenPop_Milestones.RDS")
 indiv_percentiles <- readRDS("Individual_Percentiles.RDS")
+
+milestones_list <- c(unique(indiv_percentiles$milestone))
 
 
 # Pull general population 90th percentile into the individual percentiles data
@@ -79,7 +85,7 @@ ui <- fluidPage(
   ),
   
   conditionalPanel(
-    condition = "input.tabs == 'SCT Comparisons' || input.tabs == 'Individual summaries'",
+    condition = "input.tabs == 'SCT Comparisons' || input.tabs == 'Individual summaries' || input.tabs = 'Input Milestones'",
     fluidRow(
       # Domain : dropdown
       column(4,
@@ -153,8 +159,33 @@ ui <- fluidPage(
                          column(6, plotlyOutput("indiv", height = "650px", width = "100%")),
                          column(6, plotlyOutput("indiv_perc", height = "650px", width = "100%"))
                        )
+              ),
+              
+              
+              tabPanel("Input Milestones",
+                      fluidRow(
+                         column(6,
+                                div(h4("Input Milestones Below:"), 
+    
+                                    tagList(
+                                      lapply(milestones_list, function(milestone) {
+                                      numericInput(
+                                        inputId = paste0("AgeWhen_", gsub(" ","",milestone)), # be careful with spaces !!!!
+                                        label= gsub(" ","",milestone),
+                                        min = 0, max = 48, value = NA, step = 1
+                                      )
+                                      })
+                                    ),
+                                  actionButton("addPoint", "Add to Graph")
+                                )
+                         )
+                       ),
+                      fluidRow(
+                        column(12, plotOutput("indiv_perc"))
+                      )
               )
-  )
+
+)
 )
 
 # Define server logic
@@ -545,7 +576,7 @@ server <- function(input, output) {
                   x = ~Age,
                   y = ~fct_reorder(milestone, Age),
                   type = "scatter",
-                  mode = "markers",
+                  mode = "markers", ################################################## ADD FOR LOOP FOR DIFFERENT CHECKMARKS, SEE TEAMS
                   marker = list(size = 15, color = 'red', symbol = 'x'),
                   text = ~paste("ID:", study_id_extraordinary,
                                 "<br>Age:", round(Age, 1), "months",
@@ -656,7 +687,7 @@ server <- function(input, output) {
                   y = ~milestone,
                   type = "scatter",
                   mode = "markers",
-                  marker = list(size = 15, color = 'red', symbol = 'x'),
+                  marker = list(size = 15, color = 'red', symbol = '*'),
                   text = ~paste("ID:", study_id_extraordinary,
                                 "<br>Age:", round(Age, 1), "months",
                                 "<br>Percentile:", round(Percentile, 1)),

@@ -1,0 +1,149 @@
+---
+title: "Untitled"
+author: "Liam Hallian"
+date: "2025-07-08"
+output: html_document
+---
+
+```{r}
+### Libraries 
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(ggplot2)
+library(ggrepel)
+library(plotly)
+library(kableExtra)
+
+
+### Datasets
+milestones <- readRDS("Milestones.RDS")
+genpop <- readRDS("GenPop_Milestones.RDS")
+indiv_percentiles <- readRDS("Individual_Percentiles.RDS")
+
+column(
+  for i in milestone_list:
+    numericInput("month", {milestone_list[i]},
+                 min = 0, max = 150,
+                 value=c(min, max))
+)
+
+'''
+# Percentile boxplot for Panel 3
+    output$indiv_perc <- renderPlotly({
+      
+     
+
+  #Subset domain (NOT NEEDED)
+      if(input$domain == "Motor"){
+        indiv_percentiles <- indiv_percentiles %>% filter(domain == "Motor")
+      }
+      
+      if(input$domain == "Language"){
+        indiv_percentiles <- indiv_percentiles %>% filter(domain == "Language")
+      }
+'''      
+      
+'''      
+      # Filter to age range (NOT NEEDED)
+      indiv_percentiles <- indiv_percentiles %>% 
+        group_by(milestone) %>% 
+        filter(min(Age, na.rm = T) >= input$age[1]) %>% 
+        filter(max(Age, na.rm = T) <= input$age[2]) 
+'''      
+      
+      # Explicitly reorder the milestone factor by median Age, descending
+      indiv_percentiles <- indiv_percentiles %>%
+        mutate(milestone = as.character(milestone)) %>% 
+        mutate(milestone = fct_reorder(milestone, Age, .fun = median, .desc = FALSE))
+      
+      
+      indiv_dat <- indiv_percentiles %>% filter(study_id_extraordinary == input$selected_id) %>% filter(!is.na(Age))
+      sca = indiv_dat$sca_condition[1]
+      sca_milestones <- indiv_percentiles %>% filter(sca_condition == sca)
+      
+      # Filter to percentile range 
+      indiv_dat <- indiv_dat %>% 
+        group_by(milestone) %>% 
+        filter(min(Percentile >= input$percentile[1], na.rm = T) & max(Percentile <= input$percentile[2], na.rm = T))
+      sca_milestones <- sca_milestones %>% filter(milestone %in% indiv_dat$milestone)
+      
+      
+      # pick fill color
+      scafill = case_when(sca == "XXY" ~ "#fdb863", 
+                          sca == "XYY" ~ "cyan3",
+                          sca == "XXX" ~ "#4B0082")
+      
+      
+      # Sort individual data by percentile
+      ordered_levels <- indiv_dat %>%
+        group_by(milestone) %>%
+        summarise(median_percentile = median(Percentile, na.rm = TRUE)) %>%
+        arrange(median_percentile) %>%
+        pull(milestone)
+      
+      # make sure datasets are ordered  by percentiles
+      sca_milestones$milestone <- factor(sca_milestones$milestone, levels = ordered_levels)
+      indiv_dat$milestone <- factor(indiv_dat$milestone, levels = ordered_levels)
+
+      
+      # Overlay all points for a better comparison
+      if(input$overlay == "Yes"){
+        p <- plot_ly(sca_milestones, 
+                     y = ~milestone, 
+                     x = ~Percentile, 
+                     color = I(scafill),
+                     type = "box", 
+                     marker = list(size = 6, color = 'white', line = list(color = 'black', width = 1)),
+                     boxpoints = "all",
+                     jitter = 0.6,
+                     pointpos = 0,
+                     hoverinfo = "skip")
+        
+      # plots without scatter
+      }else{
+        p <- plot_ly(sca_milestones, 
+                     y = ~milestone, 
+                     x = ~Percentile, 
+                     color = I(scafill),
+                     type = "box", 
+                     boxpoints = FALSE,
+                     hoverinfo = "skip")
+      }
+      
+      # Specify the information that is shown when hovering over points
+      p <- p %>% add_trace(data = indiv_dat,
+                  x = ~Percentile,
+                  y = ~milestone,
+                  type = "scatter",
+                  mode = "markers",
+                  marker = list(size = 15, color = 'red', symbol = '*'),
+                  text = ~paste("ID:", study_id_extraordinary,
+                                "<br>Age:", round(Age, 1), "months",
+                                "<br>Percentile:", round(Percentile, 1)),
+                  hoverinfo = "text",
+                  inherit = FALSE) %>% 
+        layout(xaxis = list(range = c(0, 100)),yaxis = list(title = ""),
+          shapes = list(
+            list(type = "rect", fillcolor = "rgba(255, 0, 0, 0.2)", 
+              line = list(color = "red", width = 0), x0 = 90, x1 = 100, y0 = 0, y1 = 1, xref = "x", yref = "paper")
+          )
+        )
+      
+      # Show the plot
+      p <- p %>%
+        layout(boxmode = "group",
+               xaxis = list(title = "Achievement Percentile",
+                            tickfont = list(size = 14)),  # Custom x-axis label
+               yaxis = list(title = ""), 
+               font = list(size = 16), 
+               showlegend = FALSE)
+      p
+      
+    })
+}
+
+'''
+
+
+```
