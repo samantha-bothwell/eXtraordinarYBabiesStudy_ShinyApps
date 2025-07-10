@@ -161,7 +161,7 @@ ui <- fluidPage(
                        )
               ),
               
-              
+              # Panel 4: Inputting Milestones
               tabPanel("Input Milestones",
                       fluidRow(
                          column(6,
@@ -176,20 +176,39 @@ ui <- fluidPage(
                                       )
                                       })
                                     ),
-                                  actionButton("addPoint", "Add to Graph")
+                                  actionButton("addPoint", "Add to Graph"),
+                                  actionButton("clear_btn", "Clear List"))
                                 )
                          )
                        ),
                       fluidRow(
                         column(12, plotOutput("indiv_perc"))
+                      ),
+                      fluidRow(
+                        column(6, plotlyOutput("indiv", height = "650px", width = "100%")),
+                        column(6, plotlyOutput("indiv_perc", height = "650px", width = "100%"))
                       )
+                    
               )
 
-)
+
 )
 
 # Define server logic
-server <- function(input, output) {
+server <- function(input, output, session) {
+  
+    # temp List
+  temp_list <- reactiveValues (data = list())
+  
+  observeEvent(input$AgeWhen_, {
+    if (!is.null(input$AgeWhen_)){
+      temp_List$data <- c(temp_list$data, input$AgeWhen_)
+    }
+  })
+  
+  observeEvent(input$clear_btn, {
+    temp_list$data <- list()
+  })
     
     # Table showing counts for each SCT for Panel 1
     output$counts <- renderUI({
