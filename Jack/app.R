@@ -153,9 +153,51 @@ ui <- fluidPage(
                          column(6, plotlyOutput("indiv", height = "650px", width = "100%")),
                          column(6, plotlyOutput("indiv_perc", height = "650px", width = "100%"))
                        )
+              ),
+              tabPanel("Addition",
+                       fluidRow(
+                         column(4, div(p("Jack Preisser is now 21!"))),
+                         column(4, div(p("hey", uiOutput("Hi")))),
+                         column(4, div(
+                           p("Yo yo yo")))
+                         )
+                       ),
+              tabPanel("Input Milestones",
+                       fluidRow(
+                         column(4, div(p("Hello World!"))),
+                         column(4, div(p("This is the second column which also has a plot!"),
+                                       uiOutput("summary"))),
+                         column(4, div(
+                           p("Label for this box"),
+                           p("I just did something"))
+                           )
+                         ),
+                       fluidRow(
+                         column(12,
+                                div(h4("Input Milestones"),
+                                    tagList(
+                                      lapply(milestones, function(milestone) {
+                                        numericInput(
+                                          inputId = paste0("AgeWhen_", gsub(" "," ", milestone)), # be careful with spaces !!!!
+                                          label= gsub(" "," ", milestone),
+                                          min = 0, max = 48, value = 0)
+                                        })
+                                      )
+                                    )
+                                )
+                         )
+                       )
               )
   )
-)
+
+                               
+        
+  
+  
+              
+
+                       
+                     
 
 # Define server logic
 server <- function(input, output) {
@@ -388,6 +430,12 @@ server <- function(input, output) {
       
       if(input$sca_condition != "All SCTs"){
         plot_dat <- plot_dat %>% filter(sca_condition == input$sca_condition)
+      }
+      
+      {running <- 30
+        ecdf_running <- ecdf(Milestone$devfu_run_age)
+        running_perc <- ecdf_ages(add_age)*100
+        
       }
       
       # pick fill color
@@ -684,5 +732,4 @@ server <- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
 
