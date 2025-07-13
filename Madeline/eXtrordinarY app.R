@@ -1,8 +1,3 @@
-
-########################## NOT FULLY FUNCTIONAL
-
-
-### Libraries 
 library(shiny)
 library(shinythemes)
 library(tidyverse)
@@ -10,150 +5,81 @@ library(ggplot2)
 library(ggrepel)
 library(plotly)
 library(kableExtra)
-library(stringr)
+library(DT)
 
-
-### Datasets
+# Load datasets
 milestones <- readRDS("Milestones.RDS")
 genpop <- readRDS("GenPop_Milestones.RDS")
 indiv_percentiles <- readRDS("Individual_Percentiles.RDS")
 
-milestones_list <- c(unique(indiv_percentiles$milestone))
-
-
-# Pull general population 90th percentile into the individual percentiles data
+# Prepare data
 indiv_percentiles$norms_90th <- genpop$Q90[match(indiv_percentiles$milestone, genpop$milestone)]
-# Format ID to display number and SCT
-indiv_percentiles$study_id_extraordinary <- paste0(indiv_percentiles$study_id_extraordinary, " (", 
-                                                   indiv_percentiles$sca_condition, ")")
+indiv_percentiles$study_id_extraordinary <- paste0(indiv_percentiles$study_id_extraordinary, " (", indiv_percentiles$sca_condition, ")")
 
-
-# Define UI for application that draws a histogram
+# Define UI
 ui <- fluidPage(
-  
-  # Set theme
   theme = shinytheme("flatly"),
   
-  # Application title
+  # Title and logo
   fluidPage(
     fluidRow(
-      column(10, 
-             h1("eXtraordinarY Babies Study : SCT Developmental Milestones")  # Title on the left (adjust this as needed)
-      ),
-      column(2, 
-             tags$img(src = "eBs_Logo.jpg", height = "100px", style = "float: right;")  # Image on the right
-      )
+      column(10, h1("eXtraordinarY Babies Study : SCT Developmental Milestones")),
+      column(2, tags$img(src = "eBs_Logo.jpg", height = "100px", style = "float: right;"))
     )
   ),
   
-  
-  # ID filter: only shown in Individual summaries
+  # Conditional filters
   conditionalPanel(
     condition = "input.tabs == 'Individual summaries'",
     fluidRow(
-      # ID : dropdown
-      column(4,
-             selectInput("selected_id", "Select Individual ID",
-                         choices = unique(indiv_percentiles$study_id_extraordinary))
-      ),
-      # Percentile : sliderbar
-      column(4,
-             sliderInput("percentile", "Percentile Range:",
-                         min = 0, max = 100,
-                         value = c(0, 100))
-      ),
-      # Data Points : Radio
-      column(4,
-             radioButtons("overlay", "Overlay All Data Points:",
-                          choices = list("No", "Yes"), 
-                          selected = "No")
-      )
+      column(4, selectInput("selected_id", "Select Individual ID", choices = unique(indiv_percentiles$study_id_extraordinary))),
+      column(4, sliderInput("percentile", "Percentile Range:", min = 0, max = 100, value = c(0, 100))),
+      column(4, radioButtons("overlay", "Overlay All Data Points:", choices = list("No", "Yes"), selected = "No"))
     )
   ),
-  
-  # SCT filter: only shown in Individual summaries
   conditionalPanel(
     condition = "input.tabs == 'SCT Comparisons'",
     fluidRow(
-      # SCT : dropdown
-      column(4,
-             selectInput("sca_condition", label = "Select SCT",
-                         choices = c("All SCTs", unique(milestones$sca_condition)), 
-                         selected = "All SCTs")
-      )
+      column(4, selectInput("sca_condition", "Select SCT", choices = c("All SCTs", unique(milestones$sca_condition)), selected = "All SCTs"))
     )
   ),
-  
   conditionalPanel(
-    condition = "input.tabs == 'SCT Comparisons' || input.tabs == 'Individual summaries' || input.tabs = 'Input Milestones'",
+    condition = "input.tabs == 'SCT Comparisons' || input.tabs == 'Individual summaries'",
     fluidRow(
-      # Domain : dropdown
-      column(4,
-             selectInput("domain", label = "Domain",
-                         choices = c("Language and Motor", unique(indiv_percentiles$domain)), 
-                         selected = "Language and Motor")
-      ),
-      # Age Range : dropdown
-      column(4,
-             sliderInput("age", "Age Range:",
-                         min = 0, max = 50,
-                         value = c(0, 50))
-      )
+      column(4, selectInput("domain", "Domain", choices = c("Language and Motor", unique(indiv_percentiles$domain)), selected = "Language and Motor")),
+      column(4, sliderInput("age", "Age Range:", min = 0, max = 50, value = c(0, 50)))
     )
   ),
   
-  
-  # Tabs with ID to control visibility of filters
+  # Tab panels
   tabsetPanel(id = "tabs",
               
-              # Panel 1 of overview
+              # Overview tab
               tabPanel("Milestones Overview",
-                # Put plot on the left and text on the right using column command
-                fluidRow(
-                  column(
-                    width = 6,
-                    div(
-                      style = "text-align: center;",
-                      tags$img(src = "Milestones_fig.jpg", height = "800px")
-                    )
-                  ),
-                  # Summary text formatting
-                  column(
-                    width = 6,
-                    div(
-                      style = "padding: 50px; margin-top: -70px;",
-                      tags$h3("Understanding the Milestones", style = "text-align: center;"),
-                      p("Sex Chromosome Trisomy (SCT) milestones were collected from our study cohort are compared with existing published norms. Normative milestone achievement data for the 25th, 50th, 75th, and 90th percentiles were taken from the Denver II Scales, the World Health Organization (WHO) Motor Development Study, and the Primitive Reflex Profile (PRP). We used the Denver II whenever possible (sitting, walking, running, jumping, cooing, babbling, single words, 2-word phrases). WHO was used for crawling and cruising and the PRP was used for rolling front to back and rolling back to front. Percentiles for the PRP were estimated theoretically under the assumption of a normal distribution from the provided mean and standard deviations."),
-                      p("To evaluate if each SCT condition was significantly delayed compared to the general population, a simulated dataset of 1000 samples was generated based on the provided percentiles under the assumption of a non-normal distribution using the approxfun function in R."),
-                      p("The current number of participants included for analysis are as follows : "),
-                      uiOutput("counts"),
-                      p("This figure supports the following paper :"),
-                      p("Thompson T, Bothwell S, Janusz J, Wilson R, Howell S, Davis S, Swenson K, Martin S, Kowal K, Ikomi C, Despradel M, Ross J, Tartaglia N. Quantifying the Spectrum of Early Motor and Language Milestones in Sex Chromosome Trisomy. medRxiv [Preprint]. 2024 Aug 19:2024.08.16.24312065. doi: 10.1101/2024.08.16.24312065. PMID: 39228733; PMCID: PMC11370534.")
-                    )
-                  )
-                )
-              ),
-              
-              # Panel 2 : SCT specific data
-              tabPanel("SCT Comparisons",
                        fluidRow(
-                         column(6, plotlyOutput("scaPlot", height = "650px", width = "100%")),
-                         column(6, div(
-                           style = "height: 750px; overflow-y: auto; font-size: 20px;",
-                           uiOutput("summary")
+                         column(6, div(style = "text-align: center;", tags$img(src = "Milestones_fig.jpg", height = "800px"))),
+                         column(6, div(style = "padding: 50px; margin-top: -70px;",
+                                       tags$h3("Understanding the Milestones", style = "text-align: center;"),
+                                       p("Sex Chromosome Trisomy (SCT) milestones were collected..."),
+                                       uiOutput("counts"),
+                                       p("This figure supports the following paper:"),
+                                       p("Thompson T, Bothwell S... PMC11370534.")
                          ))
-                       ),
-                       fluidRow(
-                         column(12,
-                                div(
-                                  plotlyOutput("over90plot", height = "750px"),
-                                  style = "padding-bottom: 30px;"
-                                )
-                         )
                        )
               ),
               
-              # Panel 3 : Individual summary data
+              # SCT Comparison tab (plotly + summary)
+              tabPanel("SCT Comparisons",
+                       fluidRow(
+                         column(6, plotlyOutput("scaPlot", height = "650px", width = "100%")),
+                         column(6, div(style = "height: 750px; overflow-y: auto; font-size: 20px;", uiOutput("summary")))
+                       ),
+                       fluidRow(
+                         column(12, div(plotlyOutput("over90plot", height = "750px"), style = "padding-bottom: 30px;"))
+                       )
+              ),
+              
+              # Individual summaries tab
               tabPanel("Individual summaries",
                        fluidPage(
                          column(6, plotlyOutput("indiv", height = "650px", width = "100%")),
@@ -161,69 +87,72 @@ ui <- fluidPage(
                        )
               ),
               
-              # Panel 4: Inputting Milestones
-              tabPanel("Input Milestones",
-                      fluidRow(
-                         column(6,
-                                div(h4("Input Milestones Below:"), 
-    
-                                    tagList(
-                                      lapply(milestones_list, function(milestone) {
-                                      numericInput(
-                                        inputId = paste0("AgeWhen_", gsub(" ","",milestone)), # be careful with spaces !!!!
-                                        label= gsub(" ","",milestone),
-                                        min = 0, max = 48, value = NA, step = 1
-                                      )
-                                      })
-                                    ),
-                                  actionButton("addPoint", "Add to Graph"),
-                                  actionButton("clear_btn", "Clear List"))
-                                )
-                         )
+          
+              tabPanel("User Input",
+                       fluidRow(
+                         column(6, selectInput("user_milestone", "Milestone", choices = unique(indiv_percentiles$milestone))),
+                         column(6, selectInput("user_sca", "SCA Condition", choices = unique(indiv_percentiles$sca_condition)))
                        ),
-                      fluidRow(
-                        column(12, plotOutput("indiv_perc"))
-                      ),
-                      fluidRow(
-                        column(6, plotlyOutput("indiv", height = "650px", width = "100%")),
-                        column(6, plotlyOutput("indiv_perc", height = "650px", width = "100%"))
-                      )
-                    
+                       fluidRow(
+                         column(6, selectInput("user_id", "Study ID", choices = unique(indiv_percentiles$study_id_extraordinary))),
+                         column(6, numericInput("user_age", "Age Achieved (months)", value = NA, min = 0, max = 100))
+                       ),
+                       actionButton("submit_data", "Add Milestone", class = "btn btn-success"),
+                       br(), br(),
+                       DTOutput("user_table")
               )
-
-
+  )
 )
+
+
 
 # Define server logic
 server <- function(input, output, session) {
   
-    # temp List
-  temp_list <- reactiveValues (data = list())
+  # Create a reactive data frame for storing user input
+  user_data <- reactiveVal(data.frame(
+    study_id = character(),
+    sca_condition = character(),
+    milestone = character(),
+    Age = numeric(),
+    stringsAsFactors = FALSE
+  ))
   
-  observeEvent(input$AgeWhen_, {
-    if (!is.null(input$AgeWhen_)){
-      temp_List$data <- c(temp_list$data, input$AgeWhen_)
-    }
+  # Observe when user clicks "Add Milestone"
+  observeEvent(input$submit_data, {
+    req(input$user_id, input$user_sca, input$user_milestone, !is.na(input$user_age))
+    new_row <- data.frame(
+      study_id = input$user_id,
+      sca_condition = input$user_sca,
+      milestone = input$user_milestone,
+      Age = input$user_age,
+      stringsAsFactors = FALSE
+    )
+    updated_data <- bind_rows(user_data(), new_row)
+    user_data(updated_data)
   })
   
-  observeEvent(input$clear_btn, {
-    temp_list$data <- list()
+  # Render user-submitted table
+  output$user_table <- renderDT({
+    datatable(user_data(), options = list(pageLength = 5), rownames = FALSE)
   })
+  
+  
+
+  output$counts <- renderUI({
+    tbl_counts <- data.frame(
+      `Total` = length(unique(indiv_percentiles$study_id_extraordinary)),
+      `XXY` = length(unique(indiv_percentiles$study_id_extraordinary[indiv_percentiles$sca_condition == "XXY"])),
+      `XYY` = length(unique(indiv_percentiles$study_id_extraordinary[indiv_percentiles$sca_condition == "XYY"])),
+      `XXX` = length(unique(indiv_percentiles$study_id_extraordinary[indiv_percentiles$sca_condition == "XXX"]))
+    )
     
-    # Table showing counts for each SCT for Panel 1
-    output$counts <- renderUI({
-      
-      tbl_counts <- data.frame(`Total` = length(unique(indiv_percentiles$study_id_extraordinary)),
-                               `XXY` = length(unique(indiv_percentiles$study_id_extraordinary[indiv_percentiles$sca_condition == "XXY"])),
-                               `XYY` = length(unique(indiv_percentiles$study_id_extraordinary[indiv_percentiles$sca_condition == "XYY"])),
-                               `XXX` = length(unique(indiv_percentiles$study_id_extraordinary[indiv_percentiles$sca_condition == "XXX"])))
-      
-      HTML(
-        kable(tbl_counts, "html") %>%
-          kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
-      )
-      
-    })
+    HTML(
+      kable(tbl_counts, "html") %>%
+        kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+    )
+  })#Comment
+  
 
     
     # SCT Boxplots for Panel 2
@@ -595,7 +524,7 @@ server <- function(input, output, session) {
                   x = ~Age,
                   y = ~fct_reorder(milestone, Age),
                   type = "scatter",
-                  mode = "markers", ################################################## ADD FOR LOOP FOR DIFFERENT CHECKMARKS, SEE TEAMS
+                  mode = "markers",
                   marker = list(size = 15, color = 'red', symbol = 'x'),
                   text = ~paste("ID:", study_id_extraordinary,
                                 "<br>Age:", round(Age, 1), "months",
@@ -706,7 +635,7 @@ server <- function(input, output, session) {
                   y = ~milestone,
                   type = "scatter",
                   mode = "markers",
-                  marker = list(size = 15, color = 'red', symbol = '*'),
+                  marker = list(size = 15, color = 'red', symbol = 'x'),
                   text = ~paste("ID:", study_id_extraordinary,
                                 "<br>Age:", round(Age, 1), "months",
                                 "<br>Percentile:", round(Percentile, 1)),
