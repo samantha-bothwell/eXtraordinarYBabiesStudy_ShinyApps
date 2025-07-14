@@ -180,19 +180,17 @@ ui <- fluidPage(
                                       )
                                       })
                                     ),
-                                  actionButton("addPoints", "Add to Graph"),
-                                  actionButton("clearAll", "Clear List"))
+                                  actionButton("addPoints", "Add to Graph", class = "btn btn-success"),
+                                  br(), br(),
+                                  
                                 )
-                         )
-                       ),
-                      fluidRow(
-                        column(12, plotOutput("indiv_perc"))
-                      ),
-                      fluidRow(
-                        column(6, plotlyOutput("indiv", height = "650px", width = "100%")),
-                        column(6, plotlyOutput("indiv_perc", height = "650px", width = "100%"))
-                      )
-                    
+                         ),
+                         column(12,
+                                DTOutput("user_table"))
+                       )
+
+              )
+  
               )
 
 
@@ -200,6 +198,55 @@ ui <- fluidPage(
 
 # Define server logic
 server <- function(input, output, session) {
+  
+  
+  # Create a reactive data frame for storing user input
+  user_data <- reactiveVal(data.frame(
+    #study_id = character(),
+    #sca_condition = character(),
+    milestone = character(),
+    months_WhenAchieved = numeric(),
+    stringsAsFactors = FALSE
+  ))
+  
+  # Observe when user clicks "Add Milestone"
+  observeEvent(input$addPoints, {
+    new_rows <- lapply(milestones_list, function(milestone){
+      input_id <- paste0("AgeWhen_", gsub(" ", "", milestone))
+      valueWhenAchieved <- input[[input_id]]
+      if (!is.null(valueWhenAchieved) && !is.na(valueWhenAchieved)) {
+        data.frame(
+          milestone = milestone,
+          months_WhenAchieved = valueWhenAchieved,
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+    )
+    new_rows <- Filter(Negate(is.null), new_rows) # EXCLUDES milestones without input
+    if (length(new_rows) > 0) {
+      combined <- do.call(rbind, new_rows)
+      updated_data <- bind_rows(user_data(), combined)
+      user_data(updated_data)
+    } else{
+      showNotification("Please fill in at least one milestone before plotting", type = "error")
+    }
+  
+  })
+  
+  # Render user-submitted table
+  output$user_table <- renderDT({
+    datatable(user_data(), extensions = "Buttons",
+              options = list(pageLength = 12,
+                             dom = 'Bfrtip',  # B = Buttons, f = filter, r = processing, t = table, i = info, p = pagination
+                             buttons = list(
+                             list(extend = 'csv', filename = 'Milestones'),
+                             list(extend = 'pdf', filename = 'Milestones'),
+                             list(extend = 'print', title = 'Milestones')),
+                             lengthMenu = c(5, 10, 12, 20, 50)), 
+              class = 'display'
+              )
+  })
   
     # temp List
   temp_list <- reactiveValues (data = list())
