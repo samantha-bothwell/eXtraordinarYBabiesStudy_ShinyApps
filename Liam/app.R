@@ -108,6 +108,7 @@ ui <- fluidPage(
               
               # Panel 1 of overview
               tabPanel("Milestones Overview",
+                       value = "milestoneoverview",
                 # Put plot on the left and text on the right using column command
                 fluidRow(
                   column(
@@ -136,6 +137,7 @@ ui <- fluidPage(
               
               # Panel 2 : SCT specific data
               tabPanel("SCT Comparisons",
+                       value = "sctcomparisons",
                        fluidRow(
                          column(6, plotlyOutput("scaPlot", height = "650px", width = "100%")),
                          column(6, div(
@@ -155,6 +157,7 @@ ui <- fluidPage(
               
               # Panel 3 : Individual summary data
               tabPanel("Individual summaries",
+                       value = "individualsummaries",
                        fluidPage(
                          column(6, plotlyOutput("indiv", height = "650px", width = "100%")),
                          column(6, plotlyOutput("indiv_perc", height = "650px", width = "100%"))
@@ -163,6 +166,7 @@ ui <- fluidPage(
               
               # Panel 4: Inputting Milestones
               tabPanel("Input Milestones",
+                       value = "inputmilestones",
                       fluidRow(
                          column(6,
                                 div(h4("Input Milestones Below:"), 
@@ -176,8 +180,8 @@ ui <- fluidPage(
                                       )
                                       })
                                     ),
-                                  actionButton("addPoint", "Add to Graph"),
-                                  actionButton("clear_btn", "Clear List"))
+                                  actionButton("addPoints", "Add to Graph"),
+                                  actionButton("clearAll", "Clear List"))
                                 )
                          )
                        ),
@@ -199,15 +203,22 @@ server <- function(input, output, session) {
   
     # temp List
   temp_list <- reactiveValues (data = list())
+
   
-  observeEvent(input$AgeWhen_, {
-    if (!is.null(input$AgeWhen_)){
-      temp_List$data <- c(temp_list$data, input$AgeWhen_)
-    }
-  })
+  milestone_ids <- gsub(" ", "", milestones_list)  # define this first
   
-  observeEvent(input$clear_btn, {
-    temp_list$data <- list()
+  empty_df <- data.frame(matrix(ncol = length(milestone_ids), nrow = 0))
+  colnames(empty_df) <- milestone_ids
+  
+  milestoneData <- reactiveVal(empty_df)
+  
+  # When 'Add to Graph' is clicked, collect current inputs and add a new row
+  observeEvent(input$addPoints, {
+    newRow <- sapply(milestone_ids, function(id) {
+      val <- input[[paste0("AgeWhen_", id)]]
+      if (is.null(val) || is.na(val)) NA else val
+    })
+    milestoneData(rbind(milestoneData(), as.data.frame(t(newRow))))
   })
     
     # Table showing counts for each SCT for Panel 1
@@ -531,6 +542,7 @@ server <- function(input, output, session) {
     # Age boxplot for Panel 3
     output$indiv <- renderPlotly({
       
+      #if bracket only for tab 3, not tab 4
       #Subset domain
       if(input$domain == "Motor"){
         indiv_percentiles <- indiv_percentiles %>% filter(domain == "Motor")
@@ -540,22 +552,29 @@ server <- function(input, output, session) {
         indiv_percentiles <- indiv_percentiles %>% filter(domain == "Language")
       }
       
+      #probably don't need for tab 4
       # Filter to age range 
       indiv_percentiles <- indiv_percentiles %>% 
         group_by(milestone) %>% 
         filter(min(Age, na.rm = T) >= input$age[1]) %>% 
         filter(max(Age, na.rm = T) <= input$age[2]) 
       
-      
+      #KEEP for both
       # Explicitly reorder the milestone factor by median Age, descending
       indiv_percentiles <- indiv_percentiles %>%
         mutate(milestone = as.character(milestone)) %>% 
         mutate(milestone = fct_reorder(milestone, Age, .fun = median, .desc = FALSE))
       
+      ## ONLY NEED for tab 3 (start if bracket here)
+      if (input$tabs == "individualsummaries"){
+        indiv_dat <- indiv_percentiles %>% filter(study_id_extraordinary == input$selected_id) %>% filter(!is.na(Age))
+        sca = indiv_dat$sca_condition[1]
+        sca_milestones <- indiv_percentiles %>% filter(sca_condition == sca)
+      } else if (input$tabs == "inputmilestones"){
+        # do something
+      }
       
-      indiv_dat <- indiv_percentiles %>% filter(study_id_extraordinary == input$selected_id) %>% filter(!is.na(Age))
-      sca = indiv_dat$sca_condition[1]
-      sca_milestones <- indiv_percentiles %>% filter(sca_condition == sca)
+      
       
       # Filter to percentile range 
       indiv_dat <- indiv_dat %>% 
@@ -728,6 +747,12 @@ server <- function(input, output, session) {
                font = list(size = 16), 
                showlegend = FALSE)
       p
+      
+      
+      ########## TAB 4
+      output$dataTable <- renderTable({
+        milestoneData()
+      })
       
     })
 }
