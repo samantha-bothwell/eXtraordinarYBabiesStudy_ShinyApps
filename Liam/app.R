@@ -168,7 +168,7 @@ ui <- fluidPage(
               tabPanel("Input Milestones",
                        value = "inputmilestones",
                       fluidRow(
-                         column(6,
+                         column(4,
                                 div(h4("Input Milestones Below:"), 
     
                                     tagList(
@@ -183,8 +183,12 @@ ui <- fluidPage(
                                   actionButton("addPoints", "Add to Graph", class = "btn btn-success"),
                                   br(), br(),
                                   
-                                )
-                         ),
+                                ),
+                                column(8,
+                                div(h4("Plots"
+                                       ## TO DO: Add plots of milestones
+                                       ))
+                         )),
                          column(12,
                                 DTOutput("user_table"))
                        )
