@@ -205,7 +205,7 @@ ui <- fluidPage(
 # Define server logic
 server <- function(input, output, session) {
   
-  
+############################################## FOR DATA TABLE ###########################################
   # Create a reactive data frame for storing user input
   user_data <- reactiveVal(data.frame(
     milestone = character(),
@@ -251,6 +251,7 @@ server <- function(input, output, session) {
               class = 'display'
               )
   })
+  ########################################### END DATA TABLE SECTION ###########################################
   
     # temp List
   temp_list <- reactiveValues (data = list())
