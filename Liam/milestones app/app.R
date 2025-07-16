@@ -1,5 +1,5 @@
 
-########################## NOT FULLY FUNCTIONAL, as of 14 July 3:10pm
+########################## NOT FULLY FUNCTIONAL, as of 15 July 1:15pm ####################
 
 
 ### Libraries 
@@ -251,7 +251,9 @@ server <- function(input, output, session) {
               class = 'display'
               )
   })
-  ########################################### END DATA TABLE SECTION ###########################################
+########################################### END DATA TABLE SECTION ###########################################
+  
+########################################## FOR PLOTTING INDIVIDUAL MILESTONES ################################
   
     # temp List
   temp_list <- reactiveValues (data = list())
@@ -446,7 +448,7 @@ server <- function(input, output, session) {
              font = list(size = 16), 
              showlegend = FALSE)
     p})
-    
+#################################################### END PANEL 4 PLOT #########################################################
   
   ############################################## ORIGINAL CODE: DO NOT MODIFY BELOW ###########################################
   
