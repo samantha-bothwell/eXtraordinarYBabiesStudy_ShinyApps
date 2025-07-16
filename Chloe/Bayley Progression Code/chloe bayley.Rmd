@@ -1,0 +1,106 @@
+---
+title: "Untitled"
+author: "Chloe Child"
+date: "2025-07-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+bayley_composite <- readRDS("Bayley_Composite_scores.rds")
+
+bayley_gsv <- readRDS("Bayley_GSV_scores.rds")
+
+bayley_scaled <- readRDS("Bayley_Scaled_scores.rds")
+
+head(bayley_composite)
+```
+## Convert bayley_composite to long form
+
+```{r}
+composite_rename <- bayley_composite %>% rename(
+  Cognitive = 'bsid_cog_composite',
+  Language = 'bsid_lang_composite',
+  Motor = 'bsid_mot_composite',
+)
+
+head(composite_rename)
+composite_long <- composite_rename %>% pivot_longer(cols=c('Cognitive', 'Language', 'Motor'), names_to = 'domain', values_to = 'score')
+
+head(composite_long)
+```
+
+## Convert bayley_gsv to long form
+
+```{r}
+head(bayley_gsv)
+gsv_rename <- bayley_gsv %>% rename(
+  Cognitive = 'bsid_gsv_cog',
+  Receptive = 'bsid_gsv_rc',
+  Expressive = 'bsid_gsv_ec',
+  Fine_Motor = 'bsid_gsv_fm',
+  Gross_Motor = 'bsid_gsv_gm'
+)
+
+
+
+gsv_long <- gsv_rename %>% pivot_longer(cols = c('Cognitive', 'Receptive', 'Expressive', 'Fine_Motor', 'Gross_Motor'), names_to = 'domain', values_to = 'score')
+
+head(gsv_long)
+```
+
+# Convert bayley_scaled to long form
+```{r}
+head(bayley_scaled)
+
+scaled_rename <- bayley_scaled %>% rename(
+  Cognitive = "bsid_cog_scaled",
+  Receptive = "bsid_rc_scaled",
+  Expressive = "bsid_ec_scaled",
+  Fine_Motor = "bsid_fm_scaled",
+  Gross_Motor = "bsid_gm_scaled"
+)
+
+scaled_long <- scaled_rename %>% pivot_longer(cols = c('Cognitive', 'Receptive', 'Expressive', 'Fine_Motor', 'Gross_Motor'), names_to = 'domain', values_to = 'score')
+
+head(scaled_long)
+```
+
+# Convert Bayley GSV Scores
+```{r}
+## Create a function to transform scores
+
+transform_score <- function(scores) {
+  z_scores <- (scores - 500)/100
+  
+  transformed <- z_scores * 25 + 500
+  
+  return(transformed)
+}
+```
+
+```{r}
+new_gsv_long <- gsv_long %>% mutate(transformed_score = transform_score(score)) # Add transformed scores as a new column
+
+head(gsv_long)
+head(new_gsv_long)
+```
+
+# Remove 2 month visits from the GSV scores
+```{r}
+new_gsv_long_rem <- new_gsv_long %>% filter(redcap_event_name != "2_month_visit_arm_1")
+
+table(new_gsv_long_rem$redcap_event_name)
+```
+
+
+
+
