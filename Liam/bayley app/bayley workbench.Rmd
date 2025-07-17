@@ -1,0 +1,122 @@
+---
+title: "bayley workbench"
+author: "Liam Hallinan"
+date: "2025-07-16"
+output: html_document:
+  toc: true
+  toc_float: true
+---
+
+# Summary of changes to eXtraordinarY Babies Bayley Data
+
+### Initalizes libraries and reads in data sets
+```{r}
+library(tidyverse)
+library(ggplot2)
+
+
+composite <- readRDS("Bayley_Composite_scores.RDS")
+GSV <- readRDS("Bayley_GSV_scores.RDS")
+scaled <- readRDS("Bayley_Scaled_scores.RDS")
+```
+
+
+### Pivoting of Data Sets, and Removing 2-month visits from GSV dataset
+```{r}
+# create NEW data frames to not modify original sets, where "_p" indicates pivoted
+composite_p <- data.frame(composite)
+GSV_p <- data.frame(GSV)
+scaled_p <- data.frame(scaled)
+
+# Composite data pivoting
+composite_p <- composite_p %>% 
+  pivot_longer(cols = c(bsid_cog_composite, bsid_lang_composite, bsid_mot_composite), # columns to transform
+                                 names_to = "domains", 
+                                 values_to = "Score_III") %>%
+  mutate(domains = recode(domains, # New names of incoming columns
+                  bsid_cog_composite = "Cognitive",
+                  bsid_lang_composite = "Language",
+                  bsid_mot_composite = "Motor"))
+  
+  
+# GSV data pivoting
+GSV_p <- GSV_p %>% filter(redcap_event_name != "2_month_visit_arm_1") |> # filters out 2-month visits, to force normality
+  pivot_longer(cols = c(bsid_gsv_cog, bsid_gsv_ec, bsid_gsv_rc, bsid_gsv_fm, bsid_gsv_gm), # columns to transform
+                           names_to = "domains",
+                           values_to = "Score_III") %>% 
+  mutate(domains = recode(domains, # New names of incoming columns
+                  bsid_gsv_cog = "Cognitive",
+                  bsid_gsv_ec = "Expressive",
+                  bsid_gsv_rc = "Receptive",
+                  bsid_gsv_fm = "Fine Motor",
+                  bsid_gsv_gm = "Gross Motor"))
+
+# Scaled data pivoting
+scaled_p <- scaled_p %>% 
+  mutate(bsid_mot_sumscaled = as.numeric(bsid_mot_sumscaled)) %>% #changes motor scaled column from character to numeric
+  pivot_longer(cols = c(bsid_cog_scaled, bsid_ec_scaled, bsid_rc_scaled, bsid_lang_sumscaled, 
+                                   bsid_fm_scaled, bsid_gm_scaled, bsid_mot_sumscaled), # columns to transform
+                              names_to = "domains",
+                              values_to = "Score_III") %>%
+  mutate(domains = recode(domains, # New names of incoming columns
+                  bsid_cog_scaled = "Cognitive",
+                  bsid_ec_scaled = "Expressive",
+                  bsid_rc_scaled = "Receptive",
+                  bsid_lang_sumscaled = "Language",
+                  bsid_fm_scaled = "Fine Motor",
+                  bsid_gm_scaled = "Gross Motor",
+                  bsid_mot_sumscaled = "Motor"))
+
+#displaying the data sets, to confirm successful pivot
+composite_p
+GSV_p
+scaled_p
+```
+### Converting Scores from Bayley 3 to Bayley 4 via Z-Score
+
+
+The Bayley-III has a mean $(\mu)$ of 500 and standard deviation $(\sigma)$ of 100.
+The Bayley-IV has a mean $(\mu)$ of 500 and a standard deviation $(\sigma)$ of 25.
+
+So, we can use the $z$-score to modify our current scores (Bayley-III) to fit them to the distribution of the new scores, as the database is updated (Bayley-IV).
+
+Thus, our calculation of z-score for *EACH* value of "$x_3$", or Bayley-III score,  is $z = \frac{x_3-\mu}{\sigma}$, or $z = \frac{x_3-500}{100}$.
+Once z is calculated, we can convert the z-score now into "$x_4$", or Bayley-IV score, our new distribution, which can be calculated $z = \frac{x-\mu_4}{\sigma_4} \to x_4 = (z \times \sigma_4) + \mu_4 \to x_4 = (z \times 25) + 500$.
+
+```{r}
+composite_IV <- composite_p %>% mutate(Score_IV = round((((Score_III -500) / 100) * 25) + 500, 0))
+
+GSV_IV <- GSV_p %>% 
+  mutate(Score_IV = round((((Score_III -500) / 100) * 25) + 500, 0))
+
+
+scaled_IV <- scaled_p %>% mutate(Score_IV = round((((Score_III -500) / 100) * 25) + 500, 0))
+
+
+composite_IV
+GSV_IV
+scaled_IV
+```
+
+### Pretty plots!!
+
+```{r}
+# Composite Plot of Score by Sex Condition and Domain
+comp_plot <- ggplot(composite_IV[composite_IV$Score_III < 450, ], aes(x=Score_III, y=sca_condition)) + 
+  geom_boxplot(aes(color=domains)) +
+  theme_bw() + 
+  labs(title = "Boxplot by SCA Condition",
+       x = "Bayley-III Score",
+       y = "SCA Condition")
+
+# Composite Plot of _____ and _____
+#GSV_plot <- ggplot(GSV_IV, aes(x=, y=)) + 
+
+# Composite Plot of _____ and _____
+
+# display
+comp_plot
+
+```
+
+
