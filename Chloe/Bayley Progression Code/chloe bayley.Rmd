@@ -11,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+library(forcats)
+
 ```
 
 
@@ -88,7 +90,7 @@ transform_score <- function(scores) {
 ```
 
 ```{r}
-new_gsv_long <- gsv_long %>% mutate(transformed_score = transform_score(score)) # Add transformed scores as a new column
+new_gsv_long <- gsv_long %>% mutate(transformed_score = round(transform_score(score)),0) # Add transformed scores as a new column
 
 head(gsv_long)
 head(new_gsv_long)
@@ -102,5 +104,112 @@ table(new_gsv_long_rem$redcap_event_name)
 ```
 
 
+```{r}
+summary(new_gsv_long_rem)
+```
+
+```{r}
+ggplot(new_gsv_long_rem, aes(x = bsid_age_calc, y = transformed_score)) + geom_line(aes(color = as.factor(sca_condition))) + geom_point(x = new_gsv_long_rem$bsid_age_calc, y = new_gsv_long_rem$transformed_score, alpha = 0.5) + facet_wrap(~domain)
+```
+
+```{r}
+ggplot(new_gsv_long_rem, aes(x = bsid_age_calc, 
+                             y = fct_reorder(as.factor(domain), bsid_age_calc), 
+                             fill = as.factor(redcap_event_name))) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.6) +  # Hide default outliers
+  geom_jitter(aes(color = transformed_score), 
+              width = 0.2, height = 0.1, size = 2, alpha = 0.9) +  # Show transformed_score
+  scale_fill_manual(values = sca_colors) +
+  scale_color_gradient(low = "skyblue", high = "darkblue") +  # Color scale for transformed_score
+  labs(
+    x = "Age Score was Achieved (Months)",
+    y = NULL,
+    fill = "SCA Condition",
+    color = "Transformed Score"
+  ) +
+  theme_minimal(base_size = 16) +
+  theme(
+    axis.text.y = element_text(size = 12),
+    axis.text.x = element_text(size = 14),
+    legend.title = element_text(size = 14)
+  ) +facet_wrap(~as.factor(sca_condition))
+
+
+```
+
+```{r}
+ggplot(new_gsv_long_rem, aes(x = transformed_score, 
+                             y = fct_reorder(as.factor(domain), transformed_score), 
+                             fill = sca_condition)) +
+  geom_violin(trim = FALSE, alpha = 0.5) +
+  geom_jitter(aes(color = transformed_score), width = 0.1, height = 0.2, size = 1.5, alpha = 0.7) +
+  scale_fill_manual(values = sca_colors) +
+  scale_color_gradient(low = "skyblue", high = "darkblue") +
+  labs(
+    x = "Transformed Score",
+    y = NULL,
+    fill = "SCA Condition",
+    color = "Transformed Score"
+  ) +
+  theme_minimal(base_size = 16)
+
+```
+
+
+```{r}
+library(ggridges)
+
+ggplot(new_gsv_long_rem, aes(x = transformed_score, 
+                             y = fct_reorder(domain, transformed_score), 
+                             fill = sca_condition)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.2, rel_min_height = 0.01) + facet_wrap(~as.factor(redcap_event_name))
+  scale_fill_manual(values = sca_colors) +
+  labs(
+    x = "Transformed Score",
+    y = NULL,
+    fill = "SCA Condition"
+  ) +
+  theme_minimal(base_size = 16)
+```
+
+```{r}
+ggplot(new_gsv_long_rem, aes(x = transformed_score, 
+                             y = fct_reorder(domain, transformed_score))) +
+  geom_density_ridges(aes(fill = sca_condition), alpha = 0.4, scale = 1.1) +
+  geom_jitter(aes(color = bsid_age_calc), width = 0.1, height = 0.1, alpha = 0.6, size = 1.5) +
+  scale_fill_manual(values = sca_colors) +
+  scale_color_gradient(low = "orange", high = "red") +
+  labs(
+    x = "Transformed Score",
+    y = NULL,
+    fill = "SCA Condition",
+    color = "Age (Months)"
+  ) +
+  theme_minimal(base_size = 16)
+
+```
+
+```{r}
+ggplot(new_gsv_long_rem, aes(x = fct_reorder(domain, bsid_age_calc), 
+                             y = bsid_age_calc, 
+                             fill = sca_condition)) +
+  geom_violin(trim = FALSE, alpha = 0.5, color = NA) +
+  geom_jitter(aes(color = transformed_score), 
+              width = 0.2, height = 0.1, size = 2, alpha = 0.7) +
+  scale_fill_manual(values = sca_colors) +
+  scale_color_gradient(low = "pink", high = "darkred") +
+  facet_wrap(~sca_condition) + coord_flip()
+  labs(
+    x = NULL,
+    y = "Age at Assessment (Months)",
+    fill = "SCA Condition",
+    color = "Transformed Score"
+  ) +
+  theme_minimal(base_size = 16) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+```
 
 
