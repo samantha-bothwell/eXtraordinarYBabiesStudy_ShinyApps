@@ -14,13 +14,12 @@ milestones <- readRDS("Milestones.RDS")
 genpop <- readRDS("GenPop_Milestones.RDS")
 indiv_percentiles <- readRDS("Individual_Percentiles.RDS")
 
-
 # Pull general population 90th percentile into the individual percentiles data
 indiv_percentiles$norms_90th <- genpop$Q90[match(indiv_percentiles$milestone, genpop$milestone)]
 # Format ID to display number and SCT
 indiv_percentiles$study_id_extraordinary <- paste0(indiv_percentiles$study_id_extraordinary, " (", 
                                                    indiv_percentiles$sca_condition, ")")
-
+milestones_list <- c(unique(indiv_percentiles$milestone))
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -130,6 +129,7 @@ ui <- fluidPage(
               
               # Panel 2 : SCT specific data
               tabPanel("SCT Comparisons",
+                       value = "sctcomparisons",
                        fluidRow(
                          column(6, plotlyOutput("scaPlot", height = "650px", width = "100%")),
                          column(6, div(
@@ -154,41 +154,44 @@ ui <- fluidPage(
                          column(6, plotlyOutput("indiv_perc", height = "650px", width = "100%"))
                        )
               ),
-              tabPanel("Addition",
+              tabPanel("Select a Milestone",
+                       value = "the_stones",
+                       fluidPage(column(4,selectInput("stones", label = "Select Milestone",
+                                            choices = c("all",milestones_list))),
+                                 column(4, plotlyOutput("the_stones", height = "650px", width = "auto"))
+                                 )
+                       ),
+              tabPanel("Input Milestones", 
+                       value = "inputmilestones", 
                        fluidRow(
-                         column(4, div(p("Jack Preisser is now 21!"))),
-                         column(4, div(p("hey", uiOutput("Hi")))),
-                         column(4, div(
-                           p("Yo yo yo")))
+                         column(6,
+                                div(h4("Input Milestones Below:"),
+                                    tagList(
+                                      lapply(milestones_list, function(milestone) {
+                                      numericInput(
+                                        inputId = paste0("AgeWhen_", gsub(" ", "", milestone)),
+                                        label = gsub(" ", "", milestone), 
+                                        min = 0, max = 48, value = NA, step = 1
+                                        )
+                                        })
+                                      ),
+                                    actionButton("addPoints", "Add to Graph"),
+                                    actionButton("clearAll", "Clear List"))
+                                  )
                          )
                        ),
-              tabPanel("Input Milestones",
                        fluidRow(
-                         column(4, div(p("Hello World!"))),
-                         column(4, div(p("This is the second column which also has a plot!"),
-                                       uiOutput("summary"))),
-                         column(4, div(
-                           p("Label for this box"),
-                           p("I just did something"))
-                           )
-                         ),
+                         column(12, plotOutput("indiv_perc"))
+                       ),
                        fluidRow(
-                         column(12,
-                                div(h4("Input Milestones"),
-                                    tagList(
-                                      lapply(milestones, function(milestone) {
-                                        numericInput(
-                                          inputId = paste0("AgeWhen_", gsub(" "," ", milestone)), # be careful with spaces !!!!
-                                          label= gsub(" "," ", milestone),
-                                          min = 0, max = 48, value = 0)
-                                        })
-                                      )
-                                    )
-                                )
+                         column(6, plotlyOutput("indiv", height = "650px", width = "100%")),
+                         column(6, plotlyOutput("indiv_perc", height = "650px", width = "100%"))
                          )
-                       )
               )
-  )
+)
+
+                         
+
 
                                
         
@@ -549,18 +552,25 @@ server <- function(input, output) {
       indiv_percentiles <- indiv_percentiles %>%
         mutate(milestone = as.character(milestone)) %>% 
         mutate(milestone = fct_reorder(milestone, Age, .fun = median, .desc = FALSE))
-      
+      #keep for both
+      ##only needed for individual summaries tab
       
       indiv_dat <- indiv_percentiles %>% filter(study_id_extraordinary == input$selected_id) %>% filter(!is.na(Age))
       sca = indiv_dat$sca_condition[1]
       sca_milestones <- indiv_percentiles %>% filter(sca_condition == sca)
       
       # Filter to percentile range 
+      if(input$tabs == "individualsummaries"){
       indiv_dat <- indiv_dat %>% 
         group_by(milestone) %>% 
         filter(min(Percentile >= input$percentile[1], na.rm = T) & max(Percentile <= input$percentile[2], na.rm = T))
       sca_milestones <- sca_milestones %>% filter(milestone %in% indiv_dat$milestone)
-      
+      }
+      # else if (input$tabs != "individualsummaries") {
+      #   else {
+      #     "Select another tab"
+      #   }
+      # }
       
       # pick fill color
       scafill = case_when(sca == "XXY" ~ "#fdb863", 
@@ -727,6 +737,227 @@ server <- function(input, output) {
                showlegend = FALSE)
       p
       
+    })
+    output$the_stones<- renderPlotly({
+      # Filter to age range 
+      indiv_percentiles <- indiv_percentiles %>% 
+        group_by(milestone) %>% 
+        filter(min(Age, na.rm = T) >= input$age[1]) %>% 
+        filter(max(Age, na.rm = T) <= input$age[2]) 
+      
+      
+      # Explicitly reorder the milestone factor by median Age, descending
+      indiv_percentiles <- indiv_percentiles %>%
+        mutate(milestone = as.character(milestone)) %>% 
+        mutate(milestone = fct_reorder(milestone, Age, .fun = median, .desc = FALSE))
+      
+      
+      indiv_dat <- indiv_percentiles %>% filter(study_id_extraordinary == input$selected_id) %>% filter(!is.na(Age))
+      sca = indiv_dat$sca_condition[1]
+      sca_milestones <- indiv_percentiles %>% filter(sca_condition == sca)
+      
+      # Filter to percentile range 
+      indiv_dat <- indiv_dat %>% 
+        group_by(milestone) %>% 
+        filter(min(Percentile >= input$percentile[1], na.rm = T) & max(Percentile <= input$percentile[2], na.rm = T))
+      sca_milestones <- sca_milestones %>% filter(milestone %in% indiv_dat$milestone)
+      
+      
+      # pick fill color
+      scafill = case_when(sca == "XXY" ~ "#fdb863", 
+                          sca == "XYY" ~ "cyan3",
+                          sca == "XXX" ~ "#4B0082")
+      
+      
+      # Sort individual data by percentile
+      ordered_levels <- indiv_dat %>%
+        group_by(milestone) %>%
+        summarise(median_percentile = median(Percentile, na.rm = TRUE)) %>%
+        arrange(median_percentile) %>%
+        pull(milestone)
+      
+      # make sure datasets are ordered  by percentiles
+      sca_milestones$milestone <- factor(sca_milestones$milestone, levels = ordered_levels)
+      indiv_dat$milestone <- factor(indiv_dat$milestone, levels = ordered_levels)
+      milestones_list
+      
+      if(input$stones == 1){
+        box <- plot_ly(sca_milestones,
+                       y = ~milestone[1],
+                       x = ~Percentile,
+                       color = I(scafill),
+                       type = "box",
+                       marker = list(size = 6, color = 'blue',
+                                     line = list(color = 'orange', width = 1)),
+                       boxpoints = FALSE, jitter = 0.6, pointpos = 0,
+                       hoverinfo = "skip")
+        
+      
+      }
+      
+      else if(input$stones == 2){
+        box <- plot_ly(sca_milestones,
+                       y = ~milestone[2],
+                       x = ~Percentile,
+                       color = I(scafill),
+                       type = "box",
+                       marker = list(size = 6, color = 'blue',
+                                     line = list(color = 'orange', width = 1)),
+                       boxpoints = FALSE, jitter = 0.6, pointpos = 0,
+                       hoverinfo = "skip")
+        
+      }
+      else if(input$stones == 3){
+        box <- plot_ly(sca_milestones,
+                       y = ~milestone[3],
+                       x = ~Percentile,
+                       color = I(scafill),
+                       type = "box",
+                       marker = list(size = 6, color = 'blue',
+                                     line = list(color = 'orange', width = 1)),
+                       boxpoints = FALSE, jitter = 0.6, pointpos = 0,
+                       hoverinfo = "skip")
+    
+      }
+      else if(input$stones == 4){
+        box <- plot_ly(sca_milestones,
+                       y = ~milestone[4],
+                       x = ~Percentile,
+                       color = I(scafill),
+                       type = "box",
+                       marker = list(size = 6, color = 'blue',
+                                     line = list(color = 'orange', width = 1)),
+                       boxpoints = FALSE, jitter = 0.6, pointpos = 0,
+                       hoverinfo = "skip")
+      }
+      else if(input$stones == 5){
+        box <- plot_ly(sca_milestones,
+                       y = ~milestone[5],
+                       x = ~Percentile,
+                       color = I(scafill),
+                       type = "box",
+                       marker = list(size = 6, color = 'blue',
+                                     line = list(color = 'orange', width = 1)),
+                       boxpoints = FALSE, jitter = 0.6, pointpos = 0,
+                       hoverinfo = "skip")
+      }
+      else if(input$stones == 6){
+        box <- plot_ly(sca_milestones,
+                       y = ~milestone[6],
+                       x = ~Percentile,
+                       color = I(scafill),
+                       type = "box",
+                       marker = list(size = 6, color = 'blue',
+                                     line = list(color = 'orange', width = 1)),
+                       boxpoints = FALSE, jitter = 0.6, pointpos = 0,
+                       hoverinfo = "skip")
+      }
+      else if(input$stones == 7){
+        box <- plot_ly(sca_milestones,
+                       y = ~milestone[7],
+                       x = ~Percentile,
+                       color = I(scafill),
+                       type = "box",
+                       marker = list(size = 6, color = 'blue',
+                                     line = list(color = 'orange', width = 1)),
+                       boxpoints = FALSE, jitter = 0.6, pointpos = 0,
+                       hoverinfo = "skip")
+      }
+      
+      else if(input$stones == 9){
+        box <- plot_ly(sca_milestones,
+                       y = ~milestone[9],
+                       x = ~Percentile,
+                       color = I(scafill),
+                       type = "box",
+                       marker = list(size = 6, color = 'blue',
+                                     line = list(color = 'orange', width = 1)),
+                       boxpoints = FALSE, jitter = 0.6, pointpos = 0,
+                       hoverinfo = "skip")
+      }
+      else if(input$stones == 10){
+        box <- plot_ly(sca_milestones,
+                       y = ~milestone[10],
+                       x = ~Percentile,
+                       color = I(scafill),
+                       type = "box",
+                       marker = list(size = 6, color = 'blue',
+                                     line = list(color = 'orange', width = 1)),
+                       boxpoints = FALSE, jitter = 0.6, pointpos = 0,
+                       hoverinfo = "skip")
+      }
+      else if(input$stones == 11){
+        box <- plot_ly(sca_milestones,
+                       y = ~milestone[11],
+                       x = ~Percentile,
+                       color = I(scafill),
+                       type = "box",
+                       marker = list(size = 6, color = 'blue',
+                                     line = list(color = 'orange', width = 1)),
+                       boxpoints = FALSE, jitter = 0.6, pointpos = 0,
+                       hoverinfo = "skip")
+      }
+      else if(input$stones == 12){
+        box <- plot_ly(sca_milestones,
+                       y = ~milestone[12],
+                       x = ~Percentile,
+                       color = I(scafill),
+                       type = "box",
+                       marker = list(size = 6, color = 'blue',
+                                     line = list(color = 'orange', width = 1)),
+                       boxpoints = FALSE, jitter = 0.6, pointpos = 0,
+                       hoverinfo = "skip")
+      }
+      else if(input$stones == 13){
+        box <- plot_ly(sca_milestones,
+                       y = ~milestone[8],
+                       x = ~Percentile,
+                       color = I(scafill),
+                       type = "box",
+                       marker = list(size = 6, color = 'blue',
+                                     line = list(color = 'orange', width = 1)),
+                       boxpoints = FALSE, jitter = 0.6, pointpos = 0,
+                       hoverinfo = "skip")
+      
+      
+      }else{
+        box <- plot_ly(sca_milestones, 
+                     y = ~milestone, 
+                     x = ~Percentile, 
+                     color = I(scafill),
+                     type = "box", 
+                     boxpoints = FALSE,
+                     hoverinfo = "skip")
+      }
+      
+      # Specify the information that is shown when hovering over points
+      box <- box %>% add_trace(data = indiv_dat,
+                           x = ~Percentile,
+                           y = ~milestone,
+                           type = "scatter",
+                           mode = "markers",
+                           marker = list(size = 15, color = 'red', symbol = 'x'),
+                           text = ~paste("ID:", study_id_extraordinary,
+                                         "<br>Age:", round(Age, 1), "months",
+                                         "<br>Percentile:", round(Percentile, 1)),
+                           hoverinfo = "text",
+                           inherit = FALSE) %>% 
+        layout(xaxis = list(range = c(0, 100)),yaxis = list(title = ""),
+               shapes = list(
+                 list(type = "rect", fillcolor = "rgba(255, 0, 0, 0.2)", 
+                      line = list(color = "red", width = 0), x0 = 90, x1 = 100, y0 = 0, y1 = 1, xref = "x", yref = "paper")
+               )
+        )
+      
+      # Show the plot
+       box <- box %>%
+        layout(boxmode = "group",
+               xaxis = list(title = "Achievement Percentile",
+                            tickfont = list(size = 14)),  # Custom x-axis label
+               yaxis = list(title = ""), 
+               font = list(size = 16), 
+               showlegend = FALSE) 
+      box
     })
 }
 
