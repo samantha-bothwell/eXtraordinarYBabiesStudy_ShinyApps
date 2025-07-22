@@ -1,4 +1,7 @@
 
+########################## NOT FULLY FUNCTIONAL
+
+
 ### Libraries 
 library(shiny)
 library(shinythemes)
@@ -7,6 +10,8 @@ library(ggplot2)
 library(ggrepel)
 library(plotly)
 library(kableExtra)
+library(stringr)
+library(DT)
 
 
 ### Datasets
@@ -14,12 +19,66 @@ milestones <- readRDS("Milestones.RDS")
 genpop <- readRDS("GenPop_Milestones.RDS")
 indiv_percentiles <- readRDS("Individual_Percentiles.RDS")
 
+milestones_list <- c("RollingFronttoBack", "RollingBacktoFront", "Sitting", "Cooing", "Babbling", "SingleWord", "2WordPhrases", "Sentences", "Crawling", "Cruising", "Walking", "Running", "Jumping")
+
+milestone_to_col <- c(
+  RollingFronttoBack = "devfu_rolling_f2b_age",
+  RollingBacktoFront = "devfu_rolling_b2f_age",
+  Sitting = "devfu_sit_age",
+  Cooing = "devfu_coo_age",
+  Babbling = "devfu_babble_age",
+  SingleWord = "devfu_singleword_age",
+  `2WordPhrases` = "devfu_twoword_age",
+  Sentences = "devfu_sentences_age",
+  Crawling = "devfu_crawl_age",
+  Cruising = "devfu_cruise_age",
+  Walking = "devfu_walk_age",
+  Running = "devfu_run_age",
+  Jumping = "devfu_jump_age"
+)
+
+
+devfu_milestone <- data.frame(colnames(milestones)[3:15])
+
+milestone_ids <- gsub(" ", "", milestones_list)  # This line just replaces spaces with spaces (no effect)
 
 # Pull general population 90th percentile into the individual percentiles data
 indiv_percentiles$norms_90th <- genpop$Q90[match(indiv_percentiles$milestone, genpop$milestone)]
 # Format ID to display number and SCT
 indiv_percentiles$study_id_extraordinary <- paste0(indiv_percentiles$study_id_extraordinary, " (", 
                                                    indiv_percentiles$sca_condition, ")")
+
+# Function to calculate percentiles by position
+calculate_percentiles <- function(values, ref_data, milestone_to_col) {
+  # values: named vector of ages entered by user
+  # ref_data: reference data frame with age columns
+  # milestone_to_col: named vector mapping milestone names to ref_data column names
+  
+  percentiles <- numeric(length(values))
+  names(percentiles) <- names(values)
+  
+  for (milestone in names(values)) {
+    age_val <- values[milestone]
+    col_name <- milestone_to_col[milestone]
+    
+    # Check if column exists and age_val is valid
+    if (!is.na(age_val) && !is.null(col_name) && col_name %in% colnames(ref_data)) {
+      ref_ages <- suppressWarnings(as.numeric(ref_data[[col_name]]))
+      ref_ages <- ref_ages[!is.na(ref_ages)]
+      
+      if (length(ref_ages) > 0) {
+        ecdf_fun <- ecdf(ref_ages)
+        percentiles[milestone] <- ecdf_fun(age_val) * 100
+      } else {
+        percentiles[milestone] <- NA
+      }
+    } else {
+      percentiles[milestone] <- NA
+    }
+  }
+  
+  return(percentiles)
+}
 
 
 # Define UI for application that draws a histogram
@@ -79,7 +138,7 @@ ui <- fluidPage(
   ),
   
   conditionalPanel(
-    condition = "input.tabs == 'SCT Comparisons' || input.tabs == 'Individual summaries'",
+    condition = "input.tabs == 'SCT Comparisons' || input.tabs == 'Individual summaries' || input.tabs = 'Input Milestones'",
     fluidRow(
       # Domain : dropdown
       column(4,
@@ -102,34 +161,36 @@ ui <- fluidPage(
               
               # Panel 1 of overview
               tabPanel("Milestones Overview",
-                # Put plot on the left and text on the right using column command
-                fluidRow(
-                  column(
-                    width = 6,
-                    div(
-                      style = "text-align: center;",
-                      tags$img(src = "Milestones_fig.jpg", height = "800px")
-                    )
-                  ),
-                  # Summary text formatting
-                  column(
-                    width = 6,
-                    div(
-                      style = "padding: 50px; margin-top: -70px;",
-                      tags$h3("Understanding the Milestones", style = "text-align: center;"),
-                      p("Sex Chromosome Trisomy (SCT) milestones were collected from our study cohort are compared with existing published norms. Normative milestone achievement data for the 25th, 50th, 75th, and 90th percentiles were taken from the Denver II Scales, the World Health Organization (WHO) Motor Development Study, and the Primitive Reflex Profile (PRP). We used the Denver II whenever possible (sitting, walking, running, jumping, cooing, babbling, single words, 2-word phrases). WHO was used for crawling and cruising and the PRP was used for rolling front to back and rolling back to front. Percentiles for the PRP were estimated theoretically under the assumption of a normal distribution from the provided mean and standard deviations."),
-                      p("To evaluate if each SCT condition was significantly delayed compared to the general population, a simulated dataset of 1000 samples was generated based on the provided percentiles under the assumption of a non-normal distribution using the approxfun function in R."),
-                      p("The current number of participants included for analysis are as follows : "),
-                      uiOutput("counts"),
-                      p("This figure supports the following paper :"),
-                      p("Thompson T, Bothwell S, Janusz J, Wilson R, Howell S, Davis S, Swenson K, Martin S, Kowal K, Ikomi C, Despradel M, Ross J, Tartaglia N. Quantifying the Spectrum of Early Motor and Language Milestones in Sex Chromosome Trisomy. medRxiv [Preprint]. 2024 Aug 19:2024.08.16.24312065. doi: 10.1101/2024.08.16.24312065. PMID: 39228733; PMCID: PMC11370534.")
-                    )
-                  )
-                )
+                       value = "milestoneoverview",
+                       # Put plot on the left and text on the right using column command
+                       fluidRow(
+                         column(
+                           width = 6,
+                           div(
+                             style = "text-align: center;",
+                             tags$img(src = "Milestones_fig.jpg", height = "800px")
+                           )
+                         ),
+                         # Summary text formatting
+                         column(
+                           width = 6,
+                           div(
+                             style = "padding: 50px; margin-top: -70px;",
+                             tags$h3("Understanding the Milestones", style = "text-align: center;"),
+                             p("Sex Chromosome Trisomy (SCT) milestones were collected from our study cohort are compared with existing published norms. Normative milestone achievement data for the 25th, 50th, 75th, and 90th percentiles were taken from the Denver II Scales, the World Health Organization (WHO) Motor Development Study, and the Primitive Reflex Profile (PRP). We used the Denver II whenever possible (sitting, walking, running, jumping, cooing, babbling, single words, 2-word phrases). WHO was used for crawling and cruising and the PRP was used for rolling front to back and rolling back to front. Percentiles for the PRP were estimated theoretically under the assumption of a normal distribution from the provided mean and standard deviations."),
+                             p("To evaluate if each SCT condition was significantly delayed compared to the general population, a simulated dataset of 1000 samples was generated based on the provided percentiles under the assumption of a non-normal distribution using the approxfun function in R."),
+                             p("The current number of participants included for analysis are as follows : "),
+                             uiOutput("counts"),
+                             p("This figure supports the following paper :"),
+                             p("Thompson T, Bothwell S, Janusz J, Wilson R, Howell S, Davis S, Swenson K, Martin S, Kowal K, Ikomi C, Despradel M, Ross J, Tartaglia N. Quantifying the Spectrum of Early Motor and Language Milestones in Sex Chromosome Trisomy. medRxiv [Preprint]. 2024 Aug 19:2024.08.16.24312065. doi: 10.1101/2024.08.16.24312065. PMID: 39228733; PMCID: PMC11370534.")
+                           )
+                         )
+                       )
               ),
               
               # Panel 2 : SCT specific data
               tabPanel("SCT Comparisons",
+                       value = "sctcomparisons",
                        fluidRow(
                          column(6, plotlyOutput("scaPlot", height = "650px", width = "100%")),
                          column(6, div(
@@ -149,417 +210,277 @@ ui <- fluidPage(
               
               # Panel 3 : Individual summary data
               tabPanel("Individual summaries",
+                       value = "individualsummaries",
                        fluidPage(
                          column(6, plotlyOutput("indiv", height = "650px", width = "100%")),
                          column(6, plotlyOutput("indiv_perc", height = "650px", width = "100%"))
                        )
+              ),
+              
+              # Panel 4: Inputting Milestones
+              tabPanel("Input Milestones",
+                       value = "inputmilestones",
+                       fluidRow(
+                         column(4,
+                                div(h4("Input Milestones Below:"), 
+                                    
+                                    tagList(
+                                      lapply(milestones_list, function(milestone) {
+                                        numericInput(
+                                          inputId = paste0("AgeWhen_", gsub(" ","",milestone)), # be careful with spaces !!!!
+                                          label= gsub(" ","",milestone),
+                                          min = 0, max = 48, value = NA, step = 1
+                                        )
+                                      })
+                                    ),
+                                    actionButton("addPoints", "Add to Graph", class = "btn btn-success"),
+                                    br(), br(),
+                                    
+                                ),
+                                column(8,
+                                       div(h4("Plots"
+                                              ## TO DO: Add plots of milestones
+                                       ))
+                                )),
+                         column(12,
+                                DTOutput("user_table"))
+                       )
+                       
               )
+              
   )
-),
-          # Panel 4: Entering numeric data
-          tabPanel("Entering Your Data",
-                   fluidPage(column(6, plotlyOutput("score", height = "650px", width = "100%")),
-                             column(6, plotlyOutput("score_perc", height = "650px", width = "100%"))
-                             )
-                   )
+  
+  
 )
 
 # Define server logic
-server <- function(input, output) {
-    
-    # Table showing counts for each SCT for Panel 1
-    output$counts <- renderUI({
-      
-      tbl_counts <- data.frame(`Total` = length(unique(indiv_percentiles$study_id_extraordinary)),
-                               `XXY` = length(unique(indiv_percentiles$study_id_extraordinary[indiv_percentiles$sca_condition == "XXY"])),
-                               `XYY` = length(unique(indiv_percentiles$study_id_extraordinary[indiv_percentiles$sca_condition == "XYY"])),
-                               `XXX` = length(unique(indiv_percentiles$study_id_extraordinary[indiv_percentiles$sca_condition == "XXX"])))
-      
-      HTML(
-        kable(tbl_counts, "html") %>%
-          kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
-      )
-      
+server <- function(input, output, session) {
+  
+  
+  # Create a reactive data frame for storing user input
+  user_data <- reactiveVal(data.frame(
+    #study_id = character(),
+    #sca_condition = character(),
+    milestone = character(),
+    months_WhenAchieved = numeric(),
+    percentile_WhenAchieved = numeric(),
+    stringsAsFactors = FALSE
+  ))
+  
+
+  
+  # Observe when user clicks "Add Milestone"
+  observeEvent(input$addPoints, {
+    new_rows <- lapply(milestones_list, function(milestone) {
+      input_id <- paste0("AgeWhen_", gsub(" ", "", milestone))
+      val <- input[[input_id]]
+      if (!is.null(val) && !is.na(val)) {
+        ref_col <- devfu_milestone[[milestone]]  # or by index
+        ref_col_clean <- suppressWarnings(as.numeric(ref_col[!is.na(ref_col)]))
+        percentiles <- calculate_percentiles(val, ref_col_clean, milestone_to_col)
+        
+        data.frame(
+          milestone = milestone,
+          months_WhenAchieved = val,
+          percentile_WhenAchieved = percentile,
+          stringsAsFactors = FALSE
+        )
+      } else {
+        NULL
+      }
     })
+    new_rows <- Filter(Negate(is.null), new_rows)
+    if (length(new_rows) > 0) {
+      updated_df <- rbind(user_data(), do.call(rbind, new_rows))
+      user_data(updated_df)
+    } else {
+      showNotification("Please fill in at least one milestone before plotting", type = "error")
+    }
+  })
+  
+  
+  # Render user-submitted table
+  output$user_table <- renderDT({
+    datatable(user_data(), extensions = "Buttons",
+              options = list(pageLength = 12,
+                             dom = 'Bfrtip',  # B = Buttons, f = filter, r = processing, t = table, i = info, p = pagination
+                             buttons = list(
+                               list(extend = 'csv', filename = 'Milestones'),
+                               list(extend = 'pdf', filename = 'Milestones'),
+                               list(extend = 'print', title = 'Milestones')),
+                             lengthMenu = c(5, 10, 12, 20, 50)), 
+              class = 'display'
+    )
+  })
+  
+  # temp List
+  temp_list <- reactiveValues(data = list())
+  
+  
+  
+  empty_df <- data.frame(matrix(ncol = length(milestone_ids), nrow = 0))
+  colnames(empty_df) <- milestone_ids
+  
+  milestoneData <- reactiveVal(empty_df)
+  
+  # When 'Add to Graph' is clicked, collect current inputs and add a new row
+  observeEvent(input$addPoints, {
+    newRow <- sapply(milestone_ids, function(id) {
+      val <- input[[paste0("AgeWhen_", id)]]
+      if (is.null(val) || is.na(val)) NA else val
+    })
+    
+    new_values <- sapply(milestone_ids, function(id) {
+      val <- input[[paste0("AgeWhen_", id)]]
+      if (is.null(val) || is.na(val)) NA else val
+    })
+    names(new_values) <- milestone_ids
+    
 
     
-    # SCT Boxplots for Panel 2
-    output$scaPlot <- renderPlotly({
-      
-      #Subset domain
-      if(input$domain == "Motor"){
-        indiv_percentiles <- indiv_percentiles %>% filter(domain == "Motor")
-      }
-      
-      if(input$domain == "Language"){
-        indiv_percentiles <- indiv_percentiles %>% filter(domain == "Language")
-      }
-      
-      # Filter to age range 
-      indiv_percentiles <- indiv_percentiles %>% 
-        group_by(milestone) %>% 
-        filter(min(Age, na.rm = T) >= input$age[1]) %>% 
-        filter(max(Age, na.rm = T) <= input$age[2]) 
-        
-      
-      # Explicitly reorder the milestone factor by median Age, descending
-      indiv_percentiles <- indiv_percentiles %>%
-        mutate(milestone = as.character(milestone)) %>% 
-        mutate(milestone = fct_reorder(milestone, Age, .fun = median, .desc = FALSE))
-      
-      # Identify outliers manually per group (you may need to adapt this to your data structure)
-      outliers <- indiv_percentiles %>%
-        group_by(sca_condition, milestone) %>%
-        mutate(Q1 = quantile(Age, 0.25, na.rm = T),
-               Q3 = quantile(Age, 0.75, na.rm = T),
-               IQR = Q3 - Q1,
-               is_outlier = Age < (Q1 - 1.5 * IQR) | Age > (Q3 + 1.5 * IQR)) %>%
-        filter(is_outlier)
-      
-      
-      # Calculate summary percentiles for each boxplot group
-      box_summary <- indiv_percentiles %>%
-        group_by(milestone, sca_condition) %>%
-        summarise(
-          p25 = quantile(Age, 0.25, na.rm = TRUE),
-          p50 = quantile(Age, 0.50, na.rm = TRUE),
-          p75 = quantile(Age, 0.75, na.rm = TRUE),
-          p90 = quantile(Age, 0.90, na.rm = TRUE),
-          .groups = "drop"
-        ) %>%
-        mutate(hovertext = paste0(
-          "25th percentile: ", round(p25, 1), " mo\n",
-          "Median: ", round(p50, 1), " mo\n",
-          "75th percentile: ", round(p75, 1), " mo\n",
-          "90th percentile: ", round(p90, 1), " mo"
-        ))
-      
-      indiv_percentiles <- indiv_percentiles %>%
-        left_join(box_summary, by = c("milestone", "sca_condition"))
-      
+    combined_named <- c(
+      setNames(new_values, paste0(names(new_values), "_age")), 
+      setNames(percentiles, paste0(names(percentiles), "_percentile"))
+    )
+    
+    combined_row <- as.data.frame(t(combined_named), stringsAsFactors = FALSE)
+    
+    milestoneData(rbind(milestoneData(),combined_row))
+    
 
-      # Subset data
-      if(input$sca_condition == "All SCTs"){
-        
-        # Reorder sca_condition so that "XXY" comes first and "XXX" comes last
-        indiv_percentiles$sca_condition <- fct_relevel(indiv_percentiles$sca_condition, "XXY", after = 0)
-        indiv_percentiles$sca_condition <- fct_relevel(indiv_percentiles$sca_condition, "XXX", after = Inf)
-        
-        # Create a plotly boxplot
-        p <- plot_ly(indiv_percentiles, 
-                     y = ~fct_reorder(milestone, Age), 
-                     x = ~Age, 
-                     color = ~sca_condition,
-                     colors = c("#fdb863", "cyan3", "#4B0082"),
-                     type = "box", 
-                     boxpoints = "outliers", 
-                     text = ~paste("ID :", study_id_extraordinary, 
-                                   "\nAge =", round(Age, 1), "Months", 
-                                   "\nPercentile =", round(Percentile, 1)),
-                     hoverinfo = "text") %>%
-          layout(
-            legend = list(
-              x = 0.95,  # Position from the left
-              y = 0.05,  # Position from the bottom
-              xanchor = "right",  # Anchor legend to the right
-              yanchor = "bottom",  # Anchor legend to the bottom
-              traceorder = "reversed"  # Reverse the legend order
-            )
+    temp_list$data <- append(temp_list$data, list(as.data.frame(t(percentiles))))
+  })
+  
+  # Table showing counts for each SCT for Panel 1
+  output$counts <- renderUI({
+    
+    tbl_counts <- data.frame(`Total` = length(unique(indiv_percentiles$study_id_extraordinary)),
+                             `XXY` = length(unique(indiv_percentiles$study_id_extraordinary[indiv_percentiles$sca_condition == "XXY"])),
+                             `XYY` = length(unique(indiv_percentiles$study_id_extraordinary[indiv_percentiles$sca_condition == "XYY"])),
+                             `XXX` = length(unique(indiv_percentiles$study_id_extraordinary[indiv_percentiles$sca_condition == "XXX"])))
+    
+    HTML(
+      kable(tbl_counts, "html") %>%
+        kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+    )
+    
+  })
+  
+  
+  # SCT Boxplots for Panel 2
+  output$scaPlot <- renderPlotly({
+    
+    #Subset domain
+    if(input$domain == "Motor"){
+      indiv_percentiles <- indiv_percentiles %>% filter(domain == "Motor")
+    }
+    
+    if(input$domain == "Language"){
+      indiv_percentiles <- indiv_percentiles %>% filter(domain == "Language")
+    }
+    
+    # Filter to age range 
+    indiv_percentiles <- indiv_percentiles %>% 
+      group_by(milestone) %>% 
+      filter(min(Age, na.rm = T) >= input$age[1]) %>% 
+      filter(max(Age, na.rm = T) <= input$age[2]) 
+    
+    
+    # Explicitly reorder the milestone factor by median Age, descending
+    indiv_percentiles <- indiv_percentiles %>%
+      mutate(milestone = as.character(milestone)) %>% 
+      mutate(milestone = fct_reorder(milestone, Age, .fun = median, .desc = FALSE))
+    
+    # Identify outliers manually per group (you may need to adapt this to your data structure)
+    outliers <- indiv_percentiles %>%
+      group_by(sca_condition, milestone) %>%
+      mutate(Q1 = quantile(Age, 0.25, na.rm = T),
+             Q3 = quantile(Age, 0.75, na.rm = T),
+             IQR = Q3 - Q1,
+             is_outlier = Age < (Q1 - 1.5 * IQR) | Age > (Q3 + 1.5 * IQR)) %>%
+      filter(is_outlier)
+    
+    
+    # Calculate summary percentiles for each boxplot group
+    box_summary <- indiv_percentiles %>%
+      group_by(milestone, sca_condition) %>%
+      summarise(
+        p25 = quantile(Age, 0.25, na.rm = TRUE),
+        p50 = quantile(Age, 0.50, na.rm = TRUE),
+        p75 = quantile(Age, 0.75, na.rm = TRUE),
+        p90 = quantile(Age, 0.90, na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      mutate(hovertext = paste0(
+        "25th percentile: ", round(p25, 1), " mo\n",
+        "Median: ", round(p50, 1), " mo\n",
+        "75th percentile: ", round(p75, 1), " mo\n",
+        "90th percentile: ", round(p90, 1), " mo"
+      ))
+    
+    indiv_percentiles <- indiv_percentiles %>%
+      left_join(box_summary, by = c("milestone", "sca_condition"))
+    
+    
+    # Subset data
+    if(input$sca_condition == "All SCTs"){
+      
+      # Reorder sca_condition so that "XXY" comes first and "XXX" comes last
+      indiv_percentiles$sca_condition <- fct_relevel(indiv_percentiles$sca_condition, "XXY", after = 0)
+      indiv_percentiles$sca_condition <- fct_relevel(indiv_percentiles$sca_condition, "XXX", after = Inf)
+      
+      # Create a plotly boxplot
+      p <- plot_ly(indiv_percentiles, 
+                   y = ~fct_reorder(milestone, Age), 
+                   x = ~Age, 
+                   color = ~sca_condition,
+                   colors = c("#fdb863", "cyan3", "#4B0082"),
+                   type = "box", 
+                   boxpoints = "outliers", 
+                   text = ~paste("ID :", study_id_extraordinary, 
+                                 "\nAge =", round(Age, 1), "Months", 
+                                 "\nPercentile =", round(Percentile, 1)),
+                   hoverinfo = "text") %>%
+        layout(
+          legend = list(
+            x = 0.95,  # Position from the left
+            y = 0.05,  # Position from the bottom
+            xanchor = "right",  # Anchor legend to the right
+            yanchor = "bottom",  # Anchor legend to the bottom
+            traceorder = "reversed"  # Reverse the legend order
           )
-        
-        # Show the plot
-        p <- p %>%
-          layout(boxmode = "group",
-                 xaxis = list(title = "Age Milestone was Achieved (Months)",
-                              tickfont = list(size = 14)),  # Custom x-axis label
-                 yaxis = list(title = ""), 
-                 font = list(size = 16))
-        p
-        
-          
-      }else{
-        # pick fill color
-        scafill = case_when(input$sca_condition == "XXY" ~ "#fdb863", 
-                            input$sca_condition == "XYY" ~ "cyan3",
-                            input$sca_condition == "XXX" ~ "#4B0082")
-        
-        # subset data
-        sca_milestones <- indiv_percentiles %>% filter(sca_condition == input$sca_condition)
-        sca_outliers <- outliers %>% filter(sca_condition == input$sca_condition)
-        
-        # Create a plotly boxplot
-        p <- plot_ly(sca_milestones, 
-                     y = ~fct_reorder(milestone, Age), 
-                     x = ~Age, 
-                     color = I(scafill),
-                     type = "box", boxpoints = "outliers", 
-                     text = ~paste("ID :", study_id_extraordinary, 
-                                   "\nAge =", round(Age, 1), "Months", 
-                                   "\nPercentile =", round(Percentile, 1)), 
-                     hoverinfo = "text") %>%
-          layout(
-            xaxis = list(
-              range = c(0, 50)  # Replace with your desired min and max values
-            )
-          )
-        
-        # Show the plot
-        p <- p %>%
-          layout(boxmode = "group",
-                 xaxis = list(title = "Age Milestone was Achieved (Months)",
-                              tickfont = list(size = 14)),  # Custom x-axis label
-                 yaxis = list(title = ""), 
-                 font = list(size = 16))
-        p
-      }
-
-    })
-    
-    
-    # Percentile summary for Panel 2
-    output$summary <- renderUI({
-      #Subset domain
-      if(input$domain == "Motor"){
-        indiv_percentiles <- indiv_percentiles %>% filter(domain == "Motor")
-      }
+        )
       
-      if(input$domain == "Language"){
-        indiv_percentiles <- indiv_percentiles %>% filter(domain == "Language")
-      }
-      
-      # Filter to age range 
-      indiv_percentiles <- indiv_percentiles %>% 
-        group_by(milestone) %>% 
-        filter(min(Age, na.rm = T) >= input$age[1]) %>% 
-        filter(max(Age, na.rm = T) <= input$age[2])  
+      # Show the plot
+      p <- p %>%
+        layout(boxmode = "group",
+               xaxis = list(title = "Age Milestone was Achieved (Months)",
+                            tickfont = list(size = 14)),  # Custom x-axis label
+               yaxis = list(title = ""), 
+               font = list(size = 16))
+      p
       
       
-      # Explicitly reorder the milestone factor by median Age, descending
-      indiv_percentiles <- indiv_percentiles %>%
-        mutate(milestone = as.character(milestone)) %>% 
-        mutate(milestone = fct_reorder(milestone, Age, .fun = median, .desc = FALSE))
-      
-      # Treat all SCAs differently 
-      if(input$sca_condition == "All SCTs"){
-        tbl <- indiv_percentiles %>% 
-          filter(!is.na(Age)) %>% 
-          group_by(milestone) %>% 
-          summarise(`Total N` = n(), 
-                    `25th` = round(quantile(Age, 0.25, na.rm = T), 1), 
-                    `50th` = round(quantile(Age, 0.5, na.rm = T), 1),
-                    `75th` = round(quantile(Age, 0.75, na.rm = T), 1),
-                    `90th` = round(quantile(Age, 0.9, na.rm = T), 1)) %>% 
-          rename(Milestone = milestone) %>% 
-          arrange(desc(`75th`))
-        
-      }else{
-        tbl <- indiv_percentiles %>% 
-          filter(sca_condition == input$sca_condition) %>% 
-          filter(!is.na(Age)) %>% 
-          group_by(milestone) %>% 
-          summarise(`Total N` = n(), 
-                    `25th` = round(quantile(Age, 0.25, na.rm = T), 1), 
-                    `50th` = round(quantile(Age, 0.5, na.rm = T), 1),
-                    `75th` = round(quantile(Age, 0.75, na.rm = T), 1),
-                    `90th` = round(quantile(Age, 0.9, na.rm = T), 1)) %>% 
-          rename(Milestone = milestone) %>% 
-          arrange(desc(`75th`))
-      }
-      
-      HTML(
-        kable(tbl, "html") %>%
-          kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
-      )
-    })
-    
-    
-    # Small multiples view of comparison to GP 90th percentile for Panel 2
-    output$over90plot <- renderPlotly({
-      #Subset domain
-      if(input$domain == "Motor"){
-        indiv_percentiles <- indiv_percentiles %>% filter(domain == "Motor")
-      }
-      
-      if(input$domain == "Language"){
-        indiv_percentiles <- indiv_percentiles %>% filter(domain == "Language")
-      }
-      
-      # Filter to age range 
-      indiv_percentiles <- indiv_percentiles %>% 
-        group_by(milestone) %>% 
-        filter(min(Age, na.rm = T) >= input$age[1]) %>% 
-        filter(max(Age, na.rm = T) <= input$age[2])  
-      
-      
-      plot_dat = indiv_percentiles %>% filter(Age > norms_90th)
-      
-      if(input$sca_condition != "All SCTs"){
-        plot_dat <- plot_dat %>% filter(sca_condition == input$sca_condition)
-      }
-      
+    }else{
       # pick fill color
-      scafill = case_when(input$sca_condition == "All SCTs" ~ "darkseagreen3", 
-                          input$sca_condition == "XXY" ~ "#fdb863", 
+      scafill = case_when(input$sca_condition == "XXY" ~ "#fdb863", 
                           input$sca_condition == "XYY" ~ "cyan3",
                           input$sca_condition == "XXX" ~ "#4B0082")
       
+      # subset data
+      sca_milestones <- indiv_percentiles %>% filter(sca_condition == input$sca_condition)
+      sca_outliers <- outliers %>% filter(sca_condition == input$sca_condition)
       
-      # Manually bin data & aggregate IDs for hover text
-      df_binned <- plot_dat %>%
-        group_by(milestone) %>% 
-        mutate(bin_width = (max(Age) - min(Age))/10) %>% 
-        mutate(bin = cut(Age, breaks = seq(floor(min(Age)), ceiling(max(Age)), by = unique(bin_width)), include.lowest = TRUE)) %>%
-        ungroup() %>% 
-        group_by(milestone, bin) %>%
-        summarise(
-          bin_width = bin_width,
-          count = n(),
-          ids = paste(study_id_extraordinary, collapse = "<br>"),  # Use <br> for line breaks between IDs
-          bin_center = (as.numeric(sub("\\((.+),.*", "\\1", bin)) + 
-                          as.numeric(sub("[^,]*,([^]]*)\\]", "\\1", bin))) / 2,
-          bin_center = ifelse(is.na(bin_center), 
-                              (as.numeric(sub("\\[(.+),.*", "\\1", bin)) + 
-                                 as.numeric(sub("[^,]*,([^]]*)\\]", "\\1", bin))) / 2, bin_center)
-        ) %>% 
-        group_by(milestone, bin) %>% 
-        slice(1) %>% 
-        filter(!is.na(bin))
-      
-      # Create a full data frame with all bins (including empty ones) for each milestone
-      all_bins <- plot_dat %>%
-        group_by(milestone) %>%
-        summarise(
-          bins = list(seq(floor(min(Age)), ceiling(max(Age)), length.out = 11))  # 10 bins requires 11 breaks
-        ) %>%
-        ungroup() %>%
-        unnest(cols = c(bins)) %>%
-        mutate(
-          bin = cut(bins, breaks = unique(seq(floor(min(plot_dat$Age)), ceiling(max(plot_dat$Age)), length.out = 11)), include.lowest = TRUE)  # Cut based on the actual range of bins
-        )
-      
-      # Merge the original binned data with all possible bins (to include missing ones)
-      df_binned$bin = as.character(df_binned$bin)
-      all_bins$bin = as.character(all_bins$bin)
-      df_binned_complete <- df_binned %>%
-        full_join(all_bins, by = c("milestone", "bin")) %>%
-        # Replace missing counts with 0
-        replace_na(list(count = 0)) %>% 
-        mutate(bin_center = (as.numeric(sub("\\((.+),.*", "\\1", bin)) + 
-                               as.numeric(sub("[^,]*,([^]]*)\\]", "\\1", bin))) / 2) %>% 
-        group_by(milestone, bin) %>% slice(1) %>% ungroup() %>% 
-        group_by(milestone) %>% mutate(mean = mean(bin_center, na.rm = T)) %>% ungroup()
-      
-      # Reverse the order of the facets by reversing the factor levels of 'milestone'
-      df_binned$milestone <- factor(df_binned$milestone, levels = c("Jumping", "2 Word Phrases", "Running", "Walking",
-                                                                    "First Words", "Cruising", "Crawling", "Babbling",
-                                                                    "Sitting", "Rolling Back to Front", 
-                                                                    "Rolling Front to Back", "Cooing"))
-      
-      
-      # Create ggplot with facets
-      genpop$placement = df_binned_complete$mean[match(genpop$milestone, df_binned_complete$milestone)]
-      textplacement <- max(df_binned$count)
-      p <- ggplot(df_binned, aes(x = bin_center, y = count, text = paste("IDs:", ids))) +
-        geom_bar(stat = "identity", fill = scafill, color = "black", position = "dodge", 
-                 aes(width = bin_width)) +
-        geom_text(data = genpop, 
-                  aes(x = placement, y = textplacement, label = paste0("GP 90th = ", round(Q90, 1))), 
-                  inherit.aes = FALSE, size = 4) +
-        facet_wrap(~ milestone, scales = "free_x") + theme_bw() + 
-        ggtitle("Ages Over the General Population 90th Percentile") + 
-        theme(plot.title = element_text(face="bold", size = 16, hjust = 0.5), 
-              text = element_text(size = 14)) + ylim(0, textplacement+1) + 
-        labs(x = "Age of Milestone Achievement (Months)", y = "Count")
-      
-      # Convert ggplot to plotly
-      p_plotly <- ggplotly(p, tooltip = "text")
-      
-      # Display the plot
-      p_plotly  %>%
-        layout(
-          margin = list(b = 50, l = 50) # to fully display the x and y axis labels
-        )
-      
-    })
-    
-    
-    
-    ############ Individual data 
-    # Age boxplot for Panel 3
-    output$indiv <- renderPlotly({
-      
-      #Subset domain
-      if(input$domain == "Motor"){
-        indiv_percentiles <- indiv_percentiles %>% filter(domain == "Motor")
-      }
-      
-      if(input$domain == "Language"){
-        indiv_percentiles <- indiv_percentiles %>% filter(domain == "Language")
-      }
-      
-      # Filter to age range 
-      indiv_percentiles <- indiv_percentiles %>% 
-        group_by(milestone) %>% 
-        filter(min(Age, na.rm = T) >= input$age[1]) %>% 
-        filter(max(Age, na.rm = T) <= input$age[2]) 
-      
-      
-      # Explicitly reorder the milestone factor by median Age, descending
-      indiv_percentiles <- indiv_percentiles %>%
-        mutate(milestone = as.character(milestone)) %>% 
-        mutate(milestone = fct_reorder(milestone, Age, .fun = median, .desc = FALSE))
-      
-      
-      indiv_dat <- indiv_percentiles %>% filter(study_id_extraordinary == input$selected_id) %>% filter(!is.na(Age))
-      sca = indiv_dat$sca_condition[1]
-      sca_milestones <- indiv_percentiles %>% filter(sca_condition == sca)
-      
-      # Filter to percentile range 
-      indiv_dat <- indiv_dat %>% 
-        group_by(milestone) %>% 
-        filter(min(Percentile >= input$percentile[1], na.rm = T) & max(Percentile <= input$percentile[2], na.rm = T))
-      sca_milestones <- sca_milestones %>% filter(milestone %in% indiv_dat$milestone)
-      
-      
-      # pick fill color
-      scafill = case_when(sca == "XXY" ~ "#fdb863", 
-                          sca == "XYY" ~ "cyan3",
-                          sca == "XXX" ~ "#4B0082")
-      
-      if(input$overlay == "Yes"){
-        p <- plot_ly(sca_milestones, 
-                     y = ~fct_reorder(milestone, Age), 
-                     x = ~Age, 
-                     color = I(scafill),
-                     type = "box", 
-                     marker = list(size = 6, color = 'white', line = list(color = 'black', width = 1)),
-                     boxpoints = "all",
-                     jitter = 0.6,
-                     pointpos = 0,
-                     hoverinfo = "skip")
-      }else{
-        # Create a plotly boxplot
-        p <- plot_ly(sca_milestones, 
-                     y = ~fct_reorder(milestone, Age), 
-                     x = ~Age, 
-                     color = I(scafill),
-                     type = "box", boxpoints = FALSE, 
-                     hoverinfo = "skip")
-      }
-      
-      # Overlay custom points from indiv_dat
-      p <- p %>% add_trace(data = indiv_dat,
-                  x = ~Age,
-                  y = ~fct_reorder(milestone, Age),
-                  type = "scatter",
-                  mode = "markers",
-                  marker = list(size = 15, color = 'red', symbol = 'x'),
-                  text = ~paste("ID:", study_id_extraordinary,
-                                "<br>Age:", round(Age, 1), "months",
-                                "<br>Percentile:", round(Percentile, 1)),
-                  hoverinfo = "text",
-                  inherit = FALSE
-        ) %>% 
+      # Create a plotly boxplot
+      p <- plot_ly(sca_milestones, 
+                   y = ~fct_reorder(milestone, Age), 
+                   x = ~Age, 
+                   color = I(scafill),
+                   type = "box", boxpoints = "outliers", 
+                   text = ~paste("ID :", study_id_extraordinary, 
+                                 "\nAge =", round(Age, 1), "Months", 
+                                 "\nPercentile =", round(Percentile, 1)), 
+                   hoverinfo = "text") %>%
         layout(
           xaxis = list(
             range = c(0, 50)  # Replace with your desired min and max values
@@ -572,121 +493,616 @@ server <- function(input, output) {
                xaxis = list(title = "Age Milestone was Achieved (Months)",
                             tickfont = list(size = 14)),  # Custom x-axis label
                yaxis = list(title = ""), 
-               font = list(size = 16), 
-               showlegend = FALSE)
+               font = list(size = 16))
       p
-      
-    })
+    }
+    
+  })
+  
+  
+  # Percentile summary for Panel 2
+  output$summary <- renderUI({
+    #Subset domain
+    if(input$domain == "Motor"){
+      indiv_percentiles <- indiv_percentiles %>% filter(domain == "Motor")
+    }
+    
+    if(input$domain == "Language"){
+      indiv_percentiles <- indiv_percentiles %>% filter(domain == "Language")
+    }
+    
+    # Filter to age range 
+    indiv_percentiles <- indiv_percentiles %>% 
+      group_by(milestone) %>% 
+      filter(min(Age, na.rm = T) >= input$age[1]) %>% 
+      filter(max(Age, na.rm = T) <= input$age[2])  
     
     
-    # Percentile boxplot for Panel 3
-    output$indiv_perc <- renderPlotly({
-      
-      #Subset domain
-      if(input$domain == "Motor"){
-        indiv_percentiles <- indiv_percentiles %>% filter(domain == "Motor")
-      }
-      
-      if(input$domain == "Language"){
-        indiv_percentiles <- indiv_percentiles %>% filter(domain == "Language")
-      }
-      
-      # Filter to age range 
-      indiv_percentiles <- indiv_percentiles %>% 
+    # Explicitly reorder the milestone factor by median Age, descending
+    indiv_percentiles <- indiv_percentiles %>%
+      mutate(milestone = as.character(milestone)) %>% 
+      mutate(milestone = fct_reorder(milestone, Age, .fun = median, .desc = FALSE))
+    
+    # Treat all SCAs differently 
+    if(input$sca_condition == "All SCTs"){
+      tbl <- indiv_percentiles %>% 
+        filter(!is.na(Age)) %>% 
         group_by(milestone) %>% 
-        filter(min(Age, na.rm = T) >= input$age[1]) %>% 
-        filter(max(Age, na.rm = T) <= input$age[2]) 
+        summarise(`Total N` = n(), 
+                  `25th` = round(quantile(Age, 0.25, na.rm = T), 1), 
+                  `50th` = round(quantile(Age, 0.5, na.rm = T), 1),
+                  `75th` = round(quantile(Age, 0.75, na.rm = T), 1),
+                  `90th` = round(quantile(Age, 0.9, na.rm = T), 1)) %>% 
+        rename(Milestone = milestone) %>% 
+        arrange(desc(`75th`))
       
-      
-      # Explicitly reorder the milestone factor by median Age, descending
-      indiv_percentiles <- indiv_percentiles %>%
-        mutate(milestone = as.character(milestone)) %>% 
-        mutate(milestone = fct_reorder(milestone, Age, .fun = median, .desc = FALSE))
-      
-      
+    }else{
+      tbl <- indiv_percentiles %>% 
+        filter(sca_condition == input$sca_condition) %>% 
+        filter(!is.na(Age)) %>% 
+        group_by(milestone) %>% 
+        summarise(`Total N` = n(), 
+                  `25th` = round(quantile(Age, 0.25, na.rm = T), 1), 
+                  `50th` = round(quantile(Age, 0.5, na.rm = T), 1),
+                  `75th` = round(quantile(Age, 0.75, na.rm = T), 1),
+                  `90th` = round(quantile(Age, 0.9, na.rm = T), 1)) %>% 
+        rename(Milestone = milestone) %>% 
+        arrange(desc(`75th`))
+    }
+    
+    HTML(
+      kable(tbl, "html") %>%
+        kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+    )
+  })
+  
+  
+  # Small multiples view of comparison to GP 90th percentile for Panel 2
+  output$over90plot <- renderPlotly({
+    #Subset domain
+    if(input$domain == "Motor"){
+      indiv_percentiles <- indiv_percentiles %>% filter(domain == "Motor")
+    }
+    
+    if(input$domain == "Language"){
+      indiv_percentiles <- indiv_percentiles %>% filter(domain == "Language")
+    }
+    
+    # Filter to age range 
+    indiv_percentiles <- indiv_percentiles %>% 
+      group_by(milestone) %>% 
+      filter(min(Age, na.rm = T) >= input$age[1]) %>% 
+      filter(max(Age, na.rm = T) <= input$age[2])  
+    
+    
+    plot_dat = indiv_percentiles %>% filter(Age > norms_90th)
+    
+    if(input$sca_condition != "All SCTs"){
+      plot_dat <- plot_dat %>% filter(sca_condition == input$sca_condition)
+    }
+    
+    # pick fill color
+    scafill = case_when(input$sca_condition == "All SCTs" ~ "darkseagreen3", 
+                        input$sca_condition == "XXY" ~ "#fdb863", 
+                        input$sca_condition == "XYY" ~ "cyan3",
+                        input$sca_condition == "XXX" ~ "#4B0082")
+    
+    
+    # Manually bin data & aggregate IDs for hover text
+    df_binned <- plot_dat %>%
+      group_by(milestone) %>% 
+      mutate(bin_width = (max(Age) - min(Age))/10) %>% 
+      mutate(bin = cut(Age, breaks = seq(floor(min(Age)), ceiling(max(Age)), by = unique(bin_width)), include.lowest = TRUE)) %>%
+      ungroup() %>% 
+      group_by(milestone, bin) %>%
+      summarise(
+        bin_width = bin_width,
+        count = n(),
+        ids = paste(study_id_extraordinary, collapse = "<br>"),  # Use <br> for line breaks between IDs
+        bin_center = (as.numeric(sub("\\((.+),.*", "\\1", bin)) + 
+                        as.numeric(sub("[^,]*,([^]]*)\\]", "\\1", bin))) / 2,
+        bin_center = ifelse(is.na(bin_center), 
+                            (as.numeric(sub("\\[(.+),.*", "\\1", bin)) + 
+                               as.numeric(sub("[^,]*,([^]]*)\\]", "\\1", bin))) / 2, bin_center)
+      ) %>% 
+      group_by(milestone, bin) %>% 
+      slice(1) %>% 
+      filter(!is.na(bin))
+    
+    # Create a full data frame with all bins (including empty ones) for each milestone
+    all_bins <- plot_dat %>%
+      group_by(milestone) %>%
+      summarise(
+        bins = list(seq(floor(min(Age)), ceiling(max(Age)), length.out = 11))  # 10 bins requires 11 breaks
+      ) %>%
+      ungroup() %>%
+      unnest(cols = c(bins)) %>%
+      mutate(
+        bin = cut(bins, breaks = unique(seq(floor(min(plot_dat$Age)), ceiling(max(plot_dat$Age)), length.out = 11)), include.lowest = TRUE)  # Cut based on the actual range of bins
+      )
+    
+    # Merge the original binned data with all possible bins (to include missing ones)
+    df_binned$bin = as.character(df_binned$bin)
+    all_bins$bin = as.character(all_bins$bin)
+    df_binned_complete <- df_binned %>%
+      full_join(all_bins, by = c("milestone", "bin")) %>%
+      # Replace missing counts with 0
+      replace_na(list(count = 0)) %>% 
+      mutate(bin_center = (as.numeric(sub("\\((.+),.*", "\\1", bin)) + 
+                             as.numeric(sub("[^,]*,([^]]*)\\]", "\\1", bin))) / 2) %>% 
+      group_by(milestone, bin) %>% slice(1) %>% ungroup() %>% 
+      group_by(milestone) %>% mutate(mean = mean(bin_center, na.rm = T)) %>% ungroup()
+    
+    # Reverse the order of the facets by reversing the factor levels of 'milestone'
+    df_binned$milestone <- factor(df_binned$milestone, levels = c("Jumping", "2 Word Phrases", "Running", "Walking",
+                                                                  "First Words", "Cruising", "Crawling", "Babbling",
+                                                                  "Sitting", "Rolling Back to Front", 
+                                                                  "Rolling Front to Back", "Cooing"))
+    
+    
+    # Create ggplot with facets
+    genpop$placement = df_binned_complete$mean[match(genpop$milestone, df_binned_complete$milestone)]
+    textplacement <- max(df_binned$count)
+    p <- ggplot(df_binned, aes(x = bin_center, y = count, text = paste("IDs:", ids))) +
+      geom_bar(stat = "identity", fill = scafill, color = "black", position = "dodge", 
+               aes(width = bin_width)) +
+      geom_text(data = genpop, 
+                aes(x = placement, y = textplacement, label = paste0("GP 90th = ", round(Q90, 1))), 
+                inherit.aes = FALSE, size = 4) +
+      facet_wrap(~ milestone, scales = "free_x") + theme_bw() + 
+      ggtitle("Ages Over the General Population 90th Percentile") + 
+      theme(plot.title = element_text(face="bold", size = 16, hjust = 0.5), 
+            text = element_text(size = 14)) + ylim(0, textplacement+1) + 
+      labs(x = "Age of Milestone Achievement (Months)", y = "Count")
+    
+    # Convert ggplot to plotly
+    p_plotly <- ggplotly(p, tooltip = "text")
+    
+    # Display the plot
+    p_plotly  %>%
+      layout(
+        margin = list(b = 50, l = 50) # to fully display the x and y axis labels
+      )
+    
+  })
+  
+  
+  
+  ############ Individual data 
+  # Age boxplot for Panel 3
+  output$indiv <- renderPlotly({
+    
+    #if bracket only for tab 3, not tab 4
+    #Subset domain
+    if(input$domain == "Motor"){
+      indiv_percentiles <- indiv_percentiles %>% filter(domain == "Motor")
+    }
+    
+    if(input$domain == "Language"){
+      indiv_percentiles <- indiv_percentiles %>% filter(domain == "Language")
+    }
+    
+    #probably don't need for tab 4
+    # Filter to age range 
+    indiv_percentiles <- indiv_percentiles %>% 
+      group_by(milestone) %>% 
+      filter(min(Age, na.rm = T) >= input$age[1]) %>% 
+      filter(max(Age, na.rm = T) <= input$age[2]) 
+    
+    #KEEP for both
+    # Explicitly reorder the milestone factor by median Age, descending
+    indiv_percentiles <- indiv_percentiles %>%
+      mutate(milestone = as.character(milestone)) %>% 
+      mutate(milestone = fct_reorder(milestone, Age, .fun = median, .desc = FALSE))
+    
+    ## ONLY NEED for tab 3 (start if bracket here)
+    if (input$tabs == "individualsummaries"){
       indiv_dat <- indiv_percentiles %>% filter(study_id_extraordinary == input$selected_id) %>% filter(!is.na(Age))
       sca = indiv_dat$sca_condition[1]
       sca_milestones <- indiv_percentiles %>% filter(sca_condition == sca)
-      
-      # Filter to percentile range 
-      indiv_dat <- indiv_dat %>% 
-        group_by(milestone) %>% 
-        filter(min(Percentile >= input$percentile[1], na.rm = T) & max(Percentile <= input$percentile[2], na.rm = T))
-      sca_milestones <- sca_milestones %>% filter(milestone %in% indiv_dat$milestone)
-      
-      
-      # pick fill color
-      scafill = case_when(sca == "XXY" ~ "#fdb863", 
-                          sca == "XYY" ~ "cyan3",
-                          sca == "XXX" ~ "#4B0082")
-      
-      
-      # Sort individual data by percentile
-      ordered_levels <- indiv_dat %>%
-        group_by(milestone) %>%
-        summarise(median_percentile = median(Percentile, na.rm = TRUE)) %>%
-        arrange(median_percentile) %>%
-        pull(milestone)
-      
-      # make sure datasets are ordered  by percentiles
-      sca_milestones$milestone <- factor(sca_milestones$milestone, levels = ordered_levels)
-      indiv_dat$milestone <- factor(indiv_dat$milestone, levels = ordered_levels)
-
-      
-      # Overlay all points for a better comparison
-      if(input$overlay == "Yes"){
-        p <- plot_ly(sca_milestones, 
-                     y = ~milestone, 
-                     x = ~Percentile, 
-                     color = I(scafill),
-                     type = "box", 
-                     marker = list(size = 6, color = 'white', line = list(color = 'black', width = 1)),
-                     boxpoints = "all",
-                     jitter = 0.6,
-                     pointpos = 0,
-                     hoverinfo = "skip")
-        
-      # plots without scatter
-      }else{
-        p <- plot_ly(sca_milestones, 
-                     y = ~milestone, 
-                     x = ~Percentile, 
-                     color = I(scafill),
-                     type = "box", 
-                     boxpoints = FALSE,
-                     hoverinfo = "skip")
-      }
-      
-      # Specify the information that is shown when hovering over points
-      p <- p %>% add_trace(data = indiv_dat,
-                  x = ~Percentile,
-                  y = ~milestone,
-                  type = "scatter",
-                  mode = "markers",
-                  marker = list(size = 15, color = 'red', symbol = 'x'),
-                  text = ~paste("ID:", study_id_extraordinary,
-                                "<br>Age:", round(Age, 1), "months",
-                                "<br>Percentile:", round(Percentile, 1)),
-                  hoverinfo = "text",
-                  inherit = FALSE) %>% 
-        layout(xaxis = list(range = c(0, 100)),yaxis = list(title = ""),
-          shapes = list(
-            list(type = "rect", fillcolor = "rgba(255, 0, 0, 0.2)", 
-              line = list(color = "red", width = 0), x0 = 90, x1 = 100, y0 = 0, y1 = 1, xref = "x", yref = "paper")
-          )
+    } else if (input$tabs == "inputmilestones"){
+      # do something
+    }
+    
+    
+    
+    # Filter to percentile range 
+    indiv_dat <- indiv_dat %>% 
+      group_by(milestone) %>% 
+      filter(min(Percentile >= input$percentile[1], na.rm = T) & max(Percentile <= input$percentile[2], na.rm = T))
+    sca_milestones <- sca_milestones %>% filter(milestone %in% indiv_dat$milestone)
+    
+    
+    # pick fill color
+    scafill = case_when(sca == "XXY" ~ "#fdb863", 
+                        sca == "XYY" ~ "cyan3",
+                        sca == "XXX" ~ "#4B0082")
+    
+    if(input$overlay == "Yes"){
+      p <- plot_ly(sca_milestones, 
+                   y = ~fct_reorder(milestone, Age), 
+                   x = ~Age, 
+                   color = I(scafill),
+                   type = "box", 
+                   marker = list(size = 6, color = 'white', line = list(color = 'black', width = 1)),
+                   boxpoints = "all",
+                   jitter = 0.6,
+                   pointpos = 0,
+                   hoverinfo = "skip")
+    }else{
+      # Create a plotly boxplot
+      p <- plot_ly(sca_milestones, 
+                   y = ~fct_reorder(milestone, Age), 
+                   x = ~Age, 
+                   color = I(scafill),
+                   type = "box", boxpoints = FALSE, 
+                   hoverinfo = "skip")
+    }
+    
+    # Overlay custom points from indiv_dat
+    p <- p %>% add_trace(data = indiv_dat,
+                         x = ~Age,
+                         y = ~fct_reorder(milestone, Age),
+                         type = "scatter",
+                         mode = "markers", ################################################## ADD FOR LOOP FOR DIFFERENT CHECKMARKS, SEE TEAMS
+                         marker = list(size = 15, color = 'red', symbol = 'x'),
+                         text = ~paste("ID:", study_id_extraordinary,
+                                       "<br>Age:", round(Age, 1), "months",
+                                       "<br>Percentile:", round(Percentile, 1)),
+                         hoverinfo = "text",
+                         inherit = FALSE
+    ) %>% 
+      layout(
+        xaxis = list(
+          range = c(0, 50)  # Replace with your desired min and max values
         )
+      )
+    
+    # Show the plot
+    p <- p %>%
+      layout(boxmode = "group",
+             xaxis = list(title = "Age Milestone was Achieved (Months)",
+                          tickfont = list(size = 14)),  # Custom x-axis label
+             yaxis = list(title = ""), 
+             font = list(size = 16), 
+             showlegend = FALSE)
+    p
+    
+  })
+  
+  
+  # Percentile boxplot for Panel 3
+  output$indiv_perc <- renderPlotly({
+    
+    #Subset domain
+    if(input$domain == "Motor"){
+      indiv_percentiles <- indiv_percentiles %>% filter(domain == "Motor")
+    }
+    
+    if(input$domain == "Language"){
+      indiv_percentiles <- indiv_percentiles %>% filter(domain == "Language")
+    }
+    
+    # Filter to age range 
+    indiv_percentiles <- indiv_percentiles %>% 
+      group_by(milestone) %>% 
+      filter(min(Age, na.rm = T) >= input$age[1]) %>% 
+      filter(max(Age, na.rm = T) <= input$age[2]) 
+    
+    
+    # Explicitly reorder the milestone factor by median Age, descending
+    indiv_percentiles <- indiv_percentiles %>%
+      mutate(milestone = as.character(milestone)) %>% 
+      mutate(milestone = fct_reorder(milestone, Age, .fun = median, .desc = FALSE))
+    
+    
+    indiv_dat <- indiv_percentiles %>% filter(study_id_extraordinary == input$selected_id) %>% filter(!is.na(Age))
+    sca = indiv_dat$sca_condition[1]
+    sca_milestones <- indiv_percentiles %>% filter(sca_condition == sca)
+    
+    # Filter to percentile range 
+    indiv_dat <- indiv_dat %>% 
+      group_by(milestone) %>% 
+      filter(min(Percentile >= input$percentile[1], na.rm = T) & max(Percentile <= input$percentile[2], na.rm = T))
+    sca_milestones <- sca_milestones %>% filter(milestone %in% indiv_dat$milestone)
+    
+    
+    # pick fill color
+    scafill = case_when(sca == "XXY" ~ "#fdb863", 
+                        sca == "XYY" ~ "cyan3",
+                        sca == "XXX" ~ "#4B0082")
+    
+    
+    # Sort individual data by percentile
+    ordered_levels <- indiv_dat %>%
+      group_by(milestone) %>%
+      summarise(median_percentile = median(Percentile, na.rm = TRUE)) %>%
+      arrange(median_percentile) %>%
+      pull(milestone)
+    
+    # make sure datasets are ordered  by percentiles
+    sca_milestones$milestone <- factor(sca_milestones$milestone, levels = ordered_levels)
+    indiv_dat$milestone <- factor(indiv_dat$milestone, levels = ordered_levels)
+    
+    
+    # Overlay all points for a better comparison
+    if(input$overlay == "Yes"){
+      p <- plot_ly(sca_milestones, 
+                   y = ~milestone, 
+                   x = ~Percentile, 
+                   color = I(scafill),
+                   type = "box", 
+                   marker = list(size = 6, color = 'white', line = list(color = 'black', width = 1)),
+                   boxpoints = "all",
+                   jitter = 0.6,
+                   pointpos = 0,
+                   hoverinfo = "skip")
       
-      # Show the plot
-      p <- p %>%
-        layout(boxmode = "group",
-               xaxis = list(title = "Achievement Percentile",
-                            tickfont = list(size = 14)),  # Custom x-axis label
-               yaxis = list(title = ""), 
-               font = list(size = 16), 
-               showlegend = FALSE)
-      p
-      
+      # plots without scatter
+    }else{
+      p <- plot_ly(sca_milestones, 
+                   y = ~milestone, 
+                   x = ~Percentile, 
+                   color = I(scafill),
+                   type = "box", 
+                   boxpoints = FALSE,
+                   hoverinfo = "skip")
+    }
+    
+    # Specify the information that is shown when hovering over points
+    p <- p %>% add_trace(data = indiv_dat,
+                         x = ~Percentile,
+                         y = ~milestone,
+                         type = "scatter",
+                         mode = "markers",
+                         marker = list(size = 15, color = 'red', symbol = '*'),
+                         text = ~paste("ID:", study_id_extraordinary,
+                                       "<br>Age:", round(Age, 1), "months",
+                                       "<br>Percentile:", round(Percentile, 1)),
+                         hoverinfo = "text",
+                         inherit = FALSE) %>% 
+      layout(xaxis = list(range = c(0, 100)),yaxis = list(title = ""),
+             shapes = list(
+               list(type = "rect", fillcolor = "rgba(255, 0, 0, 0.2)", 
+                    line = list(color = "red", width = 0), x0 = 90, x1 = 100, y0 = 0, y1 = 1, xref = "x", yref = "paper")
+             )
+      )
+    
+    # Show the plot
+    p <- p %>%
+      layout(boxmode = "group",
+             xaxis = list(title = "Achievement Percentile",
+                          tickfont = list(size = 14)),  # Custom x-axis label
+             yaxis = list(title = ""), 
+             font = list(size = 16), 
+             showlegend = FALSE)
+    p
+    
+    
+    ########## TAB 4
+    output$dataTable <- renderTable({
+      milestoneData()
     })
+    
+  })
+  
+  ############ Individual data 
+  # Age boxplot for Panel 4
+  output$indiv <- renderPlotly({
+    
+    #if bracket only for tab 3, not tab 4
+    #Subset domain
+    if(input$domain == "Motor"){
+      indiv_percentiles <- indiv_percentiles %>% filter(domain == "Motor")
+    }
+    
+    if(input$domain == "Language"){
+      indiv_percentiles <- indiv_percentiles %>% filter(domain == "Language")
+    }
+    
+    #probably don't need for tab 4
+    # Filter to age range 
+    indiv_percentiles <- indiv_percentiles %>% 
+      group_by(milestone) %>% 
+      filter(min(Age, na.rm = T) >= input$age[1]) %>% 
+      filter(max(Age, na.rm = T) <= input$age[2]) 
+    
+    #KEEP for both
+    # Explicitly reorder the milestone factor by median Age, descending
+    indiv_percentiles <- indiv_percentiles %>%
+      mutate(milestone = as.character(milestone)) %>% 
+      mutate(milestone = fct_reorder(milestone, Age, .fun = median, .desc = FALSE))
+    
+    ## ONLY NEED for tab 3 (start if bracket here)
+    if (input$tabs == "individualsummaries"){
+      indiv_dat <- indiv_percentiles %>% filter(study_id_extraordinary == input$selected_id) %>% filter(!is.na(Age))
+      sca = indiv_dat$sca_condition[1]
+      sca_milestones <- indiv_percentiles %>% filter(sca_condition == sca)
+    } else if (input$tabs == "inputmilestones"){
+      # do something
+    }
+    
+    
+    
+    # Filter to percentile range 
+    indiv_dat <- indiv_dat %>% 
+      group_by(milestone) %>% 
+      filter(min(Percentile >= input$percentile[1], na.rm = T) & max(Percentile <= input$percentile[2], na.rm = T))
+    sca_milestones <- sca_milestones %>% filter(milestone %in% indiv_dat$milestone)
+    
+    
+    # pick fill color
+    scafill = case_when(sca == "XXY" ~ "#fdb863", 
+                        sca == "XYY" ~ "cyan3",
+                        sca == "XXX" ~ "#4B0082")
+    
+    if(input$overlay == "Yes"){
+      p <- plot_ly(sca_milestones, 
+                   y = ~fct_reorder(milestone, Age), 
+                   x = ~Age, 
+                   color = I(scafill),
+                   type = "box", 
+                   marker = list(size = 6, color = 'white', line = list(color = 'black', width = 1)),
+                   boxpoints = "all",
+                   jitter = 0.6,
+                   pointpos = 0,
+                   hoverinfo = "skip")
+    }else{
+      # Create a plotly boxplot
+      p <- plot_ly(sca_milestones, 
+                   y = ~fct_reorder(milestone, Age), 
+                   x = ~Age, 
+                   color = I(scafill),
+                   type = "box", boxpoints = FALSE, 
+                   hoverinfo = "skip")
+    }
+    
+    # Overlay custom points from indiv_dat
+    p <- p %>% add_trace(data = indiv_dat, ##### Replace with reactive data frame
+                         x = ~Age,
+                         y = ~fct_reorder(milestone, Age),
+                         type = "scatter",
+                         mode = "markers", ################################################## ADD FOR LOOP FOR DIFFERENT CHECKMARKS, SEE TEAMS
+                         marker = list(size = 15, color = 'red', symbol = 'x'),
+                         text = ~paste("ID:", study_id_extraordinary,
+                                       "<br>Age:", round(Age, 1), "months",
+                                       "<br>Percentile:", round(Percentile, 1)),
+                         hoverinfo = "text",
+                         inherit = FALSE
+    ) %>% 
+      layout(
+        xaxis = list(
+          range = c(0, 50)  # Replace with your desired min and max values
+        )
+      )
+    
+    # Show the plot
+    p <- p %>%
+      layout(boxmode = "group",
+             xaxis = list(title = "Age Milestone was Achieved (Months)",
+                          tickfont = list(size = 14)),  # Custom x-axis label
+             yaxis = list(title = ""), 
+             font = list(size = 16), 
+             showlegend = FALSE)
+    p
+    
+  })
+  
+  
+  # Percentile boxplot for Panel 3
+  output$indiv_perc <- renderPlotly({
+    
+    #Subset domain
+    if(input$domain == "Motor"){
+      indiv_percentiles <- indiv_percentiles %>% filter(domain == "Motor")
+    }
+    
+    if(input$domain == "Language"){
+      indiv_percentiles <- indiv_percentiles %>% filter(domain == "Language")
+    }
+    
+    # Filter to age range 
+    indiv_percentiles <- indiv_percentiles %>% 
+      group_by(milestone) %>% 
+      filter(min(Age, na.rm = T) >= input$age[1]) %>% 
+      filter(max(Age, na.rm = T) <= input$age[2]) 
+    
+    
+    # Explicitly reorder the milestone factor by median Age, descending
+    indiv_percentiles <- indiv_percentiles %>%
+      mutate(milestone = as.character(milestone)) %>% 
+      mutate(milestone = fct_reorder(milestone, Age, .fun = median, .desc = FALSE))
+    
+    
+    indiv_dat <- indiv_percentiles %>% filter(study_id_extraordinary == input$selected_id) %>% filter(!is.na(Age))
+    sca = indiv_dat$sca_condition[1]
+    sca_milestones <- indiv_percentiles %>% filter(sca_condition == sca)
+    
+    # Filter to percentile range 
+    indiv_dat <- indiv_dat %>% 
+      group_by(milestone) %>% 
+      filter(min(Percentile >= input$percentile[1], na.rm = T) & max(Percentile <= input$percentile[2], na.rm = T))
+    sca_milestones <- sca_milestones %>% filter(milestone %in% indiv_dat$milestone)
+    
+    
+    # pick fill color
+    scafill = case_when(sca == "XXY" ~ "#fdb863", 
+                        sca == "XYY" ~ "cyan3",
+                        sca == "XXX" ~ "#4B0082")
+    
+    
+    # Sort individual data by percentile
+    ordered_levels <- indiv_dat %>%
+      group_by(milestone) %>%
+      summarise(median_percentile = median(Percentile, na.rm = TRUE)) %>%
+      arrange(median_percentile) %>%
+      pull(milestone)
+    
+    # make sure datasets are ordered  by percentiles
+    sca_milestones$milestone <- factor(sca_milestones$milestone, levels = ordered_levels)
+    indiv_dat$milestone <- factor(indiv_dat$milestone, levels = ordered_levels)
+    
+    
+    # Overlay all points for a better comparison
+    if(input$overlay == "Yes"){
+      p <- plot_ly(sca_milestones, 
+                   y = ~milestone, 
+                   x = ~Percentile, 
+                   color = I(scafill),
+                   type = "box", 
+                   marker = list(size = 6, color = 'white', line = list(color = 'black', width = 1)),
+                   boxpoints = "all",
+                   jitter = 0.6,
+                   pointpos = 0,
+                   hoverinfo = "skip")
+      
+      # plots without scatter
+    }else{
+      p <- plot_ly(sca_milestones, 
+                   y = ~milestone, 
+                   x = ~Percentile, 
+                   color = I(scafill),
+                   type = "box", 
+                   boxpoints = FALSE,
+                   hoverinfo = "skip")
+    }
+    
+    # Specify the information that is shown when hovering over points
+    p <- p %>% add_trace(data = indiv_dat,
+                         x = ~Percentile,
+                         y = ~milestone,
+                         type = "scatter",
+                         mode = "markers",
+                         marker = list(size = 15, color = 'red', symbol = '*'),
+                         text = ~paste("ID:", study_id_extraordinary,
+                                       "<br>Age:", round(Age, 1), "months",
+                                       "<br>Percentile:", round(Percentile, 1)),
+                         hoverinfo = "text",
+                         inherit = FALSE) %>% 
+      layout(xaxis = list(range = c(0, 100)),yaxis = list(title = ""),
+             shapes = list(
+               list(type = "rect", fillcolor = "rgba(255, 0, 0, 0.2)", 
+                    line = list(color = "red", width = 0), x0 = 90, x1 = 100, y0 = 0, y1 = 1, xref = "x", yref = "paper")
+             )
+      )
+    
+    # Show the plot
+    p <- p %>%
+      layout(boxmode = "group",
+             xaxis = list(title = "Achievement Percentile",
+                          tickfont = list(size = 14)),  # Custom x-axis label
+             yaxis = list(title = ""), 
+             font = list(size = 16), 
+             showlegend = FALSE)
+    p
+    
+    
+    ########## TAB 4
+    output$dataTable <- renderTable({
+      milestoneData()
+    })
+    
+  })
 }
 
 # Run the application 
