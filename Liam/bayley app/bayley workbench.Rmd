@@ -13,6 +13,7 @@ output: html_document:
 ```{r}
 library(tidyverse)
 library(ggplot2)
+library(gamlss)
 
 
 composite <- readRDS("Bayley_Composite_scores.RDS")
@@ -73,7 +74,7 @@ GSV_p
 scaled_p
 ```
 ### Converting Scores from Bayley 3 to Bayley 4 via Z-Score
-
+#### Note: Only need to do the conversions for the GSV data. All code is completed below, in case of future changes
 
 The Bayley-III has a mean $(\mu)$ of 500 and standard deviation $(\sigma)$ of 100.
 The Bayley-IV has a mean $(\mu)$ of 500 and a standard deviation $(\sigma)$ of 25.
@@ -118,5 +119,44 @@ comp_plot <- ggplot(composite_IV[composite_IV$Score_III < 450, ], aes(x=Score_II
 comp_plot
 
 ```
+### GAMLSS plots for GSV
+```{R}
+#ggplot(gsv, aes(x=bsid_age_calc, y = ))
+
+       
+gsv_nona_cog <- GSV %>%
+  filter(domain == "Cognitive") %>%
+  filter(!is.na(bsid_age_calc)) %>%
+  filter(!is.na("Cognitive")) %>%
+  dplyr::select(bsid_age_calc, domain == "Cognitive")
+
+gamlss_cog <- gamlss(
+  formula = height ~ pb(bsid_age_calc, lambda = 5),
+  sigma.formula = ~ pb(bsid_age_calc),
+  nu.formula = ~1,
+  tau.formula = ~1,
+  data = all_hgt,
+  family = BCCG() 
+)
+
+# 1. Prediction ages
+ages <- seq(2, 41, by = 0.5)
+
+# 2. Build newdata with all required covariates used in the model
+newdata <- data.frame(bsid_age_calc = ages)
+
+# 3. Get predicted distribution parameters from the model
+params <- predictAll(gamlss_cog, newdata = newdata)
+
+# 4. Calculate centiles manually using the BCCG distribution quantile function
+centiles <- c(5, 10, 25, 50, 75, 90, 95)
+q_vals <- sapply(centiles / 100, function(p) {
+  qBCCG(p, mu = params$mu, sigma = params$sigma, nu = params$nu)
+})
+
+# 5. Create a dataframe of predicted centiles
+lms_cog <- data.frame(age = ages, q_vals)
+colnames(lms_hgt)[-1] <- paste0("P", centiles)
 
 
+```
