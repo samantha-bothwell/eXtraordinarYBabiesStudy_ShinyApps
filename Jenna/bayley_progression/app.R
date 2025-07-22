@@ -3,7 +3,7 @@ library(ggplot2)
 
 # Define UI
 ui <- fluidPage(
-  titlePanel("Boxplot by sca_condition and category"),
+  titlePanel("Boxplot by Condition and Category"),
   
   sidebarLayout(
     sidebarPanel(
@@ -11,9 +11,10 @@ ui <- fluidPage(
                   choices = NULL),
       selectInput("selected_category", "Choose Category:",
                   choices = NULL),
-      numericInput("input_score", "Input Score:", value = NA, step = 1),
-      selectInput("input_visit", "Input Visit (Month):",
-                  choices = NULL)
+      numericInput("input_score", "Input GSV Score:", value = NA, step = 1),
+      selectInput("input_visit", "Input Visit Month:",
+                  choices = NULL),
+      actionButton("submit_point", "Enter")  # <-- The new button
     ),
     
     mainPanel(
@@ -25,7 +26,7 @@ ui <- fluidPage(
 # Define Server
 server <- function(input, output, session) {
   
-  # Update dropdowns based on data
+  # dropdowns
   observe({
     req(exists("GSV_copy"))
     
@@ -39,7 +40,16 @@ server <- function(input, output, session) {
                       choices = sort(unique(GSV_copy$redcap_event_name)))
   })
   
-  # Render filtered boxplot + user point
+  # Only show point when user clicks "Enter"
+  user_point <- eventReactive(input$submit_point, {
+    req(input$input_score, input$input_visit)
+    data.frame(
+      score = input$input_score,
+      redcap_event_name = input$input_visit
+    )
+  })
+  
+  # make filtered boxplot with red dot (only after button click)
   output$conditionBoxPlot <- renderPlot({
     req(input$selected_condition, input$selected_category)
     
@@ -47,25 +57,24 @@ server <- function(input, output, session) {
       GSV_copy$sca_condition == input$selected_condition &
         GSV_copy$category == input$selected_category, ]
     
-    ggplot(df, aes(y = as.factor(redcap_event_name), x = score)) +
+    p <- ggplot(df, aes(y = as.factor(redcap_event_name), x = score)) +
       geom_boxplot() +
-      # Add user input point if both are filled in
-      {
-        if (!is.na(input$input_score) && input$input_visit %in% df$redcap_event_name) {
-          geom_point(data = data.frame(
-            score = input$input_score,
-            redcap_event_name = input$input_visit
-          ), aes(x = score, y = redcap_event_name),
-          color = "red", size = 3)
-        } else {
-          NULL
-        }
-      } +
       labs(
         x = "GSV Score",
         y = "Month Visit",
         title = paste("Scores by Visit for", input$selected_category, "in", input$selected_condition)
       )
+    
+    #overlay point
+    if (!is.null(user_point())) {
+      p <- p + geom_point(
+        data = user_point(),
+        aes(x = score, y = redcap_event_name),
+        color = "red", size = 3
+      )
+    }
+    
+    p
   })
 }
 
