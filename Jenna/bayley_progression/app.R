@@ -44,10 +44,22 @@ ui <- fluidPage(
              )
     ),
     
-    tabPanel("GAMLSS Growth Plots",
-             # Tab 3 content here - placeholder
-             h3("GAMLSS Growth Plots"),
-             p("Content for GAMLSS Growth Plots tab goes here.")
+    tabPanel("GAMLSS Growth Plots (Just Cog)",
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("growth_category", "Select Category:",
+                             choices = c("Cognitive", "Receptive Language", "Expressive Language", "Fine Motor", "Gross Motor"), selected = "Cognitive"),
+                 selectInput("growth_sct", "Select SCT Condition:",
+                             choices = unique(indiv_percentiles$sca_condition)),
+                 
+                 numericInput("input_age", "Enter Age (months):", value = NA, min = 0, max = 60),
+                 numericInput("input_score", "Enter Score:", value = NA),
+                 actionButton("plot_point", "Plot Point")
+               ),
+               mainPanel(
+                 plotOutput("cognitive_plot")
+               )
+             )
     ),
     
     tabPanel("Input Growth Tab",
@@ -171,6 +183,49 @@ server <- function(input, output, session) {
                list(x = 90, y = -0.03, xref = "x", yref = "paper",
                     text = "90", showarrow = FALSE, font = list(size = 12))
              ))
+    
+    p
+  })
+  
+  # Store user input point
+  user_cog_point <- reactiveVal(NULL)
+  
+  observeEvent(input$plot_point, {
+    req(input$input_age, input$input_score)
+    user_cog_point(data.frame(age = input$input_age, score = input$input_score))
+  })
+  
+  output$cognitive_plot <- renderPlot({
+    # Reshape for plotting
+    lms_long <- pivot_longer(
+      lms_hgt,
+      cols = -age,
+      names_to = "Percentile",
+      values_to = "Score"
+    )
+    
+    p <- ggplot(lms_long, aes(x = age, y = Score, color = Percentile)) +
+      geom_smooth(size = 1) +
+      labs(
+        title = "Growth Chart: Bayley-4 Cognitive Scores by Age (XXY)",
+        x = "Age (months)",
+        y = "Bayley-4 Cogniitve Score",
+        color = "Percentile"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(hjust = 0.5, face = "bold"),
+        legend.position = "right"
+      )
+    
+    # Add user point if exists
+    if (!is.null(user_cog_point())) {
+      p <- p + 
+        geom_point(data = user_cog_point(), aes(x = age, y = score),
+                   color = "black", size = 3, shape = 16) + # triangle shape
+        geom_text(data = user_cog_point(), aes(x = age, y = score, label = ""),
+                  vjust = -1, hjust = 0.5, color = "black")
+    }
     
     p
   })
