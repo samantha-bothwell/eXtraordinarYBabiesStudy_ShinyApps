@@ -1,0 +1,303 @@
+---
+title: "Bayley"
+author: "Jenna Jimenez"
+date: "2025-07-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(gamlss)
+```
+
+```{r}
+Bayley_GSV_scores <- readRDS("Bayley_GSV_scores.rds")
+```
+
+```{r}
+GSV_copy <- Bayley_GSV_scores
+```
+
+```{r}
+
+Scaled_copy <- Bayley_Scaled_scores
+  
+Composite_copy <- Bayley_Composite_scores
+```
+
+GSV Work:
+  - Make month variables easier to work with
+  - Pivot Longer
+  - Convert B3 to B4
+  - Remove 2 month visits
+```{r, fig.height=10, fig.width=10}
+mutate(GSV_copy, redcap_event_name = as.factor(redcap_event_name))
+
+table(GSV_copy$redcap_event_name)
+
+GSV_copy <- GSV_copy %>%
+  mutate(redcap_event_name = case_when(redcap_event_name == "2_month_visit_arm_1" ~ 2,
+                                 redcap_event_name == "6_month_visit_arm_1" ~ 6,
+                                 redcap_event_name == "12_month_visit_arm_1" ~ 12,
+                                 redcap_event_name == "24_month_visit_arm_1" ~ 24,
+                                 redcap_event_name == "36_month_visit_arm_1" ~ 36))
+
+table(GSV_copy$redcap_event_name)
+
+GSV_copy <- pivot_longer(GSV_copy,
+                         cols = starts_with("bsid_gsv"),
+                         names_to = "category",
+                         values_to = "score") %>%
+  mutate(category = case_when(category == "bsid_gsv_cog" ~ "Cognitive", 
+                              category == "bsid_gsv_ec" ~ "Expressive", 
+                              category == "bsid_gsv_rc" ~ "Receptive", 
+                              category == "bsid_gsv_gm" ~ "Gross Motor", 
+                              category == "bsid_gsv_fm" ~ "Fine Motor"))
+
+GSV_copy <- GSV_copy %>%
+  mutate(z_score = (score - 500) / 100) %>%
+  mutate(bayley4score = round((z_score * 25) + 500))
+
+GSV_copy <- filter(GSV_copy, redcap_event_name != 2)
+
+table(GSV_copy$redcap_event_name)
+```
+
+```{r, fig.height=10, fig.width=10}
+
+set.seed(123)
+
+ggplot(GSV_copy, aes(y = score, x = bsid_age_calc, color = sca_condition))+
+  geom_jitter(width = 1.5, height = 0, alpha = 0.7) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(
+    x = "Month Visit",
+    y = "GSV Score",
+    color = "SCA Condition",
+    title = "Scores Over Time by SCA Condition and Category") +
+  facet_wrap(~ category)
+
+ggplot(GSV_copy, aes(y = score, x = bsid_age_calc, color = sca_condition))+
+  geom_smooth(se = FALSE) +
+  labs(
+    x = "Month Visit",
+    y = "GSV Score",
+    color = "SCA Condition",
+    title = "Scores Over Time by SCA Condition and Category") +
+  facet_wrap(~ category)
+
+ggplot(GSV_copy, aes(y = score, x = as.factor(redcap_event_name)))+
+  geom_boxplot() +
+  labs(y = "GSV Score",
+    x = "Month Visit",
+    title = "Scores by Month and Category") +
+  facet_wrap(~ category)
+
+```
+
+```{r}
+Scaled_copy <- mutate(Scaled_copy, redcap_event_name = as.factor(redcap_event_name))
+
+Scaled_copy <- mutate(Scaled_copy, bsid_mot_sumscaled = as.double(as.factor(bsid_mot_sumscaled)))
+
+table(Scaled_copy$redcap_event_name)
+
+summary(Scaled_copy$score)
+
+Scaled_copy <- Scaled_copy %>%
+  mutate(redcap_event_name = case_when(redcap_event_name == "2_month_visit_arm_1" ~ 2,
+                                 redcap_event_name == "6_month_visit_arm_1" ~ 6,
+                                 redcap_event_name == "18_month_visit_arm_1" ~ 18,
+                                 redcap_event_name == "12_month_visit_arm_1" ~ 12,
+                                 redcap_event_name == "24_month_visit_arm_1" ~ 24,
+                                 redcap_event_name == "36_month_visit_arm_1" ~ 36))
+
+table(Scaled_copy$redcap_event_name)
+
+Scaled_copy <- pivot_longer(Scaled_copy,
+                         cols = ends_with("scaled"),
+                         names_to = "category",
+                         values_to = "score") %>%
+  mutate(category = case_when(category == "bsid_cog_scaled" ~ "Cognitive", 
+                              category == "bsid_ec_scaled" ~ "Expressive", 
+                              category == "bsid_rc_scaled" ~ "Receptive", 
+                              category == "bsid_gm_scaled" ~ "Gross Motor", 
+                              category == "bsid_fm_scaled" ~ "Fine Motor",
+                              category == "bsid_lang_sumscaled" ~ "Language",
+                              category == "bsid_mot_sumscaled" ~ "Motor"))
+Scaled_copy
+
+set.seed(123)
+ggplot(Scaled_copy, aes(y = score, x = redcap_event_name, color = sca_condition))+
+  geom_jitter(width = 1.5, height = 0, alpha = 0.7) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(
+    x = "Month Visit",
+    y = "Scaled Score",
+    color = "SCA Condition",
+    title = "Scores Over Time by SCA Condition and Category") +
+  facet_wrap(~ category)
+```
+
+```{r}
+Composite_copy 
+
+Composite_copy <- mutate(Composite_copy, redcap_event_name = as.factor(redcap_event_name))
+
+table(Composite_copy$redcap_event_name)
+
+Composite_copy <- Composite_copy %>%
+  mutate(redcap_event_name = case_when(redcap_event_name == "2_month_visit_arm_1" ~ 2,
+                                 redcap_event_name == "6_month_visit_arm_1" ~ 6,
+                                 redcap_event_name == "18_month_visit_arm_1" ~ 18,
+                                 redcap_event_name == "12_month_visit_arm_1" ~ 12,
+                                 redcap_event_name == "24_month_visit_arm_1" ~ 24,
+                                 redcap_event_name == "36_month_visit_arm_1" ~ 36))
+
+table(Composite_copy$redcap_event_name)
+
+Composite_copy <- pivot_longer(Composite_copy,
+                         cols = ends_with("composite"),
+                         names_to = "category",
+                         values_to = "score") %>%
+  mutate(category = case_when(category == "bsid_cog_composite" ~ "Cognitive", 
+                              category == "bsid_lang_composite" ~ "Language", 
+                              category == "bsid_mot_composite" ~ "Motor"))
+```
+
+
+```{r, fig.height=15, fig.width=10}
+ggplot(GSV_copy, aes(x =bsid_age_calc, y = score, group = study_id_extraordinary)) +
+  geom_line(alpha = 0.4) +
+  geom_smooth(aes(group = 1), se = FALSE, color = "blue", size = 1.2) +
+  facet_wrap(category ~ sca_condition, ncol = 3) +
+  theme_minimal()
+```
+
+
+
+GAMLSS
+```{r}
+#make sure that you filter out all of the NA values while keeping as much overall data that you do have as possible.
+
+cog_xxy_data <- GSV_copy %>%
+  filter(category == "Cognitive") %>%
+  filter(sca_condition == "XXY") %>%
+  na.omit()
+
+mform_dt_hgt <- gamlss(
+  formula = bayley4score ~ pb(bsid_age_calc, lambda = 5),
+  sigma.formula = ~ pb(bsid_age_calc),
+  nu.formula = ~1,
+  tau.formula = ~1,
+  data = cog_xxy_data,
+  family = BCCG())
+
+ages <- seq(2, 41, by = 0.5)
+
+new_data <- data.frame(bsid_age_calc = ages)
+
+params <- predictAll(mform_dt_hgt, newdata = new_data)
+
+centiles <- c(10, 25, 50, 75, 90)
+
+q_vals <- sapply(centiles / 100, function(p) {
+  qBCCG(p, mu = params$mu, sigma = params$sigma, nu = params$nu)
+})
+
+lms_hgt <- data.frame(age = ages, q_vals)
+
+colnames(lms_hgt)[-1] <- paste0("P", centiles)
+```
+```{r}
+library(ggplot2)
+library(tidyr)
+
+# Assuming lms_hgt is already created as in your code:
+# lms_hgt <- data.frame(age = ages, q_vals)
+# colnames(lms_hgt)[-1] <- paste0("P", centiles)
+
+# Convert data from wide to long format for ggplot
+lms_long <- pivot_longer(
+  lms_hgt,
+  cols = -age,
+  names_to = "Percentile",
+  values_to = "Score"
+)
+
+# Plotting
+ggplot(lms_long, aes(x = age, y = Score, color = Percentile)) +
+  geom_smooth(size = 1) +
+  labs(
+    title = "Growth Chart: Bayley-4 Cognitive Scores by Age (XXY)",
+    x = "Age (months)",
+    y = "Bayley-4 Cogniitve Score",
+    color = "Percentile"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "right"
+  )
+
+```
+
+```{r}
+cog_xyy_data <- GSV_copy %>%
+  filter(category == "Cognitive") %>%
+  filter(sca_condition == "XYY") %>%
+  na.omit()
+
+mform_dt_hgt2 <- gamlss(
+  formula = bayley4score ~ pb(bsid_age_calc, lambda = 5),
+  sigma.formula = ~ pb(bsid_age_calc),
+  nu.formula = ~1,
+  tau.formula = ~1,
+  data = cog_xyy_data,
+  family = BCCG())
+
+ages <- seq(2, 41, by = 0.5)
+
+new_data2 <- data.frame(bsid_age_calc = ages)
+
+params2 <- predictAll(mform_dt_hgt2, newdata2 = new_data2)
+
+centiles <- c(10, 25, 50, 75, 90)
+
+q_vals2 <- sapply(centiles / 100, function(p) {
+  qBCCG(p, mu = params$mu, sigma = params$sigma, nu = params$nu)
+})
+
+lms_hgt2 <- data.frame(age = ages, q_vals2)
+
+colnames(lms_hgt2)[-1] <- paste0("P", centiles)
+
+```
+
+```{r}
+lms_long2 <- pivot_longer(
+  lms_hgt2,
+  cols = -age,
+  names_to = "Percentile",
+  values_to = "Score"
+)
+
+# Plotting
+ggplot(lms_long2, aes(x = age, y = Score, color = Percentile)) +
+  geom_smooth(size = 1) +
+  labs(
+    title = "Growth Chart: Bayley-4 Cognitive Scores by Age (XYY)",
+    x = "Age (months)",
+    y = "Bayley-4 Cogniitve Score",
+    color = "Percentile"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "right"
+  )
+```
+
