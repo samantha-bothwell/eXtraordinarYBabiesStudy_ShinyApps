@@ -1,0 +1,107 @@
+---
+title: "Tab 3"
+output: html_document
+date: "2025-07-24"
+---
+The starting code for Tab 3
+
+Tab 3: Growth Plots, based on Existing Data (GAMLSS) 
+
+--Domain drop-down 
+
+--SCT drop-down, default to ALL 
+
+--Pre-existing growth plots (static, except domain) 
+
+--Figure caption, explain in Tab 5 
+
+------Plot just 10, 25, 50, 75, 90 
+
+
+
+```{r setup, include=FALSE}
+# Load libraries
+library(shiny)
+library(gamlss)
+library(gamlss.add)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(tidyverse)
+
+new_gsv_long_rem <- readRDS("new_gsv_long_rem.rds")
+```
+
+Starting with the ui.r stuff
+```{r}
+selectInput("domain_select", "Select Domain:",
+            choices = unique(na.omit(new_gsv_long_rem$domain)))
+
+selectInput("sct_select", "Select SCT Condition:",
+            choices = c("ALL", unique(na.omit(new_gsv_long_rem$sca_condition))),
+            selected = "ALL")
+
+```
+
+```{r}
+renderPlot({
+  req(input$domain_select, input$sct_select)
+
+  plot_data <- new_gsv_long_rem %>%
+    filter(!is.na(domain), !is.na(sca_condition), !is.na(bsid_age_calc), !is.na(transformed_score)) %>%
+    filter(domain == input$domain_select)
+
+  if (input$sct_select != "ALL") {
+    plot_data <- plot_data %>% filter(sca_condition == input$sct_select)
+  }
+
+  validate(
+    need(nrow(plot_data) > 10, "Not enough data after filtering.")
+  )
+
+  model <- gamlss(
+    formula = transformed_score ~ pb(bsid_age_calc, lambda = 5),
+    sigma.formula = ~pb(bsid_age_calc),
+    nu.formula = ~1,
+    tau.formula = ~1,
+    data = plot_data,
+    family = BCCG()
+  )
+
+  age_seq <- seq(min(plot_data$bsid_age_calc, na.rm = TRUE),
+                 max(plot_data$bsid_age_calc, na.rm = TRUE),
+                 length.out = 100)
+
+  qvals <- centiles.pred(model, xname = "bsid_age_calc", xvalues = age_seq,
+                         cent = c(10, 25, 50, 75, 90), plot = FALSE)
+
+  pred_long <- pivot_longer(as.data.frame(qvals), -x,
+                            names_to = "Percentile", values_to = "Score")
+
+  ggplot(pred_long, aes(x = x, y = Score, color = Percentile)) +
+    geom_line(size = 1.2) +
+    geom_ribbon(
+      data = data.frame(
+        x = qvals$x,
+        ymin = qvals$`10`,
+        ymax = qvals$`90`
+      ),
+      aes(x = x, ymin = ymin, ymax = ymax),
+      inherit.aes = FALSE,
+      alpha = 0.2,
+      fill = "gray70"
+    ) +
+    theme_minimal(base_size = 14) +
+    labs(
+      title = paste("Growth Chart for", input$domain_select),
+      x = "Age (months)",
+      y = "Transformed Bayley Score",
+      color = "Percentile"
+    )
+})
+
+
+```
+
+
+
