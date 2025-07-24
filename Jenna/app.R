@@ -8,7 +8,6 @@ library(ggrepel)
 library(plotly)
 library(kableExtra)
 
-
 ### Datasets
 milestones <- readRDS("Milestones.RDS")
 genpop <- readRDS("GenPop_Milestones.RDS")
@@ -146,7 +145,6 @@ ui <- fluidPage(
                          )
                        )
               ),
-              
               # Panel 3 : Individual summary data
               tabPanel("Individual summaries",
                        fluidPage(
@@ -154,7 +152,7 @@ ui <- fluidPage(
                          column(6, plotlyOutput("indiv_perc", height = "650px", width = "100%"))
                        )
               )
-  )
+             )
 )
 
 # Define server logic
@@ -571,7 +569,6 @@ server <- function(input, output) {
       
     })
     
-    
     # Percentile box plot for Panel 3
     output$indiv_perc <- renderPlotly({
       
@@ -692,7 +689,7 @@ server <- function(input, output) {
                   hoverinfo = "text",
                   inherit = FALSE)
       
-      # Show the plot
+      # Show the plot with the guidelines
       p <- p %>%
         layout(boxmode = "group",
                xaxis = list(title = "Achievement Percentile",
@@ -722,8 +719,7 @@ server <- function(input, output) {
         )
       
       p
-      
-      
+
     })
 }
 

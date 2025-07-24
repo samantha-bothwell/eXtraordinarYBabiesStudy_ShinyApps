@@ -12,11 +12,14 @@ library(gamlss)
 ```
 
 ```{r}
-Bayley_GSV_scores <- readRDS("C:/Users/laned_9wo8onv/Downloads/Desktop/New folder (2)/eXtraordinarYBabiesStudy_ShinyApps/Jenna/bayley_progression/Bayley_GSV_scores.rds")
+Bayley_GSV_scores <- readRDS("C:/Users/laned_9wo8onv/Downloads/Desktop/CoSIBS/Project^^/eXtraordinarYBabiesStudy_ShinyApps/Jenna/bayley_progression/Bayley_GSV_scores.rds")
 ```
 
 ```{r}
 GSV_copy <- Bayley_GSV_scores
+```
+
+```{r}
 
 Scaled_copy <- Bayley_Scaled_scores
   
@@ -59,6 +62,9 @@ GSV_copy <- GSV_copy %>%
 GSV_copy <- filter(GSV_copy, redcap_event_name != 2)
 
 table(GSV_copy$redcap_event_name)
+```
+
+```{r}
 
 set.seed(123)
 
@@ -189,4 +195,6 @@ ages <- seq(2, 41, by = 0.5)
 
 new_date <- data.frame(bsid_age_calc = ages)
 ```
+
+view(GSV_copy)
 
