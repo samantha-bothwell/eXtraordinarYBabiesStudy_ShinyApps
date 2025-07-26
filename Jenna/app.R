@@ -8,7 +8,6 @@ library(ggrepel)
 library(plotly)
 library(kableExtra)
 
-
 ### Datasets
 milestones <- readRDS("Milestones.RDS")
 genpop <- readRDS("GenPop_Milestones.RDS")
@@ -146,7 +145,6 @@ ui <- fluidPage(
                          )
                        )
               ),
-              
               # Panel 3 : Individual summary data
               tabPanel("Individual summaries",
                        fluidPage(
@@ -154,7 +152,7 @@ ui <- fluidPage(
                          column(6, plotlyOutput("indiv_perc", height = "650px", width = "100%"))
                        )
               )
-  )
+             )
 )
 
 # Define server logic
@@ -515,9 +513,9 @@ server <- function(input, output) {
       
       
       # pick fill color
-      scafill = case_when(sca == "XXY" ~ "#fdb863", 
-                          sca == "XYY" ~ "cyan3",
-                          sca == "XXX" ~ "#4B0082")
+      scafill = case_when(sca == "XXY" ~ "khaki", 
+                          sca == "XYY" ~ "lightblue",
+                          sca == "XXX" ~ "mediumorchid1")
       
       if(input$overlay == "Yes"){
         p <- plot_ly(sca_milestones, 
@@ -539,14 +537,14 @@ server <- function(input, output) {
                      type = "box", boxpoints = FALSE, 
                      hoverinfo = "skip")
       }
-      
+       
       # Overlay custom points from indiv_dat
       p <- p %>% add_trace(data = indiv_dat,
                   x = ~Age,
                   y = ~fct_reorder(milestone, Age),
                   type = "scatter",
                   mode = "markers",
-                  marker = list(size = 15, color = 'red', symbol = 'x'),
+                  marker = list(size = 15, color = 'green', symbol = 'circle'),
                   text = ~paste("ID:", study_id_extraordinary,
                                 "<br>Age:", round(Age, 1), "months",
                                 "<br>Percentile:", round(Percentile, 1)),
@@ -571,8 +569,7 @@ server <- function(input, output) {
       
     })
     
-    
-    # Percentile boxplot for Panel 3
+    # Percentile box plot for Panel 3
     output$indiv_perc <- renderPlotly({
       
       #Subset domain
@@ -609,9 +606,9 @@ server <- function(input, output) {
       
       
       # pick fill color
-      scafill = case_when(sca == "XXY" ~ "#fdb863", 
-                          sca == "XYY" ~ "cyan3",
-                          sca == "XXX" ~ "#4B0082")
+      scafill = case_when(sca == "XXY" ~ "khaki", 
+                          sca == "XYY" ~ "lightblue",
+                          sca == "XXX" ~ "mediumorchid1")
       
       
       # Sort individual data by percentile
@@ -650,8 +647,37 @@ server <- function(input, output) {
                      hoverinfo = "skip")
       }
       
-      # Specify the information that is shown when hovering over points
-      p <- p %>% add_trace(data = indiv_dat,
+      # Group 1: <75th percentile
+      p <- p %>% 
+        add_trace(data = indiv_dat %>% filter(Percentile <= 75),
+                  x = ~Percentile,
+                  y = ~milestone,
+                  type = "scatter",
+                  mode = "markers",
+                  marker = list(size = 15, color = 'green', symbol = 'circle'),
+                  text = ~paste("ID:", study_id_extraordinary,
+                                "<br>Age:", round(Age, 1), "months",
+                                "<br>Percentile:", round(Percentile, 1)),
+                  hoverinfo = "text",
+                  inherit = FALSE)
+      
+      # Group 2: 75–90th percentile
+      p <- p %>% 
+        add_trace(data = indiv_dat %>% filter(Percentile > 75 & Percentile < 90),
+                  x = ~Percentile,
+                  y = ~milestone,
+                  type = "scatter",
+                  mode = "markers",
+                  marker = list(size = 17, color = 'orange', symbol = 'triangle-up'),
+                  text = ~paste("ID:", study_id_extraordinary,
+                                "<br>Age:", round(Age, 1), "months",
+                                "<br>Percentile:", round(Percentile, 1)),
+                  hoverinfo = "text",
+                  inherit = FALSE)
+      
+      # Group 3: ≥90th percentile
+      p <- p %>% 
+        add_trace(data = indiv_dat %>% filter(Percentile >= 90),
                   x = ~Percentile,
                   y = ~milestone,
                   type = "scatter",
@@ -661,24 +687,39 @@ server <- function(input, output) {
                                 "<br>Age:", round(Age, 1), "months",
                                 "<br>Percentile:", round(Percentile, 1)),
                   hoverinfo = "text",
-                  inherit = FALSE) %>% 
-        layout(xaxis = list(range = c(0, 100)),yaxis = list(title = ""),
-          shapes = list(
-            list(type = "rect", fillcolor = "rgba(255, 0, 0, 0.2)", 
-              line = list(color = "red", width = 0), x0 = 90, x1 = 100, y0 = 0, y1 = 1, xref = "x", yref = "paper")
-          )
-        )
+                  inherit = FALSE)
       
-      # Show the plot
+      # Show the plot with the guidelines
       p <- p %>%
         layout(boxmode = "group",
                xaxis = list(title = "Achievement Percentile",
-                            tickfont = list(size = 14)),  # Custom x-axis label
-               yaxis = list(title = ""), 
-               font = list(size = 16), 
-               showlegend = FALSE)
-      p
+                            tickfont = list(size = 14)),
+               yaxis = list(title = ""),
+               font = list(size = 16),
+               showlegend = FALSE,
+               shapes = list(     
+                 list(type = "line", 
+                      x0 = 75, x1 = 75, y0 = 0, y1 = 1, 
+                      xref = "x", yref = "paper",
+                      line = list(color = "orange", width = 2, dash = "dot")),
+                 list(type = "line",
+                      x0 = 90, x1 = 90, y0 = 0, y1 = 1, 
+                      xref = "x", yref = "paper",
+                      line = list(color = "red", width = 2, dash = "dot"))),
+               annotations = list(
+                 list(
+                   x = 75, y = -0.03, 
+                   xref = "x", yref = "paper",
+                   text = "75", showarrow = FALSE,
+                   font = list(size = 12)),
+                 list(x = 90, y = -0.03, 
+                      xref = "x", yref = "paper",
+                      text = "90", showarrow = FALSE,
+                      font = list(size = 12)))
+        )
       
+      p
+
     })
 }
 

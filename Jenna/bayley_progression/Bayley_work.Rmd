@@ -12,11 +12,14 @@ library(gamlss)
 ```
 
 ```{r}
-Bayley_GSV_scores <- readRDS("C:/Users/laned_9wo8onv/Downloads/Desktop/New folder (2)/eXtraordinarYBabiesStudy_ShinyApps/Jenna/bayley_progression/Bayley_GSV_scores.rds")
+Bayley_GSV_scores <- readRDS("Bayley_GSV_scores.rds")
 ```
 
 ```{r}
 GSV_copy <- Bayley_GSV_scores
+```
+
+```{r}
 
 Scaled_copy <- Bayley_Scaled_scores
   
@@ -59,6 +62,9 @@ GSV_copy <- GSV_copy %>%
 GSV_copy <- filter(GSV_copy, redcap_event_name != 2)
 
 table(GSV_copy$redcap_event_name)
+```
+
+```{r, fig.height=10, fig.width=10}
 
 set.seed(123)
 
@@ -175,18 +181,123 @@ ggplot(GSV_copy, aes(x =bsid_age_calc, y = score, group = study_id_extraordinary
 
 GAMLSS
 ```{r}
-#make sure that you filter out all of the NA values while keeping as many that you do have as possible.
+#make sure that you filter out all of the NA values while keeping as much overall data that you do have as possible.
+
+cog_xxy_data <- GSV_copy %>%
+  filter(category == "Cognitive") %>%
+  filter(sca_condition == "XXY") %>%
+  na.omit()
 
 mform_dt_hgt <- gamlss(
-  formula = bsid_gsv_cog ~ pb(bsid_age_calc, lambda = 5),
+  formula = bayley4score ~ pb(bsid_age_calc, lambda = 5),
   sigma.formula = ~ pb(bsid_age_calc),
   nu.formula = ~1,
   tau.formula = ~1,
-  data = ,
+  data = cog_xxy_data,
   family = BCCG())
 
 ages <- seq(2, 41, by = 0.5)
 
-new_date <- data.frame(bsid_age_calc = ages)
+new_data <- data.frame(bsid_age_calc = ages)
+
+params <- predictAll(mform_dt_hgt, newdata = new_data)
+
+centiles <- c(10, 25, 50, 75, 90)
+
+q_vals <- sapply(centiles / 100, function(p) {
+  qBCCG(p, mu = params$mu, sigma = params$sigma, nu = params$nu)
+})
+
+lms_hgt <- data.frame(age = ages, q_vals)
+
+colnames(lms_hgt)[-1] <- paste0("P", centiles)
+```
+```{r}
+library(ggplot2)
+library(tidyr)
+
+# Assuming lms_hgt is already created as in your code:
+# lms_hgt <- data.frame(age = ages, q_vals)
+# colnames(lms_hgt)[-1] <- paste0("P", centiles)
+
+# Convert data from wide to long format for ggplot
+lms_long <- pivot_longer(
+  lms_hgt,
+  cols = -age,
+  names_to = "Percentile",
+  values_to = "Score"
+)
+
+# Plotting
+ggplot(lms_long, aes(x = age, y = Score, color = Percentile)) +
+  geom_smooth(size = 1) +
+  labs(
+    title = "Growth Chart: Bayley-4 Cognitive Scores by Age (XXY)",
+    x = "Age (months)",
+    y = "Bayley-4 Cogniitve Score",
+    color = "Percentile"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "right"
+  )
+
+```
+
+```{r}
+cog_xyy_data <- GSV_copy %>%
+  filter(category == "Cognitive") %>%
+  filter(sca_condition == "XYY") %>%
+  na.omit()
+
+mform_dt_hgt2 <- gamlss(
+  formula = bayley4score ~ pb(bsid_age_calc, lambda = 5),
+  sigma.formula = ~ pb(bsid_age_calc),
+  nu.formula = ~1,
+  tau.formula = ~1,
+  data = cog_xyy_data,
+  family = BCCG())
+
+ages <- seq(2, 41, by = 0.5)
+
+new_data2 <- data.frame(bsid_age_calc = ages)
+
+params2 <- predictAll(mform_dt_hgt2, newdata2 = new_data2)
+
+centiles <- c(10, 25, 50, 75, 90)
+
+q_vals2 <- sapply(centiles / 100, function(p) {
+  qBCCG(p, mu = params$mu, sigma = params$sigma, nu = params$nu)
+})
+
+lms_hgt2 <- data.frame(age = ages, q_vals2)
+
+colnames(lms_hgt2)[-1] <- paste0("P", centiles)
+
+```
+
+```{r}
+lms_long2 <- pivot_longer(
+  lms_hgt2,
+  cols = -age,
+  names_to = "Percentile",
+  values_to = "Score"
+)
+
+# Plotting
+ggplot(lms_long2, aes(x = age, y = Score, color = Percentile)) +
+  geom_smooth(size = 1) +
+  labs(
+    title = "Growth Chart: Bayley-4 Cognitive Scores by Age (XYY)",
+    x = "Age (months)",
+    y = "Bayley-4 Cogniitve Score",
+    color = "Percentile"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "right"
+  )
 ```
 
