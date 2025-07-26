@@ -95,8 +95,8 @@ server <- function(input, output, session) {
     
     ggplot() +
       geom_smooth(data = percentiles_df, aes(x = bsid_age_calc, y = p50), color = "black", size = 1.2, na.rm = TRUE) +
-      geom_line(data = user_df, aes(x = Age, y = Score), color = "red", size = 1.5) +
-      geom_point(data = user_df, aes(x = Age, y = Score), color = "red", size = 3) +
+      geom_line(data = user_df, aes(x = Age, y = Score), color = "royalblue3", size = 1.5) +
+      geom_point(data = user_df, aes(x = Age, y = Score), color = "royalblue3", size = 3) +
       labs(
         title = paste("Growth Trajectory for", input$domain_select),
         x = "Age (months)",
@@ -132,8 +132,8 @@ server <- function(input, output, session) {
         
         ggplot() +
           geom_smooth(data = percentiles_df, aes(x = bsid_age_calc, y = p50), color = "black", size = 1.2, na.rm = TRUE) +
-          geom_line(data = user_df, aes(x = Age, y = Score), color = "red", size = 1.5) +
-          geom_point(data = user_df, aes(x = Age, y = Score), color = "red", size = 3) +
+          geom_line(data = user_df, aes(x = Age, y = Score), color = "royalblue3", size = 1.5) +
+          geom_point(data = user_df, aes(x = Age, y = Score), color = "royalblue3", size = 3) +
           labs(title = paste("Domain:", dom), x = "Age (months)", y = "Transformed GSV Score") +
           theme_minimal(base_size = 14)
       })
