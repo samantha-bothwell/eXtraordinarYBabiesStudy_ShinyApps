@@ -1,11 +1,34 @@
 ######################
 #Tab 6: Meet the Team#
 ######################
+library(shiny)
 
-tabPanel(
-  "Meet the Team",
+ui <- fluidPage(
+  titlePanel("Meet the Team"),
+  
+  # Title and logo
   fluidPage(
-    titlePanel("Meet the Team"),
+    fluidRow(
+      column(10, h1("eXtraordinarY Babies Study : SCT Developmental Milestones")),
+      column(2, tags$img(src = "eBs_Logo.jpg", height = "100px", style = "float: right;"))
+    )
+  ),
+  
+# Group image with caption at top
+  fluidRow(
+    column(
+      width = 12,
+      div(
+        style = "text-align: center;",
+        tags$img(src = "Group_pic.jpg", height = "300px", style = "max-width: 100%; border-radius: 10px;"),
+        tags$figcaption("The team, from left to right:.", 
+                        style = "font-size: 14px; color: #555; margin-top: 10px;")
+      )
+    )
+  ),
+  br(),
+  
+  
     
     # SAMANTHAS
     fluidRow(
@@ -103,5 +126,8 @@ tabPanel(
       )
     )
   )
-)
 
+
+server <- function(input, output, session) {}
+
+shinyApp(ui = ui, server = server)
