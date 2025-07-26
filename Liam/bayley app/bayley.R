@@ -77,7 +77,7 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   
-  user_data <- reactiveVal(data.frame(# creates reactive dataFrame that takes in the user inputs of milestone values
+  input_milestones_data <- reactiveVal(data.frame(# creates reactive dataFrame that takes in the user inputs of milestone values
     milestone = character(),
     months_WhenAchieved = numeric(),
     stringsAsFactors = FALSE
@@ -86,7 +86,7 @@ server <- function(input, output) {
   # Render user-submitted table
   output$user_table <- renderDT({
     
-    display_data <- user_data() %>% select(-Q25, -Q50, -Q75, -Q90) # gets rid of percentiles in exportable plot
+    display_data <- input_milestones_data() %>% select(-Q25, -Q50, -Q75, -Q90) # gets rid of percentiles in exportable plot
     
     datatable(display_data(), extensions = "Buttons",
               options = list(pageLength = 12,
@@ -135,8 +135,8 @@ server <- function(input, output) {
           TRUE ~ "red"
         )
       )
-      updated_data <- bind_rows(user_data(), combined) # adds everything together
-      user_data(updated_data)
+      updated_data <- bind_rows(input_milestones_data(), combined) # adds everything together
+      input_milestones_data(updated_data)
     } else{
       showNotification("Please fill in at least one milestone before plotting", type = "error") # throws error just in case
     }
@@ -147,7 +147,6 @@ server <- function(input, output) {
     
     # Filter to age range 
     indiv_percentiles <- indiv_percentiles %>% filter(!is.na(Age))
-    #group_by(milestone) %>% filter(min(Age, na.rm = T) >= input$age[1]) %>% filter(max(Age, na.rm = T) <= input$age[2]) 
     
     
     # Explicitly reorder the milestone factor by median Age, descending
@@ -157,6 +156,7 @@ server <- function(input, output) {
     
     
     indiv_dat <- indiv_percentiles %>% filter(!is.na(Age))
+    # sanity check
     if (nrow(indiv_dat) == 0) {
       showNotification("No data available after filtering — nothing to plot.", type = "error")
       return(NULL)
@@ -185,7 +185,7 @@ server <- function(input, output) {
                    hoverinfo = "skip")
       
     # creates list of points to plot 
-    user_points <- user_data()  
+    user_points <- input_milestones_data()  
     if(nrow(user_points)>0){
       # Fixed trace: milestone overlay uses dynamic symbols/colors
       p <- p %>% add_trace(data = user_points,
@@ -206,8 +206,7 @@ server <- function(input, output) {
     
     # Show the plot
     p <- p %>%
-      layout(#boxmode = "group",
-             xaxis = list(title = "Achievement Percentile",
+      layout(xaxis = list(title = "Achievement Percentile",
                           tickfont = list(size = 14)),  # Custom x-axis label
              yaxis = list(title = ""), 
              font = list(size = 16), 
