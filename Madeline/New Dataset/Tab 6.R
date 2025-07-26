@@ -1,0 +1,107 @@
+######################
+#Tab 6: Meet the Team#
+######################
+
+tabPanel(
+  "Meet the Team",
+  fluidPage(
+    titlePanel("Meet the Team"),
+    
+    # SAMANTHAS
+    fluidRow(
+      column(
+        width = 6,
+        div(
+          style = "text-align:center;",
+          img(src = "lead1.jpg", height = "200px"),
+          h3("Samantha Bothwell"),
+          p("Group Lead")
+        )
+      ),
+      column(
+        width = 6,
+        div(
+          style = "text-align:center;",
+          img(src = "lead2.jpg", height = "200px"),
+          h3("Samantha Roberts"),
+          p("Group Lead")
+        )
+      )
+    ),
+    
+    br(), hr(), br(),
+    
+    # TEAM
+    fluidRow(
+      column(
+        width = 3,
+        img(src = "member1.jpg", height = "150px", style = "display:block; margin:auto;")
+      ),
+      column(
+        width = 9,
+        h4("Chole Child"),
+        p("BLURB")
+      )
+    ),
+    br(),
+    
+    fluidRow(
+      column(
+        width = 3,
+        img(src = "member2.jpg", height = "150px", style = "display:block; margin:auto;")
+      ),
+      column(
+        width = 9,
+        h4("Liam Hallinan"),
+        p("BLURB.")
+      )
+    ),
+    br(),
+    
+    fluidRow(
+      column(
+        width = 3,
+        img(src = "member3.jpg", height = "150px", style = "display:block; margin:auto;")
+      ),
+      column(
+        width = 9,
+        h4("Jenna Jimenez"),
+        p("BLURB")
+      )
+    ),
+    br(),
+    
+    fluidRow(
+      column(
+        width = 3,
+        img(src = "member4.jpg", height = "150px", style = "display:block; margin:auto;")
+      ),
+      column(
+        width = 9,
+        h4("Madeline Murphy"),
+        p("Hello, my name is Madeline Murphy. I am a rising junior at Rollins College in Orlando, Florida, and I study Biology with a minor in Data Analytics.
+          I was born and raised in Miami, Florida, with my older sister Sarah. I love animals, horror movies, and playing video games with my friends.
+          I joined the Colorado Summer Institute in Biostatistics for the summer of 2025 to gain real experience in the field of biostatistics and to see if this is a career I wish to pursue.")
+      )
+    ),
+    br(),
+    
+    fluidRow(
+      column(
+        width = 3,
+        img(src = "member5.jpg", height = "150px", style = "display:block; margin:auto;")
+      ),
+      column(
+        width = 9,
+        h4("John Preisser"),
+        p("My name is Jack Preisser; 
+          I am a rising senior majoring in statistics at Carleton College.
+          I was born and raised in Chapel Hill, North Carolina along with my twin sister Hannah. 
+          I enjoy running, hiking and other physical activities. 
+          I have enjoyed my time at the Colorado Summer Institute in Biostatistics (CoSIBS)
+          because I have not studied public health through an in-depth manner prior to CoSIBS. ")
+      )
+    )
+  )
+)
+
