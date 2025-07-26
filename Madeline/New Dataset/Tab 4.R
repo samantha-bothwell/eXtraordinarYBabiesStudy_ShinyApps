@@ -96,17 +96,22 @@ server <- function(input, output, session) {
         p75 = quantile(transformed_score, 0.75, na.rm = TRUE),
         p90 = quantile(transformed_score, 0.90, na.rm = TRUE),
         .groups = "drop"
+      ) %>%
+      arrange(bsid_age_calc) %>%  # Fix 1: ensure order
+      mutate(
+        bsid_age_calc = as.numeric(bsid_age_calc),  # Fix 2: ensure numeric
+        p50_smooth = zoo::rollmean(p50, k = 3, fill = NA)  # Optional: smooth median
       )
+    print(head(percentiles_df))
+    
     
     #Plot 
     ggplot() +
-      geom_ribbon(data = percentiles_df, aes(x = bsid_age_calc, ymin = p10, ymax = p90), fill = "lightblue", alpha = 0.3) +
-      geom_ribbon(data = percentiles_df, aes(x = bsid_age_calc, ymin = p25, ymax = p75), fill = "blue", alpha = 0.2) +
-      geom_line(data = percentiles_df, aes(x = bsid_age_calc, y = p50), color = "black", size = 1.2) +
-      geom_line(data = percentiles_df, aes(x = bsid_age_calc, y = p25), color = "black", linetype = "dashed") +
-      geom_line(data = percentiles_df, aes(x = bsid_age_calc, y = p75), color = "black", linetype = "dashed") +
+      geom_smooth(data = percentiles_df, aes(x = bsid_age_calc, y = p50), 
+                  method = "loess", color = "black", se = FALSE, size = 1.2)+
       geom_line(data = user_df, aes(x = Age, y = Score), color = "red", size = 1.5) +
       geom_point(data = user_df, aes(x = Age, y = Score), color = "red", size = 3) +
+      geom_ribbon(data = percentiles_df, aes(x = bsid_age_calc, ymin = p10, ymax = p90), fill = "lightblue", alpha = 0.3, na.rm = TRUE) +
       labs(
         title = paste("Growth Trajectory for", input$domain_select),
         x = "Age (months)",
@@ -138,6 +143,7 @@ server <- function(input, output, session) {
             p90 = quantile(transformed_score, 0.90, na.rm = TRUE),
             .groups = "drop"
           )
+    
         
         ggplot() +
           geom_ribbon(data = percentiles_df, aes(x = bsid_age_calc, ymin = p10, ymax = p90), fill = "lightblue", alpha = 0.3) +
