@@ -63,6 +63,8 @@ ui <- fluidPage(
 
 # Server
 server <- function(input, output, session) {
+  #Makes the data reactive in the server so the data doesn't save 
+  user_data <- reactiveValues(df = data.frame(Age = numeric(), Score = numeric(), domain = character()))
   #Make the inputs for age and score be in the server 
   observeEvent(input$save_inputs, {
     new_points <- data.frame(
@@ -77,7 +79,7 @@ server <- function(input, output, session) {
   
   output$input_growth_plot <- renderPlot({
     user_df <- global_user_data$df
-    if (nrow(user_df) < 3) return(NULL)  # Do not plot line unless 3+ points
+    if (nrow(user_df) <= 3) return(NULL)  # Do not plot line unless 3 or more points
     
     # Filter population data
     data_filtered <- new_gsv_long_rem %>%
@@ -95,6 +97,7 @@ server <- function(input, output, session) {
         p90 = quantile(transformed_score, 0.90, na.rm = TRUE),
         .groups = "drop"
       )
+    
     #Plot 
     ggplot() +
       geom_ribbon(data = percentiles_df, aes(x = bsid_age_calc, ymin = p10, ymax = p90), fill = "lightblue", alpha = 0.3) +
@@ -139,10 +142,8 @@ server <- function(input, output, session) {
         ggplot() +
           geom_ribbon(data = percentiles_df, aes(x = bsid_age_calc, ymin = p10, ymax = p90), fill = "lightblue", alpha = 0.3) +
           geom_ribbon(data = percentiles_df, aes(x = bsid_age_calc, ymin = p25, ymax = p75), fill = "blue", alpha = 0.2) +
-          geom_line(data = percentiles_df, aes(x = bsid_age_calc, y = p50), color = "black", size = 1.2) +
-          geom_line(data = percentiles_df, aes(x = bsid_age_calc, y = p25), color = "black", linetype = "dashed") +
-          geom_line(data = percentiles_df, aes(x = bsid_age_calc, y = p75), color = "black", linetype = "dashed") +
-          geom_line(data = user_df, aes(x = Age, y = Score), color = "red", size = 1.5) +
+          geom_smooth(data = percentiles_df, aes(x = bsid_age_calc, y = p50), color = "black", size = 1.2) +
+          geom_smooth(data = user_df, aes(x = Age, y = Score), color = "red", size = 1.5) +
           geom_point(data = user_df, aes(x = Age, y = Score), color = "red", size = 3) +
           labs(title = paste("Domain:", dom), x = "Age (months)", y = "Transformed GSV Score") +
           theme_minimal(base_size = 14)
