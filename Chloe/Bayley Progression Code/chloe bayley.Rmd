@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(forcats)
 library(gamlss)
+library(ggpubr)
 ```
 
 
@@ -187,29 +188,246 @@ ggplot(new_gsv_long_rem, aes(x = transformed_score,
   theme_minimal(base_size = 16)
 
 ```
-
+# Composite Violin Updated
 ```{r}
-violin_plot <- ggplot(new_gsv_long_rem, aes(x = fct_reorder(sca_condition, bsid_age_calc), 
-                             y = bsid_age_calc, 
-                             fill = sca_condition)) +
+ref_score_min <- 100 - 15  # 85
+ref_score_max <- 100 + 15  # 115
+
+ymin_val <- min(composite_long$bsid_age_calc, na.rm = TRUE)
+ymax_val <- max(composite_long$bsid_age_calc, na.rm = TRUE)
+
+
+
+# Plot
+violin_plot <- ggplot(composite_long, aes(
+  x = fct_reorder(sca_condition, bsid_age_calc),
+  y = bsid_age_calc,
+  fill = sca_condition
+)) +
   geom_violin(trim = FALSE, alpha = 0.5, color = NA) +
-  geom_jitter(aes(color = transformed_score), 
-              width = 0.2, height = 0.1, size = 2, alpha = 0.7) +
-  scale_color_gradient(low = "pink", high = "darkred") +
-  facet_wrap(~domain, ncol = 5) + coord_flip() + 
+  geom_jitter(aes(color = score),
+              width = 0.2, height = 0.1, size = 2, alpha = 0.5) +
+  scale_color_gradient(low = "lightblue", high = "darkorange") +
+  facet_wrap(~domain, ncol = 5) +
+  coord_flip() +
   labs(
     x = NULL,
     y = "Age at Assessment (Months)",
     fill = "SCA Condition",
-    color = "Transformed Score"
-  ) + theme_bw(base_size = 16) + theme(
+    color = "Score"
+  ) +
+  theme_bw(base_size = 16) +
+  theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     legend.position = "bottom"
-  ) 
+  )
 
-violin_plot
+
+violin_plot +
+  geom_rect(
+    inherit.aes = FALSE,
+    aes(xmin = ref_score_min, xmax = ref_score_max,
+        ymin = ymin_val, ymax = ymax_val),
+    fill = "lightblue", alpha = 0.2
+  )
 
 ```
+
+
+## Violin Graphs with BoxPlot
+
+```{r}
+
+# Normative (reference) box values for score
+comp_ref_mean <- 100
+comp_ref_sd <- 15
+
+# Reference boxplot data (use same structure as violin groups)
+ref_box_data_composite <- data.frame(
+  group = unique(composite_long$sca_condition),
+  ymin = comp_ref_mean - comp_ref_sd,
+  lower = comp_ref_mean - comp_ref_sd / 2,
+  middle = comp_ref_mean,
+  upper = comp_ref_mean + comp_ref_sd / 2,
+  ymax = comp_ref_mean + comp_ref_sd
+)
+
+# Corrected plot
+violin_plot_comp <- ggplot(composite_long_filtered, aes(
+  x = fct_reorder(sca_condition, score),
+  y = score,
+  fill = sca_condition
+)) +  geom_violin(trim = FALSE, alpha = 0.5, color = NA) +
+  geom_jitter(aes(color = bsid_age_calc), 
+              width = 0.2, height = 0.1, size = 2, alpha = 0.7) +
+  geom_boxplot(
+    data = ref_box_data_composite,
+    aes(
+      x = group,
+      ymin = ymin,
+      lower = lower,
+      middle = middle,
+      upper = upper,
+      ymax = ymax
+    ),
+    stat = "identity",
+    inherit.aes = FALSE,
+    width = 0.2,
+    fill = "orange",
+    color = "black",
+    alpha = 0.5) +
+ scale_color_gradient(low = "skyblue", high = "navy") +
+  facet_wrap(~domain, ncol = 5) +
+  labs(
+    x = NULL,
+    y = "Score",
+    fill = "SCA Condition",
+    color = "Age at Assessment"
+  ) +
+  theme_bw(base_size = 16) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+      legend.text = element_text(size = 8),
+  legend.title = element_text(size = 10)
+    
+  )
+
+violin_plot_comp
+
+ggexport(violin_plot_comp, filename = "C:/Users/craft/OneDrive/Documents/GitHub/eXtraordinarYBabiesStudy_ShinyApps/Chloe/Bayley Progression Code/Bayley_take1/bayleytab1/comp_plot_violin.png", width = 6000, height = 3000, res = 250)
+
+```
+
+## Violin Plot with Boxplot for Scaled
+```{r}
+
+scaled_long_filtered <- scaled_long %>% filter(score < 777)
+
+# Normative (reference) box values for score
+scale_ref_mean <- 10
+scale_ref_sd <- 3
+
+# Reference boxplot data (use same structure as violin groups)
+ref_box_data_scaled <- data.frame(
+  group = unique(scaled_long$sca_condition),
+  ymin = scale_ref_mean - scale_ref_sd,
+  lower = scale_ref_mean - scale_ref_sd / 2,
+  middle = scale_ref_mean,
+  upper = scale_ref_mean + scale_ref_sd / 2,
+  ymax = scale_ref_mean + scale_ref_sd
+)
+
+# Corrected plot
+violin_plot_scaled <- ggplot(scaled_long_filtered, aes(
+  x = fct_reorder(sca_condition, score),
+  y = score,
+  fill = sca_condition
+)) +
+  geom_violin(trim = FALSE, alpha = 0.5, color = NA) +
+  geom_jitter(aes(color = bsid_age_calc),  # optional: color by age at assessment
+              width = 0.2, height = 0.1, size = 2, alpha = 0.7) +
+  geom_boxplot(
+    data = ref_box_data_scaled,
+    aes(
+      x = group,
+      ymin = ymin,
+      lower = lower,
+      middle = middle,
+      upper = upper,
+      ymax = ymax
+    ),
+    stat = "identity",
+    inherit.aes = FALSE,
+    width = 0.2,
+    fill = "orange",
+    color = "black",
+    alpha = 0.5) +
+  # scale_color_gradient(low = "skyblue", high = "navy") +
+  facet_wrap(~domain, ncol = 5) +
+  labs(
+    x = NULL,
+    y = "Score",
+    fill = "SCA Condition",
+    color = "Age at Assessment"
+  ) +
+  theme_bw(base_size = 16) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+          legend.text = element_text(size = 8),
+  legend.title = element_text(size = 10)
+    
+  )
+
+violin_plot_scaled
+
+ggexport(violin_plot_scaled, filename = "C:/Users/craft/OneDrive/Documents/GitHub/eXtraordinarYBabiesStudy_ShinyApps/Chloe/Bayley Progression Code/Bayley_take1/bayleytab1/violin_plot_scaled.png", width = 2100, height = 1800, res = 250)
+```
+
+## Violin Plot with Boxplot for GSV
+```{r}
+
+
+# Normative (reference) box values for score
+gsv_ref_mean <- 500
+gsv_ref_sd <- 25
+
+# Reference boxplot data (use same structure as violin groups)
+ref_box_data_gsv <- data.frame(
+  group = unique(scaled_long$sca_condition),
+  ymin = gsv_ref_mean - gsv_ref_sd,
+  lower = gsv_ref_mean - gsv_ref_sd / 2,
+  middle = gsv_ref_mean,
+  upper = gsv_ref_mean + gsv_ref_sd / 2,
+  ymax = gsv_ref_mean + gsv_ref_sd
+)
+
+# Corrected plot
+violin_plot_gsv <- ggplot(new_gsv_long_rem, aes(
+  x = fct_reorder(sca_condition, score),
+  y = score,
+  fill = sca_condition
+)) +
+  geom_violin(trim = FALSE, alpha = 0.5, color = NA) +
+  geom_jitter(aes(color = bsid_age_calc),  # optional: color by age at assessment
+              width = 0.2, height = 0.1, size = 2, alpha = 0.7) +
+  geom_boxplot(
+    data = ref_box_data_gsv,
+    aes(
+      x = group,
+      ymin = ymin,
+      lower = lower,
+      middle = middle,
+      upper = upper,
+      ymax = ymax
+    ),
+    stat = "identity",
+    inherit.aes = FALSE,
+    width = 0.2,
+    fill = "orange",
+    color = "black",
+    alpha = 0.5) +
+  scale_color_gradient(low = "skyblue", high = "navy") +
+  facet_wrap(~domain, ncol = 5) +
+  labs(
+    x = NULL,
+    y = "Score",
+    fill = "SCA Condition",
+    color = "Age at Assessment"
+  ) +
+  theme_bw(base_size = 16) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+  legend.text = element_text(size = 8),
+  legend.title = element_text(size = 10)
+  )
+
+violin_plot_gsv
+ggexport(violin_plot_gsv, filename = "C:/Users/craft/OneDrive/Documents/GitHub/eXtraordinarYBabiesStudy_ShinyApps/Chloe/Bayley Progression Code/Bayley_take1/bayleytab1/violin_plot_gsv.png", width = 2100, height = 1800, res = 250)
+```
+
 
 ```{r}
 mform_dt_scre <- gamlss(formula = transformed_score ~ pb(bsid_calc_age, lambda = 5),
@@ -281,14 +499,8 @@ colnames(lms_cog)[-1] <- paste0("P", centiles)
 
 ## Plot it
 ggplot(gsv_nona_cog, aes(x = bsid_age_calc, y = transformed_score)) + 
-  geom_point() + 
-  geom_smooth(data = lms_cog, aes(x = age, y = P5)) + 
-  geom_smooth(data = lms_cog, aes(x = age, y = P10)) + 
-  geom_smooth(data = lms_cog, aes(x = age, y = P25)) + 
-  geom_smooth(data = lms_cog, aes(x = age, y = P50)) + 
-  geom_smooth(data = lms_cog, aes(x = age, y = P75)) + 
-  geom_smooth(data = lms_cog, aes(x = age, y = P90)) + 
-  geom_smooth(data = lms_cog, aes(x = age, y = P95)) 
+  geom_point()  + # Plot Cognitive scores by age
+  geom_ribbon(data = lms_cog, aes(x = age, ymin = P5, ymax = P95), inherit.aes = F, alpha = 0.5)
 ```
 
 ## Growth Plots for Receptive Domain
@@ -366,7 +578,7 @@ gsv_exp <- gsv %>%
 # Plot Cognitive scores by age
 ggplot(gsv_exp, aes(x = bsid_age_calc, y = transformed_score)) + 
   geom_point() + 
-  geom_smooth(se = FALSE) +
+  geom_smooth(se = TRUE) +
   labs(
     title = "Expressive Domain Scores vs. Age",
     x = "Age (months)",
@@ -416,7 +628,7 @@ ggplot(gsv_nona_exp, aes(x = bsid_age_calc, y = transformed_score)) +
   geom_smooth(data = lms_exp, aes(x = age, y = P5)) + 
   geom_smooth(data = lms_exp, aes(x = age, y = P10)) + 
   geom_smooth(data = lms_exp, aes(x = age, y = P25)) + 
-  geom_smooth(data = lms_exp, aes(x = age, y = P50)) + 
+  geom_smooth(data = lms_exp, aes(x = age, y = P50), se = TRUE) + 
   geom_smooth(data = lms_exp, aes(x = age, y = P75)) + 
   geom_smooth(data = lms_exp, aes(x = age, y = P90)) + 
   geom_smooth(data = lms_exp, aes(x = age, y = P95)) 
@@ -550,5 +762,199 @@ ggplot(gsv_nona_gm, aes(x = bsid_age_calc, y = transformed_score)) +
   geom_smooth(data = lms_gm, aes(x = age, y = P75)) + 
   geom_smooth(data = lms_gm, aes(x = age, y = P90)) + 
   geom_smooth(data = lms_gm, aes(x = age, y = P95)) 
+```
+
+```{r}
+view(gsv)
+```
+
+```{r}
+# Simulate fake reference scores
+set.seed(123)
+
+n_ref <- length(composite_long_filtered)
+age_range <- range(composite_long$bsid_age_calc, na.rm = TRUE)
+
+ref_data <- data.frame(
+  bsid_age_calc = runif(n_ref, min = age_range[1], max = age_range[2]),
+  score1 = rnorm(n_ref, mean = 100, sd = 15))
+
+composite_long_filtered_ref <- bind_rows(composite_long_filtered, ref_data)
+
+
+ggplot(composite_long_filtered, aes(
+  x = fct_reorder(composite_long_filtered$sca_condition, composite_long_filtered$bsid_age_calc),
+  y = bsid_age_calc,
+  fill = sca_condition
+)) +
+  geom_violin(data = composite_long_filtered, trim = FALSE, alpha = 0.5, color = NA) +
+  geom_jitter(data = composite_long_filtered, aes(color = score),
+              width = 0.2, height = 0.1, size = 2, alpha = 0.5) + geom_point() + 
+geom_smooth(
+  data = ref_data,
+  aes(x = bsid_age_calc, y = score1),
+  method = "lm",
+  color = "black",
+  se = T,
+  linetype = "dashed"
+)+
+  facet_wrap(~domain, ncol = 5) +
+  coord_flip() +
+  scale_color_gradient2(low = "blue", mid = "orange", high = "red", midpoint = 100) +
+  labs(
+    x = NULL,
+    y = "Age at Assessment (Months)",
+    fill = "SCA Condition",
+    color = "Score"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom"
+  )
+
+```
+
+```{r}
+ref_data <- expand.grid(
+  bsid_age_calc = seq(min(composite_long$bsid_age_calc, na.rm = TRUE),
+                      max(composite_long$bsid_age_calc, na.rm = TRUE),
+                      length.out = 200),
+  sca_condition = unique(composite_long$sca_condition),
+  domain = unique(composite_long$domain)  # only if faceting by domain
+) %>%
+  mutate(
+    score = rnorm(n(), mean = 100, sd = 15)
+  )
+
+ggplot(composite_long, aes(
+  x = fct_reorder(sca_condition, bsid_age_calc),
+  y = bsid_age_calc,
+  fill = sca_condition
+)) +
+  geom_violin(trim = FALSE, alpha = 0.5, color = NA) +
+  geom_jitter(aes(color = score),
+              width = 0.2, height = 0.1, size = 2, alpha = 0.5) +
+
+  # Reference smooth line across score vs. age
+  geom_smooth(
+    data = ref_data,
+    aes(x = bsid_age_calc, y = score, group = sca_condition),
+    method = "loess",
+    se = TRUE,
+    color = "black",
+    linetype = "dashed",
+    inherit.aes = FALSE
+  ) +
+
+  facet_wrap(~domain, ncol = 5) +
+  coord_flip() +
+  scale_color_gradient2(low = "blue", mid = "orange", high = "red", midpoint = 100) +
+  labs(
+    x = NULL,
+    y = "Age at Assessment (Months)",
+    fill = "SCA Condition",
+    color = "Score"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom"
+  )
+
+```
+
+```{r}
+# Simulate reference data
+set.seed(123)
+ref_data <- data.frame(
+  score1 = rnorm(2478, mean = 100, sd = 15)
+)
+# view(ref_data)
+
+# composite_combined <- c(composite_long, ref_data)
+
+
+
+composite_long_filtered <- composite_long %>% filter(score < 777) %>% mutate(ranorm = rnorm(nrow(composite_long_filtered), mean = 100, sd = 15))
+
+# Plot
+ggplot(composite_long_filtered, aes(
+  x = fct_reorder(sca_condition, score),
+  y = score,
+  fill = sca_condition
+)) +
+  geom_violin(trim = FALSE, alpha = 0.5, color = NA) +
+  geom_jitter(aes(color = as.factor(redcap_event_name),
+              width = 0.2, height = 0.1, size = 2, alpha = 0.5)) + 
+
+  # Horizontal smooth line (x = age, y = score) -> flips to horizontal under coord_flip
+  geom_smooth(
+    aes(x = bsid_age_calc, y = ranorm),  # <- This will be flipped by coord_flip()
+    method = "loess",
+    color = "black",
+    se = TRUE,
+    linetype = "dashed",
+    inherit.aes = FALSE
+  ) +
+
+  facet_wrap(~domain, ncol = 5) +
+  # scale_color_gradient2(low = "blue", mid = "orange", high = "red", midpoint = 100) +
+  labs(
+    x = NULL,
+    y = "Age at Assessment (Months)",
+    fill = "SCA Condition",
+    color = "Score"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom"
+  )
+
+```
+
+```{r}
+ggplot(composite_long, aes(
+  x = score,                # score on x-axis
+  y = bsid_age_calc,        # age on y-axis
+  fill = sca_condition
+)) +
+  geom_violin(
+    aes(x = sca_condition, y = bsid_age_calc),  # violin by group
+    data = composite_long,
+    trim = FALSE,
+    alpha = 0.5,
+    color = NA
+  ) +
+  geom_jitter(
+    aes(color = score),
+    width = 0.2, height = 0.1,
+    size = 2, alpha = 0.6
+  ) +
+  # Reference smooth line: horizontal
+  geom_smooth(
+    data = ref_data,
+    aes(x = score, y = bsid_age_calc),
+    method = "loess",
+    color = "black",
+    se = TRUE,
+    linetype = "dashed",
+    inherit.aes = FALSE
+  ) +
+  facet_wrap(~domain, ncol = 5) +
+  scale_color_gradient2(low = "blue", mid = "orange", high = "red", midpoint = 100) +
+  labs(
+    x = "Score",
+    y = "Age at Assessment (Months)",
+    fill = "SCA Condition",
+    color = "Score"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom"
+  )
+
 ```
 

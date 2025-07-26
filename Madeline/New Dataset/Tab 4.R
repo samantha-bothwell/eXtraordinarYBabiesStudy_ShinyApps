@@ -7,6 +7,8 @@ library(tidyverse)
 library(gamlss)
 library(gamlss.add)
 library(ggplot2)
+library(zoo)
+library(gridExtra)
 
 # Load and preprocess data
 new_gsv_long_rem <- readRDS("Bayley_GSV_scores.rds") %>%
@@ -24,9 +26,6 @@ new_gsv_long_rem <- readRDS("Bayley_GSV_scores.rds") %>%
   )) %>%
   mutate(transformed_score = ((score - 500) / 100) * 25 + 500)
 
-# Global storage, to save teh reac tive chart
-global_user_data <- reactiveValues(df = data.frame(Age = numeric(), Score = numeric(), domain = character()))
-
 # UI
 ui <- fluidPage(
   titlePanel("Growth Input Charts (Bayley Scores)"),
@@ -34,12 +33,11 @@ ui <- fluidPage(
     sidebarPanel(
       selectInput("domain_select", "Select Domain:",
                   choices = unique(new_gsv_long_rem$domain),
-                  selected = "Cognitive"),#The drop down for domain
+                  selected = "Cognitive"),
       selectInput("sct_select", "Select SCT Condition:",
                   choices = c("ALL", unique(new_gsv_long_rem$sca_condition)),
-                  selected = "ALL"),#Drop down for SCA condition
-      
-      h4("Input 4 GSV Checkup Points"), #The age and scores to be saved for the plot in server
+                  selected = "ALL"),
+      h4("Input 4 GSV Checkup Points"),
       numericInput("age1", "Age 1 (months):", NA),
       numericInput("score1", "GSV 1:", NA),
       numericInput("age2", "Age 2 (months):", NA),
@@ -48,24 +46,21 @@ ui <- fluidPage(
       numericInput("score3", "GSV 3:", NA),
       numericInput("age4", "Age 4 (months):", NA),
       numericInput("score4", "GSV 4:", NA),
-      
-      #Save the inputs to make it show up on graph & export buttons
       actionButton("save_inputs", "Save Inputs"),
-      downloadButton("download_plot", "Download All Domain Plots") 
+      downloadButton("download_plot", "Download All Domain Plots")
     ),
     mainPanel(
       plotOutput("input_growth_plot"),
       br(),
-      p("Figure caption: Shows user-entered trajectory with study population ranges.")
+      p("Figure caption: Shows user-entered trajectory with study population ranges, from the 10th to 90th percentile in grey.")
     )
   )
 )
 
 # Server
 server <- function(input, output, session) {
-  #Makes the data reactive in the server so the data doesn't save 
-  user_data <- reactiveValues(df = data.frame(Age = numeric(), Score = numeric(), domain = character()))
-  #Make the inputs for age and score be in the server 
+  global_user_data <- reactiveValues(df = data.frame(Age = numeric(), Score = numeric(), domain = character()))
+  
   observeEvent(input$save_inputs, {
     new_points <- data.frame(
       Age = c(input$age1, input$age2, input$age3, input$age4),
@@ -74,20 +69,19 @@ server <- function(input, output, session) {
       filter(!is.na(Age), !is.na(Score)) %>%
       mutate(domain = input$domain_select)
     
-    global_user_data$df <- new_points #Saves the new points to the reactive graph
+    global_user_data$df <- new_points
   })
   
   output$input_growth_plot <- renderPlot({
     user_df <- global_user_data$df
-    if (nrow(user_df) <= 3) return(NULL)  # Do not plot line unless 3 or more points
+    if (nrow(user_df) <= 3) return(NULL)
     
-    # Filter population data
     data_filtered <- new_gsv_long_rem %>%
       filter(domain == input$domain_select) %>%
       filter(if (input$sct_select == "ALL") TRUE else sca_condition == input$sct_select)
     
-    # Compute percentiles
     percentiles_df <- data_filtered %>%
+      mutate(bsid_age_calc = as.numeric(bsid_age_calc)) %>%
       group_by(bsid_age_calc) %>%
       summarize(
         p10 = quantile(transformed_score, 0.10, na.rm = TRUE),
@@ -97,21 +91,12 @@ server <- function(input, output, session) {
         p90 = quantile(transformed_score, 0.90, na.rm = TRUE),
         .groups = "drop"
       ) %>%
-      arrange(bsid_age_calc) %>%  # Fix 1: ensure order
-      mutate(
-        bsid_age_calc = as.numeric(bsid_age_calc),  # Fix 2: ensure numeric
-        p50_smooth = zoo::rollmean(p50, k = 3, fill = NA)  # Optional: smooth median
-      )
-    print(head(percentiles_df))
+      arrange(bsid_age_calc)
     
-    
-    #Plot 
     ggplot() +
-      geom_smooth(data = percentiles_df, aes(x = bsid_age_calc, y = p50), 
-                  method = "loess", color = "black", se = FALSE, size = 1.2)+
-      geom_line(data = user_df, aes(x = Age, y = Score), color = "red", size = 1.5) +
-      geom_point(data = user_df, aes(x = Age, y = Score), color = "red", size = 3) +
-      geom_ribbon(data = percentiles_df, aes(x = bsid_age_calc, ymin = p10, ymax = p90), fill = "lightblue", alpha = 0.3, na.rm = TRUE) +
+      geom_smooth(data = percentiles_df, aes(x = bsid_age_calc, y = p50), color = "black", size = 1.2, na.rm = TRUE) +
+      geom_line(data = user_df, aes(x = Age, y = Score), color = "royalblue3", size = 1.5) +
+      geom_point(data = user_df, aes(x = Age, y = Score), color = "royalblue3", size = 3) +
       labs(
         title = paste("Growth Trajectory for", input$domain_select),
         x = "Age (months)",
@@ -120,7 +105,6 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 14)
   })
   
-  #Download the plot 
   output$download_plot <- downloadHandler(
     filename = function() {
       paste("growth_plot_", Sys.Date(), ".png", sep = "")
@@ -131,7 +115,8 @@ server <- function(input, output, session) {
         user_df <- global_user_data$df %>% filter(domain == dom)
         data_filtered <- new_gsv_long_rem %>%
           filter(domain == dom) %>%
-          filter(if (input$sct_select == "ALL") TRUE else sca_condition == input$sct_select)
+          filter(if (input$sct_select == "ALL") TRUE else sca_condition == input$sct_select) %>%
+          mutate(bsid_age_calc = as.numeric(bsid_age_calc))
         
         percentiles_df <- data_filtered %>%
           group_by(bsid_age_calc) %>%
@@ -142,23 +127,20 @@ server <- function(input, output, session) {
             p75 = quantile(transformed_score, 0.75, na.rm = TRUE),
             p90 = quantile(transformed_score, 0.90, na.rm = TRUE),
             .groups = "drop"
-          )
-    
+          ) %>%
+          arrange(bsid_age_calc)
         
         ggplot() +
-          geom_ribbon(data = percentiles_df, aes(x = bsid_age_calc, ymin = p10, ymax = p90), fill = "lightblue", alpha = 0.3) +
-          geom_ribbon(data = percentiles_df, aes(x = bsid_age_calc, ymin = p25, ymax = p75), fill = "blue", alpha = 0.2) +
-          geom_smooth(data = percentiles_df, aes(x = bsid_age_calc, y = p50), color = "black", size = 1.2) +
-          geom_smooth(data = user_df, aes(x = Age, y = Score), color = "red", size = 1.5) +
-          geom_point(data = user_df, aes(x = Age, y = Score), color = "red", size = 3) +
+          geom_smooth(data = percentiles_df, aes(x = bsid_age_calc, y = p50), color = "black", size = 1.2, na.rm = TRUE) +
+          geom_line(data = user_df, aes(x = Age, y = Score), color = "royalblue3", size = 1.5) +
+          geom_point(data = user_df, aes(x = Age, y = Score), color = "royalblue3", size = 3) +
           labs(title = paste("Domain:", dom), x = "Age (months)", y = "Transformed GSV Score") +
           theme_minimal(base_size = 14)
       })
       
-      ggsave(file, arrangeGrob(grobs = plots, ncol = 1), width = 8, height = 4 * length(plots))
+      ggsave(file, marrangeGrob(grobs = plots, ncol = 1, nrow = length(plots)), width = 8, height = 4 * length(plots))
     }
   )
 }
 
 shinyApp(ui = ui, server = server)
-
