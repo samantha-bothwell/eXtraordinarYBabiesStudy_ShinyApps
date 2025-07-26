@@ -20,7 +20,7 @@ indiv_percentiles <- readRDS("Individual_Percentiles.RDS")
 
 ### NEW ###
 milestones_list <- c(unique(indiv_percentiles$milestone))
-devfu_list <- 
+#devfu_list <- 
 ### NEW ###
 
 # Pull general population 90th percentile into the individual percentiles data
