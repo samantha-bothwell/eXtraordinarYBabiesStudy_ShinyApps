@@ -15,6 +15,9 @@ library(tidyverse)
 library(ggplot2)
 library(gamlss)
 
+genpop <- readRDS("GenPop_Milestones.RDS")
+indiv_percentiles <- readRDS("Individual_Percentiles.RDS")
+milestones <- readRDS("Milestones.RDS")
 
 composite <- readRDS("Bayley_Composite_scores.RDS")
 GSV <- readRDS("Bayley_GSV_scores.RDS")
