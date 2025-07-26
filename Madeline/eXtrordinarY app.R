@@ -95,7 +95,7 @@ ui <- fluidPage(
                        ),
                        fluidRow(
                          column(6, selectInput("user_id", "Study ID", choices = unique(indiv_percentiles$study_id_extraordinary))),
-                         column(6, numericInput("user_age", "Age Achieved (months)", value = NA, min = 0, max = 100))
+                         column(6, numericInput("user_age", "Age Achieved (months)", value = NA, min = 0, max = 50))
                        ),
                        actionButton("submit_data", "Add Milestone", class = "btn btn-success"),
                        br(), br(),
@@ -663,5 +663,3 @@ server <- function(input, output, session) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
-
