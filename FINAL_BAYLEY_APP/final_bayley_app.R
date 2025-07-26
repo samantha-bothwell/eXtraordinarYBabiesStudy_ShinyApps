@@ -153,7 +153,7 @@ ui <- fluidPage(
                              column(4, tags$img(src = "milestones_legend.jpg", height = "100px")),
                              column(8, h5("Figure 3: Individual Milestones plotted atop the general population data"))),
                            fluidRow(
-                             h2(" Hi")
+                             h3("Data:")
                            ),
                            fluidRow(
                              column(12,
@@ -170,9 +170,88 @@ ui <- fluidPage(
               tabPanel("Background/References"),
               
               # Tab 6: Meet the Team
-              tabPanel("Meet the Team")
+              tabPanel("Meet the Team",
+                       # Group image with caption at top
+                       fluidRow(
+                         column(12,
+                           div(style = "text-align: center;",
+                             tags$img(src = "Group_pic.jpg", height = "300px", style = "max-width: 100%; border-radius: 10px;"),
+                             tags$figcaption("The team, from left to right:.", 
+                                             style = "font-size: 14px; color: #555; margin-top: 10px;")
+                           )
+                         )
+                       ),
+                       br(),
+
+                       # SAMANTHAS
+                       fluidRow(
+                         column(6,
+                           div(style = "text-align:center;", img(src = "lead1.jpg", height = "200px"), h3("Samantha Bothwell"), p("Group Lead")
+                           )
+                         ),
+                         column(6,
+                           div(style = "text-align:center;", img(src = "lead2.jpg", height = "200px"), h3("Samantha Roberts"), p("Group Lead")
+                           )
+                         )
+                       ),
+                       
+                       br(), hr(), br(),
+                       
+                       # TEAM
+                       fluidRow(
+                         column(3,
+                           img(src = "member1.jpg", height = "150px", style = "display:block; margin:auto;")
+                         ),
+                         column(9, h4("Chole Child"), p("BLURB")
+                         )
+                       ),
+                       br(),
+                       
+                       fluidRow(
+                         column(3,img(src = "member2.jpg", height = "150px", style = "display:block; margin:auto;")
+                         ),
+                         column(9, h4("Liam Hallinan"), p("BLURB.")
+                         )
+                       ),
+                       br(),
+                       
+                       fluidRow(
+                         column(3,
+                           img(src = "member3.jpg", height = "150px", style = "display:block; margin:auto;")
+                         ),
+                         column(9, h4("Jenna Jimenez"), p("BLURB")
+                         )
+                       ),
+                       br(),
+                       
+                       fluidRow(
+                         column(3,
+                           img(src = "member4.jpg", height = "150px", style = "display:block; margin:auto;")
+                         ),
+                         column(9, h4("Madeline Murphy"),
+                           p("Hello, my name is Madeline Murphy. I am a rising junior at Rollins College in Orlando, Florida, and I study Biology with a minor in Data Analytics.
+          I was born and raised in Miami, Florida, with my older sister Sarah. I love animals, horror movies, and playing video games with my friends.
+          I joined the Colorado Summer Institute in Biostatistics for the summer of 2025 to gain real experience in the field of biostatistics and to see if this is a career I wish to pursue.")
+                         )
+                       ),
+                       br(),
+                       
+                       fluidRow(
+                         column(3,
+                           img(src = "member5.jpg", height = "150px", style = "display:block; margin:auto;")
+                         ),
+                         column(9,h4("John Preisser"),
+                           p("My name is Jack Preisser; 
+          I am a rising senior majoring in statistics at Carleton College.
+          I was born and raised in Chapel Hill, North Carolina along with my twin sister Hannah. 
+          I enjoy running, hiking and other physical activities. 
+          I have enjoyed my time at the Colorado Summer Institute in Biostatistics (CoSIBS)
+          because I have not studied public health through an in-depth manner prior to CoSIBS. ")
+                         )
+                       )
               
               ) # end tabsetPanel
+  )
 
 ) # end UI
 
