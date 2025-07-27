@@ -26,6 +26,9 @@ library(kableExtra)
 library(stringr)
 library(DT)
 library(gamlss)
+library(gamlss.add)
+library(zoo)
+library(gridExtra)
 
 ####### importing databases for plotting #####
 
@@ -242,7 +245,11 @@ ui <- fluidPage(
                          column(3,
                            img(src = "member1.jpg", height = "150px", style = "display:block; margin:auto;")
                          ),
-                         column(9, h4("Chole Child"), p("BLURB")
+                         column(9, h4("Chloe Child"), p("Hi, my name is Chloe Child! I am a rising senior at Appalachian State University in Boone, North Carolina. 
+                         I study public health with minors in statistics and mathematics. I also work as a Research Assistant in Appalachian State University's 
+                        Public Health Department and as a Student Associate for Blue Cross Blue Shield of North Carolina. When not in school or working, I enjoy hiking, rock climbing,
+                                                        weightlifting, and drawing. I joined the Colorado Summer Institute in Biostatistics (CoSIBS) because I'm really interested
+                                                        in the world of biostatistics and wanted to expand upon my ability to apply statistics and data science to public health research.")
                          )
                        ),
                        br(),
@@ -266,7 +273,7 @@ ui <- fluidPage(
                        
                        fluidRow(
                          column(3,
-                           img(src = "member4.jpg", height = "150px", style = "display:block; margin:auto;")
+                           img(src = "Murphy_Madeline.jpeg", height = "150px", style = "display:block; margin:auto;")
                          ),
                          column(9, h4("Madeline Murphy"),
                            p("Hello, my name is Madeline Murphy. I am a rising junior at Rollins College in Orlando, Florida, and I study Biology with a minor in Data Analytics.
@@ -278,7 +285,7 @@ ui <- fluidPage(
                        
                        fluidRow(
                          column(3,
-                           img(src = "member5.jpg", height = "150px", style = "display:block; margin:auto;")
+                           img(src = "Pressier_Jack.jpg", height = "150px", style = "display:block; margin:auto;")
                          ),
                          column(9,h4("John Preisser"),
                            p("My name is Jack Preisser; 
