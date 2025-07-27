@@ -39,6 +39,29 @@ composite <- readRDS("Bayley_Composite_scores.RDS")
 GSV <- readRDS("Bayley_GSV_scores.RDS")
 scaled <- readRDS("Bayley_Scaled_scores.RDS")
 
+##### Global Code: processing of datasets for plotting #####
+
+# Pull general population 90th percentile into the individual percentiles data
+indiv_percentiles$norms_90th <- genpop$Q90[match(indiv_percentiles$milestone, genpop$milestone)]
+
+# Format ID to display number and SCT
+indiv_percentiles$study_id_extraordinary <- paste0(indiv_percentiles$study_id_extraordinary, " (", 
+                                                   indiv_percentiles$sca_condition, ")")
+# pulls unique milestones for input/plot
+milestones_list <- c(unique(indiv_percentiles$milestone))
+
+# edits GSV data for plotting
+new_gsv_long_rem <- readRDS("Bayley_GSV_scores.rds") %>% 
+  mutate(sca_condition = as.character(sca_condition)) %>% 
+  pivot_longer(!c(study_id_extraordinary, redcap_event_name, sca_condition, bayley_version, bsid_age_calc), 
+               names_to = "domain", values_to = "score") %>% 
+  mutate(domain = case_when(domain == "bsid_gsv_cog" ~ "Cognitive", 
+                            domain == "bsid_gsv_rc" ~ "Receptive Communication", 
+                            domain == "bsid_gsv_ec" ~ "Expressive Communication", 
+                            domain == "bsid_gsv_fm" ~ "Fine Motor", 
+                            domain == "bsid_gsv_gm" ~ "Gross Motor")) %>% 
+  mutate(transformed_score = ((score - 500)/100)*25 + 500)
+
 # Data for Violin Plots/tab1 Specifically
 
 composite_long_filtered <- composite %>% 
@@ -70,31 +93,6 @@ scaled_long_filtered <- scaled %>%
   pivot_longer(cols = c('Cognitive', 'Receptive', 'Expressive', 'Fine_Motor', 'Gross_Motor'), names_to = 'domain', values_to = 'score') %>% 
   filter(score < 777)
 
-
-
-
-##### Global Code: processing of datasets for plotting #####
-
-# Pull general population 90th percentile into the individual percentiles data
-indiv_percentiles$norms_90th <- genpop$Q90[match(indiv_percentiles$milestone, genpop$milestone)]
-
-# Format ID to display number and SCT
-indiv_percentiles$study_id_extraordinary <- paste0(indiv_percentiles$study_id_extraordinary, " (", 
-                                                   indiv_percentiles$sca_condition, ")")
-# pulls unique milestones for input/plot
-milestones_list <- c(unique(indiv_percentiles$milestone))
-
-# edits GSV data for plotting
-new_gsv_long_rem <- readRDS("Bayley_GSV_scores.rds") %>% 
-  mutate(sca_condition = as.character(sca_condition)) %>% 
-  pivot_longer(!c(study_id_extraordinary, redcap_event_name, sca_condition, bayley_version, bsid_age_calc), 
-               names_to = "domain", values_to = "score") %>% 
-  mutate(domain = case_when(domain == "bsid_gsv_cog" ~ "Cognitive", 
-                            domain == "bsid_gsv_rc" ~ "Receptive Communication", 
-                            domain == "bsid_gsv_ec" ~ "Expressive Communication", 
-                            domain == "bsid_gsv_fm" ~ "Fine Motor", 
-                            domain == "bsid_gsv_gm" ~ "Gross Motor")) %>% 
-  mutate(transformed_score = ((score - 500)/100)*25 + 500)
 
 ############################## TO DO: Update to Mean and SD ################################ 
 calculate_percentile <- function(age, percentiles) {
@@ -136,16 +134,15 @@ ui <- fluidPage(
               
               # Tab 1: Welcome to the App/Overview Plot of Scaled/Composite/GSV of Study
               tabPanel("Overview Plots", 
-              
-              selectInput("plot_choice", "Choose a Data Type:",
-                          choices = c("Composite", "Scaled", "GSV")),
-              
-              plotOutput("dynamic_violin_plot"),
-              
-              tags$p(
-                "This plot provides an overview of bayley scores for the overall eXtrodinarY babies study at CU Anschutz. This study conducts clinical research on X&Y chromosome variations to track their influence on developmental milestones. These plots demonstrate the distribution of Bayley 4 scores, subsetted into SCA conditions, across age and domains. Boxplots overlayed on the plots demonstrate general population mean and standard deviations. For more information on the eXtraordinarY babies study and CU Anschutz research",
-                tags$a(href = "https://medschool.cuanschutz.edu/pediatrics/sections/developmental-pediatrics/extraordinary-kids-program/our-research", "click here", target = "_blank"),
-                ".")),
+                        selectInput("plot_choice", "Choose a Data Type:",
+                                    choices = c("Composite", "Scaled", "GSV")),
+                        
+                        plotOutput("dynamic_violin_plot"),
+                        
+                        tags$p(
+                          "This plot provides an overview of bayley scores for the overall eXtrodinarY babies study at CU Anschutz. This study conducts clinical research on X&Y chromosome variations to track their influence on developmental milestones. These plots demonstrate the distribution of Bayley 4 scores, subsetted into SCA conditions, across age and domains. Boxplots overlayed on the plots demonstrate general population mean and standard deviations. For more information on the eXtraordinarY babies study and CU Anschutz research",
+                          tags$a(href = "https://medschool.cuanschutz.edu/pediatrics/sections/developmental-pediatrics/extraordinary-kids-program/our-research", "click here", target = "_blank"),
+                          ".")),
               
               # Tab 2: GAMLSS Growth Plots, based on existing data (static images)
               tabPanel("GAMLSS Growth Plots",
