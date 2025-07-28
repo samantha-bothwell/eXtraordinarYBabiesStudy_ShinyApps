@@ -1,0 +1,446 @@
+---
+title: "bayleybayley"
+author: "JackPreisser"
+date: "2025-07-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(broom)
+library(stringr)
+```
+
+```{r}
+library(gamlss)
+```
+
+
+```{r}
+#loading in the the data files
+compositescores <- readRDS("Bayley_Composite_scores.rds")
+gsvscores <- readRDS("Bayley_GSV_scores.rds")
+scaledscores <- readRDS("Bayley_Scaled_scores.rds")
+```
+
+```{r}
+
+visit_time <- c("6_month_visit_arm_1", 
+                "12_month_visit_arm_1", 
+                "24_month_visit_arm_1",
+                "36_month_visit_arm_1")
+
+#pivotting longer the gsv
+gsvscores.01 <- gsvscores %>%
+  rename(cognitive = bsid_gsv_cog,
+  receptive = bsid_gsv_rc,
+  expressive = bsid_gsv_ec,
+  finemotor = bsid_gsv_fm,
+  grossmotor = bsid_gsv_gm) %>% 
+  mutate(case = 1:227)
+
+gsvscores.02 <- gsvscores.01 %>%
+  mutate(across(c(sca_condition, bayley_version, bsid_age_calc, cognitive,
+                receptive, expressive, finemotor, grossmotor, case), as.character))
+
+gsvscores.03 <- gsvscores.02 %>%
+  pivot_longer(cols = c(cognitive, expressive, receptive, finemotor, grossmotor), names_to = "variable", values_to = "value")
+
+gsvscores.04 <- gsvscores.03 %>%
+  mutate(across(c(value, bsid_age_calc), as.numeric)) %>%
+  mutate(across(c(sca_condition, redcap_event_name), as.factor)) %>%
+  filter(redcap_event_name != "2_month_visit_arm_1")
+
+gsvscores.05 <- gsvscores.04 %>%
+  mutate(value2 = round(25*((value-500)/100)+500),0) %>%
+  mutate(visit_time = factor(redcap_event_name, levels = visit_time))
+```
+
+```{r}
+#pivotting longer the scores frame
+scaledscores.01 <- scaledscores %>%
+  rename(cognitive = bsid_cog_scaled,
+         receptive = bsid_rc_scaled,
+         expressive = bsid_ec_scaled,
+         finemotor = bsid_fm_scaled,
+         grossmotor = bsid_gm_scaled)
+
+scaledscores.02 <- scaledscores.01 %>%
+  mutate(across(c(sca_condition, bayley_version, bsid_age_calc,
+                  cognitive, receptive, expressive, bsid_lang_sumscaled,
+                  finemotor, grossmotor, bsid_mot_sumscaled), as.character))
+
+scaledscores.03 <- scaledscores.02 %>%
+  pivot_longer(cols = c(cognitive, expressive, receptive, finemotor, grossmotor),
+               names_to = "variable", values_to = "value")
+scaledscores.04 <- scaledscores.03 %>%
+  mutate(across(c(value, bsid_lang_sumscaled, bsid_mot_sumscaled), as.numeric)) %>%
+  mutate(across(c(sca_condition, redcap_event_name), as.factor)) %>%
+    filter(redcap_event_name != "2_month_visit_arm_1")
+
+scaledscores.05 <- scaledscores.04 %>%
+  mutate(value2 = round(25*((value-500)/100)+500),0) %>%
+  mutate(visit_time = factor(redcap_event_name, levels = visit_time))
+```
+
+Pivotting longer the composite scores
+```{r}
+compositescores.01 <- compositescores %>%
+  rename(cognitive = bsid_cog_composite, 
+         language = bsid_lang_composite,
+         motor = bsid_mot_composite)
+```
+
+```{r}
+compositescores.02 <- compositescores.01 %>%
+  mutate(across(c(sca_condition, bayley_version, bsid_age_calc, 
+                  cognitive, language, motor), as.character))
+
+compositescores.03 <- compositescores.02 %>%
+  pivot_longer(cols = c(cognitive, language, motor), names_to = "variable", values_to = "value") 
+
+compositescores.04 <- compositescores.03 %>%
+  mutate(across(c(value, bsid_age_calc), as.numeric)) %>%
+  mutate(across(c(sca_condition, redcap_event_name), as.factor)) %>%
+  filter(redcap_event_name != "2_month_visit_arm_1")
+
+compositescores.05 <- compositescores.04 %>%
+  mutate(value2 = round(25*((value-500)/100)+500), 0) %>%
+  mutate(visit_time = factor(redcap_event_name, levels = visit_time))
+
+
+
+
+```
+
+
+
+```{r}
+#Plotting bayley scores against the age of the children at the visit for gsvscores
+gsvplot <- ggplot(aes(x = bsid_age_calc, y = value2), data = gsvscores.05) + geom_point() + geom_smooth(method = "glm", se = TRUE) + labs(x = "age at visit", y = "bayley 4 score")
+gsvplot
+```
+
+
+```{r}
+#Plotting bayley scores against the categorical time-variable (continuous; no jitter added)
+gsvplot <- ggplot(aes(x = bsid_age_calc, y = value2), data = gsvscores.05) + geom_point() + geom_smooth(method = "glm", se = TRUE) + labs(x = "age at visit", y = "bayley 4 score")
+gsvplot
+
+one.lm <- lm(value2 ~ bsid_age_calc, data = gsvscores.05)
+one.aug <- augment(one.lm)
+
+one.resid <- ggplot(one.aug, aes(x = bsid_age_calc, y = .resid)) + geom_point() + labs(y = "residuals") + geom_hline(yintercept = 0, linetype = "dashed")
+
+one.resid
+```
+
+```{r}
+
+#Plotting bayley scores against the categorical time-variable (discrete)
+gsvplot2 <- ggplot(aes(x = visit_time, y = value2), data = gsvscores.05) + geom_point() + geom_jitter(width = 0.1, height = 0.1, color = "blue", size = 1)
+gsvplot2
+
+gsvplot2box <- ggplot(aes(x = visit_time, y = value2), data = gsvscores.05) + geom_boxplot() + labs(x = "age at visit", y = "bayley 4 score")
+gsvplot2box
+
+factorone.lm <- glm(value2 ~ visit_time, data = gsvscores.05)
+factorone.aug <- augment(factorone.lm)
+gsvplot2boxresid <- ggplot(factorone.aug, aes(x = visit_time, y = .resid)) + geom_boxplot() + labs(title = "Residual boxplots", x = "age at visit", y = "bayley 4 score") + geom_hline(yintercept = 0, linetype = "dashed")
+gsvplot2boxresid
+```
+
+
+```{r}
+#What I put in
+
+newplot <- ggplot(aes(x = sca_condition, y = value2, fill = sca_condition), data = gsvscores.05) + geom_boxplot() + labs(title = "Scores given SCT", y = "bayley 4")
+newplot
+
+ggsave("boxplot.jpg", plot = newplot, width = 6, height =4,
+       dpi = 300)
+#What Liam shared on GitHub
+
+# Composite Plot of Score by Sex Condition and Domain
+# comp_plot <- ggplot(composite_IV[composite_IV$Score_III < 450, ], aes(x=Score_III, y=sca_condition)) + 
+#   geom_boxplot(aes(color=domains)) +
+#   theme_bw() + 
+#   labs(title = "Boxplot by SCA Condition",
+#        x = "Bayley-III Score",
+#        y = "SCA Condition")
+```
+
+```{r}
+#Producing Violin plots for each kind of exercise evaluated\noptions are cognitive, expressive, fine motor, gross motor, and receptive.
+#Violin plots account for showing the density of the relationship between the bayley 4\nscores and the age of the participants. 
+#We see that the type of score (which box) and the given SCT (color) is accounted for
+
+violin <- ggplot(data = gsvscores.05) + geom_violin(aes(x = bsid_age_calc, y = value2, fill = sca_condition, alpha = 0.25)) + facet_wrap(~variable) + coord_flip()
+ggsave("violin.jpg", plot = violin, width = 8, height = 6,
+       dpi = 300)
+```
+
+
+
+DOIN STUFF WIT GAMLASS
+
+Generalized Additive Models
+
+*Flexible Regression Framework: using GAMLSS
+
+```{r}
+
+#defining an object to pass through cognitive scores only
+
+gsv_nona_cog <- gsvscores.05 %>%
+  filter(!is.na(bsid_age_calc)) %>%
+  filter(variable == "cognitive") %>%
+  filter(!is.na(value2)) %>%
+dplyr::select(bsid_age_calc, value2) 
+
+#creating them gamlss object for cognitive
+
+gamlss_cog <- gamlss(
+  formula = value2 ~ pb(bsid_age_calc, lambda = 5),
+  sigma.formula = ~pb(bsid_age_calc),
+  nu.formula = ~1,
+  tau.formula = ~1,
+  data = gsv_nona_cog,
+  family = BCCG()
+)
+```
+
+```{r}
+#establishing a sequence as a range of ages, going from 2 to 41 months
+ages <- seq(2, 41, by = 0.5)
+
+# 2. Build newdata with all required covariates used in the model
+
+newdata <- data.frame(bsid_age_calc = ages)
+
+# 3. Get predicted distribution parameters from the model
+
+params <- predictAll(gamlss_cog, newdata = newdata)
+
+# 4. Calculate centiles manually using the BCCG distribution quantile function
+
+centiles <- c(10, 25, 50, 75, 90)
+q_vals <- sapply(centiles / 100, function(p) {
+  qBCCG(p, mu = params$mu, sigma = params$sigma, nu = params$nu)
+})
+
+# 5. Create a dataframe of predicted centiles
+
+lms_cog <- data.frame(age = ages, q_vals)
+colnames(lms_cog)[-1] <- paste0("P", centiles)
+
+
+## Plot it
+cogplot <- ggplot(gsv_nona_cog, aes(x = bsid_age_calc, y = value2)) + 
+  geom_point() + 
+  geom_smooth(data = lms_cog, aes(x = age, y = P10)) + 
+  geom_smooth(data = lms_cog, aes(x = age, y = P25)) + 
+  geom_smooth(data = lms_cog, aes(x = age, y = P50)) + 
+  geom_smooth(data = lms_cog, aes(x = age, y = P75)) + 
+  geom_smooth(data = lms_cog, aes(x = age, y = P90)) + 
+  labs(title = str_wrap("GAMLSS Plot: Cognitive Bayley 4 Scores versus Age in Months; Percentile Curves", width = 50), 
+                                                            y = "Bayley 4 Score", x = "Age in Months")
+
+ggsave("cognitive.jpg", plot = cogplot, width = 6, height = 4,
+       dpi = 300)
+```
+
+
+```{r}
+#doing these steps over for the expressive scores
+
+gsv_nona_exp <- gsvscores.05 %>%
+  filter(!is.na(bsid_age_calc)) %>%
+  filter(variable == "expressive") %>%
+  filter(!is.na(value2)) %>%
+dplyr::select(bsid_age_calc, value2) 
+  
+#looks good so far
+gamlss_exp <- gamlss(
+  formula = value2 ~ pb(bsid_age_calc, lambda = 5),
+  sigma.formula = ~pb(bsid_age_calc),
+  nu.formula = ~1,
+  tau.formula = ~1,
+  data = gsv_nona_exp,
+  family = BCCG()
+)
+
+# 3. Get predicted distribution parameters from the model
+paramsexp <- predictAll(gamlss_exp, newdata = newdata)
+
+# 4. Calculate centiles manually using the BCCG distribution quantile function
+centilesexp <- c(10, 25, 50, 75, 90)
+q_valsexp <- sapply(centilesexp / 100, function(p) {
+  qBCCG(p, mu = paramsexp$mu, sigma = paramsexp$sigma, nu = paramsexp$nu)
+})
+
+# 5. Create a dataframe of predicted centiles
+lms_exp <- data.frame(age = ages, q_valsexp)
+colnames(lms_exp)[-1] <- paste0("P", centilesexp)
+
+# Plot it
+expplot <- ggplot(gsv_nona_exp, aes(x = bsid_age_calc, y = value2)) + 
+  geom_point() + 
+  geom_smooth(data = lms_exp, aes(x = age, y = P10)) + 
+  geom_smooth(data = lms_exp, aes(x = age, y = P25)) + 
+  geom_smooth(data = lms_exp, aes(x = age, y = P50)) + 
+  geom_smooth(data = lms_exp, aes(x = age, y = P75)) + 
+  geom_smooth(data = lms_exp, aes(x = age, y = P90)) + 
+  labs(title = str_wrap("GAMLSS Plot: Expressive Bayley 4 Scores versus Age in Months; Percentile Curves", width = 50), 
+                                                            y = "Bayley 4 Score", x = "Age in Months")
+
+ggsave("expressive.jpg", plot = expplot, width = 6, height = 4,
+       dpi = 300)
+```
+
+```{r}
+
+#doing these steps over for the fine motor scores
+
+gsv_nona_fmo <- gsvscores.05 %>%
+  filter(!is.na(bsid_age_calc)) %>%
+  filter(variable == "finemotor") %>%
+  filter(!is.na(value2)) %>%
+dplyr::select(bsid_age_calc, value2) 
+  
+#looks good so far
+gamlss_fmo <- gamlss(
+  formula = value2 ~ pb(bsid_age_calc, lambda = 5),
+  sigma.formula = ~pb(bsid_age_calc),
+  nu.formula = ~1,
+  tau.formula = ~1,
+  data = gsv_nona_fmo,
+  family = BCCG()
+)
+
+# 3. Get predicted distribution parameters from the model
+paramsfmo <- predictAll(gamlss_fmo, newdata = newdata)
+
+# 4. Calculate centiles manually using the BCCG distribution quantile function
+centilesfmo <- c(10, 25, 50, 75, 90)
+q_valsfmo <- sapply(centilesfmo / 100, function(p) {
+  qBCCG(p, mu = paramsfmo$mu, sigma = paramsfmo$sigma, nu = paramsfmo$nu)
+})
+
+# 5. Create a dataframe of predicted centiles
+lms_fmo <- data.frame(age = ages, q_valsfmo)
+colnames(lms_fmo)[-1] <- paste0("P", centilesfmo)
+
+# Plot it
+fine_motor <- ggplot(gsv_nona_fmo, aes(x = bsid_age_calc, y = value2)) + 
+  geom_point() +
+  geom_smooth(data = lms_fmo, aes(x = age, y = P10)) + 
+  geom_smooth(data = lms_fmo, aes(x = age, y = P25)) + 
+  geom_smooth(data = lms_fmo, aes(x = age, y = P50)) + 
+  geom_smooth(data = lms_fmo, aes(x = age, y = P75)) + 
+  geom_smooth(data = lms_fmo, aes(x = age, y = P90)) +
+  labs(title = str_wrap("GAMLSS Plot: Fine Motor Bayley 4 Scores\nversus Age in Months; Percentile Curves", width = 50), 
+                                                            y = "Bayley 4 Score", x = "Age in Months")
+
+ggsave("finemotor.jpg", plot = fine_motor, width = 6, height = 4,
+       dpi = 300)
+```
+
+```{r}
+#doing these steps over for the gross motor scores
+
+gsv_nona_gmo <- gsvscores.05 %>%
+  filter(!is.na(bsid_age_calc)) %>%
+  filter(variable == "grossmotor") %>%
+  filter(!is.na(value2)) %>%
+dplyr::select(bsid_age_calc, value2) 
+  
+#looks good so far
+gamlss_gmo <- gamlss(
+  formula = value2 ~ pb(bsid_age_calc, lambda = 5),
+  sigma.formula = ~pb(bsid_age_calc),
+  nu.formula = ~1,
+  tau.formula = ~1,
+  data = gsv_nona_gmo,
+  family = BCCG()
+)
+
+# 3. Get predicted distribution parameters from the model
+paramsgmo <- predictAll(gamlss_gmo, newdata = newdata)
+
+# 4. Calculate centiles manually using the BCCG distribution quantile function
+centilesgmo <- c(10, 25, 50, 75, 90)
+q_valsgmo <- sapply(centilesgmo / 100, function(p) {
+  qBCCG(p, mu = paramsgmo$mu, sigma = paramsgmo$sigma, nu = paramsgmo$nu)
+})
+
+# 5. Create a dataframe of predicted centiles
+
+lms_gmo <- data.frame(age = ages, q_valsgmo)
+colnames(lms_gmo)[-1] <- paste0("P", centilesgmo)
+
+# Plot it
+grossplot <- ggplot(gsv_nona_gmo, aes(x = bsid_age_calc, y = value2)) + 
+  geom_point() + 
+  geom_smooth(data = lms_gmo, aes(x = age, y = P10)) + 
+  geom_smooth(data = lms_gmo, aes(x = age, y = P25)) + 
+  geom_smooth(data = lms_gmo, aes(x = age, y = P50)) + 
+  geom_smooth(data = lms_gmo, aes(x = age, y = P75)) + 
+  geom_smooth(data = lms_gmo, aes(x = age, y = P90)) + 
+  labs(title = str_wrap("GAMLSS Plot: Gross Motor Bayley 4 Scores versus Age in Months; Percentile Curves", width = 50), 
+                                                            y = "Bayley 4 Score", x = "Age in Months")
+ggsave("grossmotor.jpg", plot = grossplot, width = 6, height = 4,
+       dpi = 300)
+```
+```{r}
+#doing these steps over for the receptive scores
+
+gsv_nona_recep <- gsvscores.05 %>%
+  filter(!is.na(bsid_age_calc)) %>%
+  filter(variable == "receptive") %>%
+  filter(!is.na(value2)) %>%
+dplyr::select(bsid_age_calc, value2) 
+  
+#looks good so far
+gamlss_recep <- gamlss(
+  formula = value2 ~ pb(bsid_age_calc, lambda = 5),
+  sigma.formula = ~pb(bsid_age_calc),
+  nu.formula = ~1,
+  tau.formula = ~1,
+  data = gsv_nona_recep,
+  family = BCCG()
+)
+
+# 3. Get predicted distribution parameters from the model
+paramsrecep <- predictAll(gamlss_recep, newdata = newdata)
+
+# 4. Calculate centiles manually using the BCCG distribution quantile function
+centilesrecep <- c(10, 25, 50, 75, 90)
+q_valsrecep <- sapply(centilesrecep / 100, function(p) {
+  qBCCG(p, mu = paramsrecep$mu, sigma = paramsrecep$sigma, nu = paramsrecep$nu)
+})
+
+# 5. Create a dataframe of predicted centiles
+
+lms_recep <- data.frame(age = ages, q_valsrecep)
+colnames(lms_recep)[-1] <- paste0("P", centilesrecep)
+
+# Plot it
+recepplot <- ggplot(gsv_nona_recep, aes(x = bsid_age_calc, y = value2)) + 
+  geom_point() + 
+  geom_smooth(data = lms_recep, aes(x = age, y = P10)) + 
+  geom_smooth(data = lms_recep, aes(x = age, y = P25)) + 
+  geom_smooth(data = lms_recep, aes(x = age, y = P50)) + 
+  geom_smooth(data = lms_recep, aes(x = age, y = P75)) + 
+  geom_smooth(data = lms_recep, aes(x = age, y = P90)) + 
+  labs(title = str_wrap("GAMLSS Plot: Receptive Bayley 4 Scores versus Age in Months; Percentile Curves", width = 50), 
+                                                            y = "Bayley 4 Score", x = "Age in Months")
+
+ggsave("receptive.jpg", plot = recepplot, width = 6, height = 4,
+       dpi = 300)
+```
