@@ -286,18 +286,29 @@ lms_long2 <- pivot_longer(
 )
 
 # Plotting
-ggplot(lms_long2, aes(x = age, y = Score, color = Percentile)) +
-  geom_smooth(size = 1) +
+
+ggplot() +
+  # P10 and P90: light grey dashed
+  geom_smooth(data = filter(lms_long2, Percentile %in% c("P10", "P90")),
+              aes(x = age, y = Score, group = Percentile),
+              color = "grey", linetype = "dashed", se = FALSE) +
+  # P25 and P75: black dashed
+  geom_smooth(data = filter(lms_long2, Percentile %in% c("P25", "P75")),
+              aes(x = age, y = Score, group = Percentile),
+              color = "black", linetype = "dashed", se = FALSE) +
+  # P50: black solid
+  geom_smooth(data = filter(lms_long2, Percentile == "P50"),
+              aes(x = age, y = Score),
+              color = "black", linetype = "solid", se = FALSE, size = 1) +
   labs(
     title = "Growth Chart: Bayley-4 Cognitive Scores by Age (XYY)",
     x = "Age (months)",
-    y = "Bayley-4 Cogniitve Score",
-    color = "Percentile"
+    y = "Bayley-4 Cognitive Score"
   ) +
   theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
-    legend.position = "right"
+    legend.position = "none"
   )
 ```
 
