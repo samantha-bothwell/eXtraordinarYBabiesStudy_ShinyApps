@@ -316,9 +316,10 @@ ui <- fluidPage(
                        
                        fluidRow(
                          column(3,
-                           img(src = "member3.jpg", height = "150px", style = "display:block; margin:auto;")
+                           img(src = "Jenna_Jimenez.jpg", height = "150px", style = "display:block; margin:auto;")
                          ),
-                         column(9, h4("Jenna Jimenez"), p("BLURB")
+                         column(9, h4("Jenna Jimenez"), p("Hello, my name is Jenna Jimenez! I am a fifth year student, graduating May 2026, at California State University Channel Islands. I study psychology with a minor in studio art while also working as a Research Assistant on the Clobes Cannabis Research Team, and starting August 2025, as a Research Assistant with Dr. Beatrice de Oca. Outside of my academics, I enjoy making art (including, but not limited to, painting, ceramics, and figure drawing), going to concerts, spending time outdoors, and hanging out with my two cats. I took part in the 2025 Colorado Summer Institute in Biostatistics (CoSIBS) to explore the field of biostatistics and to further gain statistical and programming skills that I can apply to my current and future research. 
+")
                          )
                        ),
                        br(),
