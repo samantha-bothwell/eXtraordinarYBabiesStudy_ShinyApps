@@ -257,9 +257,7 @@ ui <- fluidPage(
                                 p("Citation for Nielsen and Wohlert : Nielsen, J. & Wohlert, M. (1991). Chromosome abnormalities found among 34,910 newborn children: results from a 13‑year incidence study in Århus, Denmark.Human Genetics, 87, 81–83."),
                                 p("Citation for Thompson, et al : Thompson T, Bothwell S, Janusz J, Wilson R, Howell S, Davis S, Swenson K, Martin S, Kowal K, Ikomi C, Despradel M, Ross J, Tartaglia N. Quantifying the Spectrum of Early Motor and Language
              Milestones in Sex Chromosome Trisomy. Pediatrics. 2025 Jul 24:e2024068773. doi: 10.1542/peds.2024-068773. Epub ahead of print. PMID: 40701561."),
-                                tabPanel("EBS",
-                                         tags$img(src = "eBs_Logo.jpg",
-                                                  width = "100%", height = "auto" , alt = "Example GAMLSS"))
+                               
                                 
                          ) 
                        )),
@@ -765,9 +763,7 @@ server <- function(input, output, session) {
         src = file.path("grossmotor.jpg")
         
       })
-      output$image_ui2 <- renderImage({
-        src = file.path("eBs_Logo.jpg")
-      })
+     
   ### For Tab 6 ###
       # no server logic, all displayed outputs are static images and text
 } # end server
