@@ -1,3 +1,5 @@
+#####TAB 2####
+
 # Load libraries
 library(shiny)
 library(ggplot2)
@@ -30,12 +32,16 @@ ui <- fluidPage(
                   selected = unique(new_gsv_long_rem$domain)[1]),
       selectInput("sct_select", "Select SCT Condition:",
                   choices = c("ALL", unique(new_gsv_long_rem$sca_condition)),
-                  selected = "ALL")
+                  selected = "ALL"),
+      checkboxInput("show_points", "Overlay Raw Data Points", value = FALSE)
+      
     ),
     mainPanel(
-      plotOutput("growth_plot"),
+      plotOutput("growth_plot", height = "600px"),
       br(),
-      p("Figure caption: see explanation in Tab 5")
+      p("Figure caption: This is a growth plot made with Bayley 4 GSV Scores using GAMLSS modeling. They can be seperated by Bayley Domian
+        and SCT Condition. There is also an option to overlay raw data points. The solid black line represents the 50th percentile 
+        of those in the Bayley study, the gray is the 25th and 75th percentile, and the dashed lines represent the 10th and 90th percentile.")
     )
   )
 )
@@ -80,10 +86,11 @@ server <- function(input, output, session) {
     
     # ages to predict over 
     age_seq <- seq(
-      min(filtered_data$bsid_age_calc, na.rm = TRUE),
-      max(filtered_data$bsid_age_calc, na.rm = TRUE),
+      from = max(5, min(filtered_data$bsid_age_calc, na.rm = TRUE)),
+      to = max(filtered_data$bsid_age_calc, na.rm = TRUE),
       length.out = 100
     )
+    
     
     model$call$data <- filtered_data
     
@@ -112,26 +119,42 @@ server <- function(input, output, session) {
                               names_to = "Percentile", values_to = "Score")
 
     # ---- Plot ----
-    ggplot(pred_long, aes(x = age, y = Score, color = Percentile)) +
-      geom_line(size = 1.2) +
-      geom_ribbon(
-        data = data.frame(
-          x = lms_mod$age,
-          ymin = lms_mod$P10,
-          ymax = lms_mod$P90
-        ),
-        aes(x = x, ymin = ymin, ymax = ymax),
-        inherit.aes = FALSE,
-        alpha = 0.2,
-        fill = "gray70"
-      ) +
+    p <- ggplot() +
+      # 10–90 ribbon
+      geom_ribbon(data = lms_mod, aes(x = age, ymin = P10, ymax = P90),
+                  fill = "gray85", alpha = 0.3) +
+      
+      # 50th percentile: thick black solid
+      geom_smooth(data = lms_mod, aes(x = age, y = P50),
+                color = "black", size = 1.6, linetype = "solid") +
+      
+      # 10th & 90th percentiles: blue dashed
+      geom_smooth(data = lms_mod, aes(x = age, y = P10),
+                color = "slateblue1", size = 1.1, linetype = "dashed") +
+      geom_smooth(data = lms_mod, aes(x = age, y = P90),
+                color = "slateblue1", size = 1.1, linetype = "dashed") +
+      
+      # 25th & 75th percentiles: gray, lighter lines
+      geom_smooth(data = lms_mod, aes(x = age, y = P25),
+                color = "snow3", size = 0.8, linetype = "solid") +
+      geom_smooth(data = lms_mod, aes(x = age, y = P75),
+                color = "snow3", size = 0.8, linetype = "solid") +
+      
+      # Theme and labels
       theme_minimal(base_size = 14) +
       labs(
         title = paste("Growth Chart for", input$domain_select),
         x = "Age (months)",
-        y = "Transformed Bayley Score",
-        color = "Percentile"
+        y = "Bayley-4 Score"
       )
+    
+    if (input$show_points) {
+      p <- p+geom_point(data = filtered_data,
+                        aes(x = bsid_age_calc, y = transformed_score),
+                        inherit.aes = FALSE,
+                        alpha = 0.5, size = 1.5)
+    }
+    p
   })
 }
 
