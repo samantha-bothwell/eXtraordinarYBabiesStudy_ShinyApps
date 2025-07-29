@@ -280,7 +280,7 @@ ui <- fluidPage(
                            width = 4,
                            style = "border-right: 1px solid #ddd; padding-right: 15px;",
                            h4("GAMLSS"),
-<<<<<<< Updated upstream
+# <<<<<<< Updated upstream
                            
                            p("GAMLSS enables the creation of distributional regression models using Generalized Additive Models. By adding 
                            location (mean), scale (variance), and shape (skew and kurtosis) components to the GAM structure, 
@@ -290,14 +290,14 @@ ui <- fluidPage(
                            p("Bayley GSV (Growth Scale Values) scores, taken from the 'eXtraordinarY Babies' study, can be modeled similarly 
                            to growth parameters like height and weight. We used the GAMLSS R-package to create percentile curves for the 
                              Bayley-IV GSV scores collected at regularly scheduled study visits."),
-=======
+# =======
                            p("GAMLSS enables the creation of distributional regression models using Generalized Additive Models (GAM). By adding location (mean), scale (variance), 
              and shape (skew and kurtosis) components to the GAM structure, GAMLSS supports the construction of distributional non-linear curves. A common use of GAMLSS 
              is for growth curve construction, where whole distributions (10th, 25th, 50th, 75th, and 90th) percentiles can be visualized."),
                            p("Bayley GSV (Growth Scale Values) scores, 
              taken from the eXtraordinarY Babies Study, can be modeled similarly to growth parameters like height and weight. We used the GAMLSS R-package to create percentile curves for the 
              Bayley-IV GSV scores collected at regularly scheduled study visits."),
->>>>>>> Stashed changes
+# >>>>>> Stashed changes
                            
                            tabPanel("Gross Motor",
                                     tags$img(src = "grossmotor.jpg",
@@ -307,7 +307,7 @@ ui <- fluidPage(
                          column(
                            width = 4, style = "border-right: 1px solid #ddd; padding-right: 15px;",
                            h4("Bayley Scores of Infant and Toddler Development"),
-<<<<<<< Updated upstream
+# <<<<<<< Updated upstream
                            
                            p("The National Library of Medicine estimates that one in six children experience developmental delays, (Balasundaram et al. 2022).  
                              Bayley Scores of Infant and Toddler Development (BSID) is the most widespread tool used to assess developmental growth in infant and toddlers, 
@@ -334,7 +334,7 @@ ui <- fluidPage(
                                   Observations at 2 months were removed for GSV growth curve estimation due to the small sample size. Future analysis with more data points should include the 2 month period 
                                   for more accurate estimation. "),
                                 
-=======
+# =======
                            p("The National Library of Medicine estimates that one in six children experience developmental delays, (Balasundaram et al. 2022).  Bayley Scores of Infant and Toddler Development 
              (BSID) is the most widespread tool used to assess developmental growth in infant and toddlers, up to 24 months in age in discovering developmental delays. Cognition, language (expressive
                                                                                                                                                                                              and receptive), motor skills (fine and gross), socio-emotional behavior, and adaptive behavior scores are the fundamental components of
@@ -355,7 +355,7 @@ ui <- fluidPage(
              and at Nemours Children’s Hospital of Thomas Jefferson University."),
                                 p("Evaluations were conducted at 2, 6, 12, 24, and 36 months, evaluating cognition, motor skills (fine and gross), and language (expressive and receptive) abilities. Observations at 2 months
              were removed for GSV growth curve estimation due to the small sample size. Future analysis with more data points should include the 2 month period for more accurate estimation. "),
->>>>>>> Stashed changes
+# >>>>>>> Stashed changes
                                 tags$hr(style = "border-top: 2px dashed #ccc; margin: 15px 0;"),
                                 
                                 p("Citation for Nielsen and Wohlert : Nielsen, J. & Wohlert, M. (1991). Chromosome abnormalities found among 34,910 newborn children: results from a 13‑year incidence study in Århus, Denmark.Human Genetics, 87, 81–83."),
@@ -389,7 +389,7 @@ ui <- fluidPage(
                          ),
                          column(9, h4("Chloe Child (she/her)"), p("Chloe Child is a rising senior at Appalachian State University in Boone, North Carolina. 
                                                                   She studies public health with minors in statistics and mathematics. Chloe also works as a Research Assistant at Appalachian State University's 
-                                                                  Public Health Department and as a Student Associate for Blue Cross Blue Shield of North Carolina. When not in school or working, Chloe enjoy hiking, rock climbing,
+                                                                  Public Health Department and as a Student Associate for Blue Cross Blue Shield of North Carolina. When not in school or working, Chloe enjoy hiking, rock climbing, crocheting,
                                                                   weightlifting, and drawing. She joined the Colorado Summer Institute in Biostatistics (CoSIBS) because of a deep interest in the world of biostatistics,
                                                                   and wanted to expand upon her ability to apply statistics and data science to public health research.")
                          )
@@ -460,7 +460,7 @@ ui <- fluidPage(
                        
                        br(), hr(), br()
                 ) # tend tab 6
-            ), # end tabset Panel
+            ) # end tabset Panel
 )# end UI
 
 ##### Defining Server logic #####
@@ -617,7 +617,7 @@ server <- function(input, output, session) {
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
-      top_row <- cowplot::plot_grid(p1, legend, ncol = 2, rel_widths = c(1, 0.25))
+      top_row <- cowplot::plot_grid(p1, legend, ncol = 2)
       
       
       bottom_row <- cowplot::plot_grid(p2, p3, ncol = 2)
@@ -730,7 +730,7 @@ server <- function(input, output, session) {
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
-      top_row <- cowplot::plot_grid(p1, legend, ncol = 2, rel_widths = c(1, 0.25))
+      top_row <- cowplot::plot_grid(p1, legend, ncol = 2)
       
       
       middle_row <- cowplot::plot_grid(p2, p3, ncol = 2)
@@ -846,7 +846,7 @@ server <- function(input, output, session) {
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
-      top_row <- cowplot::plot_grid(p1, legend, ncol = 2, rel_widths = c(1, 0.25))
+      top_row <- cowplot::plot_grid(p1, legend, ncol = 2)
       
       middle_row <- cowplot::plot_grid(p2, p3, ncol = 2)
       bottom_row <- cowplot::plot_grid(p4, p5, ncol = 2)
