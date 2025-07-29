@@ -10,7 +10,6 @@ library(gamlss.add)
 library(ggplot2)
 library(zoo)
 library(gridExtra)
-print(head(new_gsv_long_rem))
 
 # Load and preprocess data
 new_gsv_long_rem <- readRDS("Bayley_GSV_scores.rds") %>%
