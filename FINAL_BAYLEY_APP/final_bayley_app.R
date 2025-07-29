@@ -388,7 +388,7 @@ ui <- fluidPage(
                            img(src = "Child_Chloe.jpeg", height = "150px", style = "display:block; margin:auto;")
                          ),
                          column(9, h4("Chloe Child (she/her)"), p("Chloe Child is a rising senior at Appalachian State University in Boone, North Carolina. 
-                                                                  She studies public health with minors in statistics and mathematics. Chloe also works as a Research Assistant at Appalachian State University's 
+                                                                  She studies Public Health with minors in Statistics and Mathematics. Chloe also works as a Research Assistant at Appalachian State University's 
                                                                   Public Health Department and as a Student Associate for Blue Cross Blue Shield of North Carolina. When not in school or working, Chloe enjoy hiking, rock climbing, crocheting,
                                                                   weightlifting, and drawing. She joined the Colorado Summer Institute in Biostatistics (CoSIBS) because of a deep interest in the world of biostatistics,
                                                                   and wanted to expand upon her ability to apply statistics and data science to public health research.")
@@ -399,7 +399,7 @@ ui <- fluidPage(
                        fluidRow(
                          column(3,img(src = "Hallinan_Liam.jpeg", height = "150px", style = "display:block; margin:auto;")
                          ),
-                         column(9, h4("Liam Hallinan (he/him)"), p("Liam Hallinan is a rising senior at Colorado School of Mines. He is pursuoing a degree in Quantitative Biosciences and Engineering,
+                         column(9, h4("Liam Hallinan (he/him)"), p("Liam Hallinan is a rising senior at Colorado School of Mines. He is pursuing a degree in Quantitative Biosciences and Engineering,
                                                           with minors in Data Science, Public Affairs, and Biommedical Engineering. In school, Liam is active as a Lead Peer Mentor, helping
                                                           incoming students transition to college, and oversees the planning of school-wide orientation programming. Liam also serves as a Biology
                                                           2 Laboratory Teaching Assistant, helping students develop their foundational lab skills. Outside of academics, Liam is passionate
@@ -449,11 +449,16 @@ ui <- fluidPage(
                        # SAMANTHAS
                        fluidRow(
                          column(6,
-                                div(style = "text-align:center;", img(src = "lead1.jpg", height = "200px"), h3("Samantha Bothwell"), p("Group Lead")
+                                div(style = "text-align:center;", img(src = "Bothwell_Samantha.jpg", height = "200px"), h3("Samantha Bothwell (she/her)"), 
+                                    p("Group Lead Research Scientist"), 
+                                    p("Samantha Bothwell is a biostatistician in the Department of Pediatrics at the University of Colorado. She has been working with the eXtraordinarY Babies Study team since 2023. She earned her Master's degree in Biostatistics in 2021 and is currently pursuing her PhD.
+                                      Outside of work and school, she enjoys rock climbing, crocheting, hiking 14ers with her dog Maizie (though she says Maizie is faster than she is), and unwinding with a healthy dose of reality TV.")
                                 )
                          ),
                          column(6,
-                                div(style = "text-align:center;", img(src = "lead2.jpg", height = "200px"), h3("Samantha Roberts"), p("Group Lead")
+                                div(style = "text-align:center;", img(src = "Roberts_Samantha.jpg", height = "200px"), h3("Samantha Roberts (she/her)"), p("Group Lead Research Scientist"),
+                                    p("Samantha Roberts is a biostatistician with the Center for Innovative Design and Analysis since 2021, first as a master's research assistant, then as a research scientist.
+                                      She earned her Master's degree in Biostatistics in 2022 and her Master's degree in Public Health in 2012. When not working, she likes to read, hike and hang out with her two kids and husband.")
                                 )
                          )
                        ),
