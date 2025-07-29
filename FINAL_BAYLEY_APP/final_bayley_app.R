@@ -99,7 +99,7 @@ library(dplyr)
       )
     
     # adds lines for reference types
-    ref_line_types <- c("Population Mean" = "solid", "Population IQR" = "dashed")
+    ref_line_types <- c("Population Mean" = "solid", "Population 95% Conf. Int." = "dashed")
     
     # function to calculate percentiles
     calc_percentile <- function(age_in, milestone_in){
@@ -135,7 +135,7 @@ ui <- fluidPage(
   # Title of Application
     fluidRow(
       column(10, 
-             h1("eXtraordinarY Babies Study : SCT Developmental Milestones")  # Title on the left
+             h1("eXtraordinarY Babies Study : SCT Bayley Progression")  # Title on the left
       ),
       column(2, 
              tags$img(src = "eBs_Logo.jpg", height = "100px", style = "float: right;")  # Image on the right
@@ -540,16 +540,17 @@ server <- function(input, output, session) {
       
       ref_box_data_composite <- x_map_comp %>%
         mutate(
-          lower = comp_ref_mean - comp_ref_sd / 2,
+          lower = comp_ref_mean - 1.96*comp_ref_sd,
           middle = comp_ref_mean,
-          upper = comp_ref_mean + comp_ref_sd / 2
+          upper = comp_ref_mean + 1.96*comp_ref_sd
         )
       
       p1 <- composite_long_filtered %>%
         filter(domain == "Cognitive") %>%
         mutate(sca_condition = factor(sca_condition, levels = ordered_groups_comp)) %>%
         plot_base() +
-        labs(title = "Cognitive")
+        labs(title = "Cognitive") +
+        guides(fill = "none")
       
       p2 <- composite_long_filtered %>%
         filter(domain == "Language") %>%
@@ -576,13 +577,13 @@ server <- function(input, output, session) {
           geom_segment(data = ref_box_data_composite,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = lower, yend = lower,
-                           linetype = "Population IQR"),
+                           linetype = "Population 95% Conf. Int."),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           geom_segment(data = ref_box_data_composite,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = upper, yend = upper,
-                           linetype = "Population IQR"),
+                           linetype = "Population 95% Conf. Int."),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           scale_linetype_manual(
@@ -590,9 +591,12 @@ server <- function(input, output, session) {
             values = ref_line_types
           )
         )
-        p1 <- p1 + ref_geoms
-        p2 <- p2 + ref_geoms
-        p3 <- p3 + ref_geoms
+        p1 <- p1 + ref_geoms + 
+          scale_y_continuous(limits = c(30, 150), breaks = seq(30, 150, 30))
+        p2 <- p2 + ref_geoms + 
+          scale_y_continuous(limits = c(30, 150), breaks = seq(30, 150, 30))
+        p3 <- p3 + ref_geoms + 
+          scale_y_continuous(limits = c(30, 150), breaks = seq(30, 150, 30))
       }
       
       if (input$overlay == "Yes") {
@@ -615,14 +619,22 @@ server <- function(input, output, session) {
       }
       
       
+      # Make a blank spacer plot 
+      white_spacer <- ggplot() + theme_void() + theme(plot.background = element_rect(fill = "white", color = NA))
       
       # Extract legend from p1
-      legend <- cowplot::get_legend(p1)
+      legend <- cowplot::get_legend(p1 + guides(fill = "none") )
       
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
-      top_row <- cowplot::plot_grid(p1, legend, ncol = 2)
+      top_row <- plot_grid(
+        white_spacer,         # empty space for centering
+        p1,                    # your main plot
+        legend,                # the legend
+        ncol = 3,
+        rel_widths = c(1, 2, 1)  # adjust as needed to center p1
+      )
       
       
       bottom_row <- cowplot::plot_grid(p2, p3, ncol = 2)
@@ -643,9 +655,9 @@ server <- function(input, output, session) {
       
       ref_box_data_scaled <- x_map_scale %>%
         mutate(
-          lower = scale_ref_mean - scale_ref_sd / 2,
+          lower = scale_ref_mean - 1.96*scale_ref_sd,
           middle = scale_ref_mean,
-          upper = scale_ref_mean + scale_ref_sd / 2
+          upper = scale_ref_mean + 1.96*scale_ref_sd
         )
       
       p1 <- scaled_long_filtered %>%
@@ -691,13 +703,13 @@ server <- function(input, output, session) {
           geom_segment(data = ref_box_data_scaled,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = lower, yend = lower,
-                           linetype = "Population IQR"),
+                           linetype = "Population 95% Conf. Int."),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           geom_segment(data = ref_box_data_scaled,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = upper, yend = upper,
-                           linetype = "Population IQR"),
+                           linetype = "Population 95% Conf. Int."),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           scale_linetype_manual(
@@ -728,6 +740,8 @@ server <- function(input, output, session) {
       }
       
       
+      # Make a blank spacer plot 
+      white_spacer <- ggplot() + theme_void() + theme(plot.background = element_rect(fill = "white", color = NA))
       
       # Extract legend from p1
       legend <- cowplot::get_legend(p1)
@@ -735,7 +749,13 @@ server <- function(input, output, session) {
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
-      top_row <- cowplot::plot_grid(p1, legend, ncol = 2)
+      top_row <- plot_grid(
+        white_spacer,         # empty space for centering
+        p1,                    # your main plot
+        legend,                # the legend
+        ncol = 3,
+        rel_widths = c(1, 2, 1)  # adjust as needed to center p1
+      )
       
       
       middle_row <- cowplot::plot_grid(p2, p3, ncol = 2)
@@ -758,9 +778,9 @@ server <- function(input, output, session) {
       
       ref_box_data_gsv <- x_map_gsv %>%
         mutate(
-          lower = gsv_ref_mean - gsv_ref_sd / 2,
+          lower = gsv_ref_mean - 1.96*gsv_ref_sd,
           middle = gsv_ref_mean,
-          upper = gsv_ref_mean + gsv_ref_sd / 2
+          upper = gsv_ref_mean + 1.96*gsv_ref_sd
         )
       
       p1 <- new_gsv_long_rem %>%
@@ -808,13 +828,13 @@ server <- function(input, output, session) {
           geom_segment(data = ref_box_data_gsv,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = lower, yend = lower,
-                           linetype = "Population IQR"),
+                           linetype = "Population 95% Conf. Int."),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           geom_segment(data = ref_box_data_gsv,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = upper, yend = upper,
-                           linetype = "Population IQR"),
+                           linetype = "Population 95% Conf. Int."),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           scale_linetype_manual(
@@ -844,6 +864,8 @@ server <- function(input, output, session) {
       }
       
       
+      # Make a blank spacer plot 
+      white_spacer <- ggplot() + theme_void() + theme(plot.background = element_rect(fill = "white", color = NA))
       
       # Extract legend from p1
       legend <- cowplot::get_legend(p1)
@@ -851,7 +873,13 @@ server <- function(input, output, session) {
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
-      top_row <- cowplot::plot_grid(p1, legend, ncol = 2)
+      top_row <- plot_grid(
+        white_spacer,         # empty space for centering
+        p1,                    # your main plot
+        legend,                # the legend
+        ncol = 3,
+        rel_widths = c(1, 2, 1)  # adjust as needed to center p1
+      )
       
       middle_row <- cowplot::plot_grid(p2, p3, ncol = 2)
       bottom_row <- cowplot::plot_grid(p4, p5, ncol = 2)
