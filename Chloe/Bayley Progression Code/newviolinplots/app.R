@@ -97,14 +97,14 @@ server <- function(input, output, session) {
         scale_fill_manual(name = "SCA Condition", values = c("XXY" = "#fdb863", "XYY" = "cyan3", "XXX" = "#4B0082")) +
         ggnewscale::new_scale_fill() +
         labs(x = NULL, y = "Score") +
-        theme_bw(base_size = 18) +
+        theme_bw(base_size = 20) +
         theme(
           axis.text.x = element_text(angle = 45, hjust = 1),
           legend.position = "right",
-          legend.direction = "vertical",
+          legend.direction = "horizontal",
           legend.box = "vertical",
-          legend.text = element_text(size = 12),
-          legend.title = element_text(size = 15),
+          legend.text = element_text(size = 15),
+          legend.title = element_text(size = 20),
           legend.box.spacing = unit(0.2, "cm"),
           legend.margin = margin(t = 10, r = 20, b = 10, l = 20)
         ) + 
@@ -238,7 +238,7 @@ server <- function(input, output, session) {
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
-      top_row <- cowplot::plot_grid(p1, legend, ncol = 2, rel_widths = c(1, 0.25))
+      top_row <- cowplot::plot_grid(p1, legend, ncol = 2)
 
 
       bottom_row <- cowplot::plot_grid(p2, p3, ncol = 2)
@@ -351,13 +351,13 @@ server <- function(input, output, session) {
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
-      top_row <- cowplot::plot_grid(p1, legend, ncol = 2, rel_widths = c(1, 0.25))
+      top_row <- cowplot::plot_grid(p1, legend, ncol = 2)
 
 
       middle_row <- cowplot::plot_grid(p2, p3, ncol = 2)
       bottom_row <- cowplot::plot_grid(p4, p5, ncol = 2)
       
-      final_plot <- final_plot <- cowplot::plot_grid(
+      final_plot <- cowplot::plot_grid(
         top_row,            # p1 + legend
         middle_row,         # p2 + p3
         bottom_row,         # p4 + p5
@@ -467,7 +467,7 @@ server <- function(input, output, session) {
         # Remove legend from p1 plot itself to avoid duplication
         p1 <- p1 + theme(legend.position = "none")
         
-        top_row <- cowplot::plot_grid(p1, legend, ncol = 2, rel_widths = c(1, 0.25))
+        top_row <- cowplot::plot_grid(p1, legend, ncol = 2)
         
         middle_row <- cowplot::plot_grid(p2, p3, ncol = 2)
         bottom_row <- cowplot::plot_grid(p4, p5, ncol = 2)
@@ -483,6 +483,7 @@ server <- function(input, output, session) {
         print(final_plot) 
     }
   })
+  
 }
 
 

@@ -356,7 +356,7 @@ ui <- fluidPage(
                            img(src = "Child_Chloe.jpeg", height = "150px", style = "display:block; margin:auto;")
                          ),
                          column(9, h4("Chloe Child (she/her)"), p("Chloe Child is a rising senior at Appalachian State University in Boone, North Carolina. 
-                                                                  She study public health with minors in statistics and mathematics. Chloe also works as a Research Assistant at Appalachian State University's 
+                                                                  She studies public health with minors in statistics and mathematics. Chloe also works as a Research Assistant at Appalachian State University's 
                                                                   Public Health Department and as a Student Associate for Blue Cross Blue Shield of North Carolina. When not in school or working, Chloe enjoy hiking, rock climbing,
                                                                   weightlifting, and drawing. She joined the Colorado Summer Institute in Biostatistics (CoSIBS) because of a deep interest in the world of biostatistics,
                                                                   and wanted to expand upon her ability to apply statistics and data science to public health research.")
@@ -383,7 +383,7 @@ ui <- fluidPage(
                          ),
                          column(9, h4("Jenna Jimenez (they/them)"), p("Jenna Jimenez is a fifth year student, graduating May 2026, at California State University Channel Islands. They study psychology with a minor in studio art,
                                                                       while also working as a Research Assistant on the Clobes Cannabis Research Team, and starting August 2025, as a Research Assistant with Dr. Beatrice de Oca. 
-                                                                      Outside of their academics, Jenna enjoy making art (including, but not limited to, painting, ceramics, and figure drawing), going to concerts, spending time outdoors, 
+                                                                      Outside of their academics, Jenna enjoys making art (including, but not limited to, painting, ceramics, and figure drawing), going to concerts, spending time outdoors, 
                                                                       and hanging out with their two cats. Jenna took part in the 2025 Colorado Summer Institute in Biostatistics (CoSIBS) to explore the field of biostatistics and to further 
                                                                       gain statistical and programming skills that they can apply to their current and future research. ")
                          )
@@ -407,8 +407,8 @@ ui <- fluidPage(
                            img(src = "Pressier_Jack.jpg", height = "150px", style = "display:block; margin:auto;")
                          ),
                          column(9,h4("John Preisser (he/him)"), p("Jack Preisser is a rising senior majoring in statistics at Carleton College. He was born and raised in Chapel Hill, North Carolina along with 
-                                                                    his twin sister, Hannah. Jack enjoys running, hiking and other physical activities. He has enjoyed my time at the Colorado Summer Institute in Biostatistics (CoSIBS)
-                                                                  because I have not studied public health through an in-depth manner prior to CoSIBS. ")
+                                                                    his twin sister, Hannah. Jack enjoys running, hiking and other physical activities. He has enjoyed his time at the Colorado Summer Institute in Biostatistics (CoSIBS)
+                                                                  because he has not studied public health through an in-depth manner prior to CoSIBS. ")
                          )
                        ),
                        
