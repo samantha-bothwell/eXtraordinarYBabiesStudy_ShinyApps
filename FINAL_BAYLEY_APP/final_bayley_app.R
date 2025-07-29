@@ -57,18 +57,19 @@ library(dplyr)
   # pulls unique milestones for input/plot
   milestones_list <- c(unique(indiv_percentiles$milestone))
   
-  # edits GSV data for plotting
+  
   new_gsv_long_rem <- readRDS("Bayley_GSV_scores.rds") %>% 
     mutate(sca_condition = as.character(sca_condition)) %>% 
+    filter(redcap_event_name != "2_month_visit_arm_1") %>%
     pivot_longer(!c(study_id_extraordinary, redcap_event_name, sca_condition, bayley_version, bsid_age_calc), 
                  names_to = "domain", values_to = "score") %>% 
     mutate(domain = case_when(domain == "bsid_gsv_cog" ~ "Cognitive", 
                               domain == "bsid_gsv_rc" ~ "Receptive Communication", 
                               domain == "bsid_gsv_ec" ~ "Expressive Communication", 
                               domain == "bsid_gsv_fm" ~ "Fine Motor", 
-                              domain == "bsid_gsv_gm" ~ "Gross Motor")) %>% 
+                              domain == "bsid_gsv_gm" ~ "Gross Motor")) %>%
+    filter(score < 777) %>%
     mutate(transformed_score = ((score - 500)/100)*25 + 500)
-  
   
     # Data Filtering/Cleaning for Violin Plots - Composite Scores
     composite_long_filtered <- readRDS("Bayley_Composite_scores.rds") %>% 
@@ -83,38 +84,22 @@ library(dplyr)
       )
     
     # Data Filtering/Cleaning for Violin Plots - GSV Scores
-    new_gsv_long_rem <- readRDS("Bayley_GSV_scores.rds") %>% 
-      rename(
-        Cognitive = 'bsid_gsv_cog',
-        Receptive = 'bsid_gsv_rc',
-        Expressive = 'bsid_gsv_ec',
-        `Fine Motor` = 'bsid_gsv_fm',
-        `Gross Motor` = 'bsid_gsv_gm'
-      ) %>% 
-      pivot_longer(cols = c('Cognitive', 'Receptive', 'Expressive', 'Fine Motor', 'Gross Motor'), names_to = 'domain', values_to = 'score') %>%
-      filter(redcap_event_name != "2_month_visit_arm_1") %>%
-      mutate(domain = factor(domain, levels = c(
-        "Cognitive", "Receptive", "Expressive", "Fine Motor", "Gross Motor"
-      ))
-      )
-    
-    # Data Filtering/Cleaning for Violin Plots - GSV Scores
     scaled_long_filtered <- readRDS("Bayley_Scaled_scores.rds") %>% 
       rename(
         Cognitive = "bsid_cog_scaled",
-        Receptive = "bsid_rc_scaled",
-        Expressive = "bsid_ec_scaled",
+        `Receptive Communication` = "bsid_rc_scaled",
+        `Expressive Communication` = "bsid_ec_scaled",
         `Fine Motor` = "bsid_fm_scaled",
         `Gross Motor` = "bsid_gm_scaled") %>% 
-      pivot_longer(cols = c('Cognitive', 'Receptive', 'Expressive', 'Fine Motor', 'Gross Motor'), names_to = 'domain', values_to = 'score') %>% 
+      pivot_longer(cols = c('Cognitive', 'Receptive Communication', 'Expressive Communication', 'Fine Motor', 'Gross Motor'), names_to = 'domain', values_to = 'score') %>% 
       filter(score < 777) %>%
       mutate(domain = factor(domain, levels = c(
-        "Cognitive", "Receptive", "Expressive", "Fine Motor", "Gross Motor"
+        "Cognitive", "Receptive Communication", "Expressive Communication", "Fine Motor", "Gross Motor"
       ))
       )
     
     # adds lines for reference types
-    ref_line_types <- c("Pop Mean" = "solid", "Pop IQR" = "dashed")
+    ref_line_types <- c("Population Mean" = "solid", "Population IQR" = "dashed")
     
     # function to calculate percentiles
     calc_percentile <- function(age_in, milestone_in){
@@ -232,7 +217,8 @@ ui <- fluidPage(
                                                           )
                                               
                                                     }), # end lapply function
-                                            actionButton("addPoints", "Add to Graph", class = "btn btn-success"), # adds inputted milestones to plot
+                                            actionButton("addPoints", "View Inputs", icon = icon("plus-circle"), class = "btn btn-success"), # adds inputted milestones to plot
+                                            actionButton("clear_milestones", "Clear Milestones", icon = icon("eraser"),class = "btn btn-success"),
                                             br(), br()
                                           ))),
                          
@@ -272,13 +258,16 @@ ui <- fluidPage(
                                     numericInput("score3", "GSV 3:", NA),
                                     numericInput("age4", "Age 4 (months):", NA),
                                     numericInput("score4", "GSV 4:", NA),
-                                    actionButton("save_inputs", "Save Inputs"),
-                                    downloadButton("download_plot", "Download All Domain Plots")
+                                    actionButton("save_inputs", "View Inputs", icon = icon("plus-circle"),class = "btn btn-success"),
+                                    actionButton("clear_inputs", "Clear Data", icon = icon("eraser"),class = "btn btn-success"),
+                                    downloadButton("download_plot", "Download All Plots", class = "btn btn-success")
                                   ),
                           mainPanel(
                             plotOutput("input_growth_plot"),
                             br(),
-                            p("Figure caption: Shows user-entered trajectory with study population ranges, from the 10th to 90th percentile in grey.")
+                            p("Figure caption: Shows user-entered trajectory with study population ranges, from the 10th to 90th percentile in grey."),
+                            br(),
+                            DTOutput("GAMLSS_table")
                           ) # end mainPanel
                         ) # end SidebarLayout
                        ), # end tab4
@@ -544,19 +533,19 @@ server <- function(input, output, session) {
           geom_segment(data = ref_box_data_composite,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = middle, yend = middle,
-                           linetype = "Pop Mean"),
+                           linetype = "Population Mean"),
                        inherit.aes = FALSE, color = "black", size = .75),
           
           geom_segment(data = ref_box_data_composite,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = lower, yend = lower,
-                           linetype = "Pop IQR"),
+                           linetype = "Population IQR"),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           geom_segment(data = ref_box_data_composite,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = upper, yend = upper,
-                           linetype = "Pop IQR"),
+                           linetype = "Population IQR"),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           scale_linetype_manual(
@@ -628,16 +617,16 @@ server <- function(input, output, session) {
         plot_base() + labs(title = "Cognitive")
       
       p2 <- scaled_long_filtered %>%
-        filter(domain == "Receptive") %>%
+        filter(domain == "Receptive Communication") %>%
         mutate(sca_condition = factor(sca_condition, levels = ordered_groups_scale)) %>%
-        plot_base() + labs(title = "Receptive") +
+        plot_base() + labs(title = "Receptive Communication") +
         theme(legend.position = "none")
       
       p3 <- scaled_long_filtered %>%
-        filter(domain == "Expressive") %>%
+        filter(domain == "Expressive Communication") %>%
         mutate(sca_condition = factor(sca_condition, levels = ordered_groups_scale)) %>%
         plot_base() + 
-        labs(title = "Expressive") + 
+        labs(title = "Expressive Communication") + 
         theme(legend.position = "none")
       
       p4 <- scaled_long_filtered %>%
@@ -659,19 +648,19 @@ server <- function(input, output, session) {
           geom_segment(data = ref_box_data_scaled,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = middle, yend = middle,
-                           linetype = "Pop Mean"),
+                           linetype = "Population Mean"),
                        inherit.aes = FALSE, color = "black", size = .75),
           
           geom_segment(data = ref_box_data_scaled,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = lower, yend = lower,
-                           linetype = "Pop IQR"),
+                           linetype = "Population IQR"),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           geom_segment(data = ref_box_data_scaled,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = upper, yend = upper,
-                           linetype = "Pop IQR"),
+                           linetype = "Population IQR"),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           scale_linetype_manual(
@@ -744,17 +733,17 @@ server <- function(input, output, session) {
         labs(title = "Cognitive")
       
       p2 <- new_gsv_long_rem %>%
-        filter(domain == "Receptive") %>%
+        filter(domain == "Receptive Communication") %>%
         mutate(sca_condition = factor(sca_condition, levels = ordered_groups_gsv)) %>%
         plot_base() +
-        labs(title = "Receptive") +
+        labs(title = "Receptive Communication") +
         theme(legend.position = "none")
       
       p3 <- new_gsv_long_rem %>%
-        filter(domain == "Expressive") %>%
+        filter(domain == "Expressive Communication") %>%
         mutate(sca_condition = factor(sca_condition, levels = ordered_groups_gsv)) %>%
         plot_base() +
-        labs(title = "Expressive") +
+        labs(title = "Expressive Communication") +
         theme(legend.position = "none")
       
       p4 <- new_gsv_long_rem %>%
@@ -776,19 +765,19 @@ server <- function(input, output, session) {
           geom_segment(data = ref_box_data_gsv,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = middle, yend = middle,
-                           linetype = "Pop Mean"),
+                           linetype = "Population Mean"),
                        inherit.aes = FALSE, color = "black", size = .75),
           
           geom_segment(data = ref_box_data_gsv,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = lower, yend = lower,
-                           linetype = "Pop IQR"),
+                           linetype = "Population IQR"),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           geom_segment(data = ref_box_data_gsv,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = upper, yend = upper,
-                           linetype = "Pop IQR"),
+                           linetype = "Population IQR"),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           scale_linetype_manual(
@@ -978,12 +967,7 @@ server <- function(input, output, session) {
                   class = 'display'
         )
       })
-      
-      
-      
-      
-      
-      
+
       # Observe when user clicks "Add Milestone"
       observeEvent(input$addPoints, {
         new_rows <- lapply(milestones_list, function(milestone){ # creates new rows for each milestone
@@ -1027,6 +1011,39 @@ server <- function(input, output, session) {
         
       })
       
+      observeEvent(input$clear_milestones, {
+        showModal(modalDialog(
+          title = "Confirm Clear",
+          "Are you sure you want to clear all milestone inputs and remove them from the plot and table?",
+          easyClose = FALSE,
+          footer = tagList(
+            modalButton("Cancel"),
+            actionButton("confirm_clear_milestones", "Yes, clear", class = "btn-danger")
+          )
+        ))
+      })
+      
+      # Step 2: If user confirms, actually clear data
+      observeEvent(input$confirm_clear_milestones, {
+        removeModal()
+        
+        # Clear milestone data
+        input_milestones_data(data.frame(
+          milestone = character(),
+          months_WhenAchieved = numeric(),
+          Percentile = numeric(),
+          stringsAsFactors = FALSE
+        ))
+        
+        # Reset all milestone input boxes (AgeWhen_xxx)
+        lapply(milestones_list, function(milestone) {
+          input_id <- paste0("AgeWhen_", gsub(" ", "", milestone))
+          if (!is.null(input[[input_id]])) {
+            updateNumericInput(session, input_id, value = NA)
+          }
+        })
+      })
+      
       output$indiv_perc <- renderPlotly({
         
         # Filter to age range 
@@ -1047,7 +1064,6 @@ server <- function(input, output, session) {
         # to NOT mutate original data
         indiv_dat <- indiv_percentiles %>% filter(!is.na(Age))
         
-        ### OLD APP ###
         # sanity check
         if (nrow(indiv_dat) == 0) {
           showNotification("No data available after filtering — nothing to plot.", type = "error")
@@ -1125,6 +1141,49 @@ server <- function(input, output, session) {
         
         global_user_data$df <- new_points
       })
+      
+      
+      
+      output$GAMLSS_table <- renderDT({
+        
+        datatable(global_user_data$df, extensions = "Buttons",
+                  options = list(pageLength = 5,
+                                 dom = 'Bfrtip',  # B = Buttons, f = filter, r = processing, t = table, i = info, p = pagination
+                                 buttons = list(
+                                   list(extend = 'csv', filename = 'GSV_Scores'),#options to print
+                                   list(extend = 'pdf', filename = 'GSV_Scores'),
+                                   list(extend = 'print', title = 'GSV_Scores')),
+                                 lengthMenu = c(5, 10)), 
+                  class = 'display'
+        )
+      })
+      
+      observeEvent(input$clear_inputs, {
+        showModal(modalDialog(
+        title = "Confirm Clear",
+        "Are you sure you want to clear all input data?",
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton("confirm_clear", "Yes, clear", class = "btn-danger")
+                        )
+                      ))
+        })
+      
+      observeEvent(input$confirm_clear, {
+        removeModal()
+        
+        updateNumericInput(session, "age1", value = NA)
+        updateNumericInput(session, "score1", value = NA)
+        updateNumericInput(session, "age2", value = NA)
+        updateNumericInput(session, "score2", value = NA)
+        updateNumericInput(session, "age3", value = NA)
+        updateNumericInput(session, "score3", value = NA)
+        updateNumericInput(session, "age4", value = NA)
+        updateNumericInput(session, "score4", value = NA)
+        
+        global_user_data$df <- data.frame(Age = numeric(), Score = numeric(), domain = character())
+      })
+      
       
       output$input_growth_plot <- renderPlot({
         user_df <- global_user_data$df
@@ -1226,6 +1285,7 @@ server <- function(input, output, session) {
         
         input_gamlss_plot
       })
+      
       
   ### For Tab 5 ###
       output$image_ui <- renderImage({
