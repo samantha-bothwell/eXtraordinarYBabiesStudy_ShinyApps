@@ -165,12 +165,12 @@ server <- function(input, output, session) {
     # Add user input points
     p <- p + geom_point(data = user_df,
                         aes(x = Age, y = Score),
-                        color = "steelblue4", size = 3)
+                        color = "darkorange2", size = 3)
     
     # Add user input trajectory line
     p <- p + geom_smooth(data = user_df,
                        aes(x = Age, y = Score),
-                       color = "steelblue4", size = 1.2)
+                       color = "darkorange2", size = 1.2)
     
     p
     }
