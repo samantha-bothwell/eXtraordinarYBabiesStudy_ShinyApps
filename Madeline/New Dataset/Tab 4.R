@@ -4,11 +4,13 @@
 
 library(shiny)
 library(tidyverse)
+library(dplyr)
 library(gamlss)
 library(gamlss.add)
 library(ggplot2)
 library(zoo)
 library(gridExtra)
+print(head(new_gsv_long_rem))
 
 # Load and preprocess data
 new_gsv_long_rem <- readRDS("Bayley_GSV_scores.rds") %>%
@@ -74,73 +76,107 @@ server <- function(input, output, session) {
   
   output$input_growth_plot <- renderPlot({
     user_df <- global_user_data$df
+    
+    # Return nothing if not enough points
     if (nrow(user_df) <= 3) return(NULL)
     
-    data_filtered <- new_gsv_long_rem %>%
+    # Filtered data (local to renderPlot)
+    filtered_data <- new_gsv_long_rem %>%
       filter(domain == input$domain_select) %>%
-      filter(if (input$sct_select == "ALL") TRUE else sca_condition == input$sct_select)
+      dplyr::select(study_id_extraordinary, sca_condition, domain, bsid_age_calc, transformed_score) %>%
+      filter(complete.cases(.))
     
-    percentiles_df <- data_filtered %>%
-      mutate(bsid_age_calc = as.numeric(bsid_age_calc)) %>%
-      group_by(bsid_age_calc) %>%
-      summarize(
-        p10 = quantile(transformed_score, 0.10, na.rm = TRUE),
-        p25 = quantile(transformed_score, 0.25, na.rm = TRUE),
-        p50 = quantile(transformed_score, 0.50, na.rm = TRUE),
-        p75 = quantile(transformed_score, 0.75, na.rm = TRUE),
-        p90 = quantile(transformed_score, 0.90, na.rm = TRUE),
-        .groups = "drop"
-      ) %>%
-      arrange(bsid_age_calc)
-    
-    ggplot() +
-      geom_smooth(data = percentiles_df, aes(x = bsid_age_calc, y = p50), color = "black", size = 1.2, na.rm = TRUE) +
-      geom_line(data = user_df, aes(x = Age, y = Score), color = "royalblue3", size = 1.5) +
-      geom_point(data = user_df, aes(x = Age, y = Score), color = "royalblue3", size = 3) +
-      labs(
-        title = paste("Growth Trajectory for", input$domain_select),
-        x = "Age (months)",
-        y = "Transformed GSV Score"
-      ) +
-      theme_minimal(base_size = 14)
-  })
   
-  output$download_plot <- downloadHandler(
-    filename = function() {
-      paste("growth_plot_", Sys.Date(), ".png", sep = "")
-    },
-    content = function(file) {
-      domains <- unique(new_gsv_long_rem$domain)
-      plots <- lapply(domains, function(dom) {
-        user_df <- global_user_data$df %>% filter(domain == dom)
-        data_filtered <- new_gsv_long_rem %>%
-          filter(domain == dom) %>%
-          filter(if (input$sct_select == "ALL") TRUE else sca_condition == input$sct_select) %>%
-          mutate(bsid_age_calc = as.numeric(bsid_age_calc))
-        
-        percentiles_df <- data_filtered %>%
-          group_by(bsid_age_calc) %>%
-          summarize(
-            p10 = quantile(transformed_score, 0.10, na.rm = TRUE),
-            p25 = quantile(transformed_score, 0.25, na.rm = TRUE),
-            p50 = quantile(transformed_score, 0.50, na.rm = TRUE),
-            p75 = quantile(transformed_score, 0.75, na.rm = TRUE),
-            p90 = quantile(transformed_score, 0.90, na.rm = TRUE),
-            .groups = "drop"
-          ) %>%
-          arrange(bsid_age_calc)
-        
-        ggplot() +
-          geom_smooth(data = percentiles_df, aes(x = bsid_age_calc, y = p50), color = "black", size = 1.2, na.rm = TRUE) +
-          geom_line(data = user_df, aes(x = Age, y = Score), color = "royalblue3", size = 1.5) +
-          geom_point(data = user_df, aes(x = Age, y = Score), color = "royalblue3", size = 3) +
-          labs(title = paste("Domain:", dom), x = "Age (months)", y = "Transformed GSV Score") +
-          theme_minimal(base_size = 14)
-      })
+    # Fit GAMLSS model
+    model <- gamlss(
+      formula = as.formula("transformed_score ~ pb(bsid_age_calc, lambda = 5)"),
+      sigma.formula = as.formula("~ pb(bsid_age_calc)"),
+      nu.formula = ~1,
+      tau.formula = ~1,
+      data = filtered_data,
+      family = BCCG(),
+      control = gamlss.control(save.data = TRUE),   
+      trace = FALSE
+    )
+    
+    # Predict percentiles
+    age_seq <- seq(
+      from = max(5, min(filtered_data$bsid_age_calc, na.rm = TRUE)),
+      to = max(filtered_data$bsid_age_calc, na.rm = TRUE),
+      length.out = 100
+    )
+    
+    model$call$data <- filtered_data
+    
+    # data 
+    newdata <- data.frame(bsid_age_calc = age_seq)
+    
+    
+    # Get predicted distribution parameters from the model
+    params <- predictAll(model, newdata = newdata)
+    
+    # Calculate centiles manually using the BCCG distribution quantile function
+    centiles <- c(10, 25, 50, 75, 90)
+    q_vals <- sapply(centiles / 100, function(p) {
+      qBCCG(p, mu = params$mu, sigma = params$sigma, nu = params$nu)
+    })
+    
+    # Create a dataframe of predicted centiles
+    lms_mod <- data.frame(age = age_seq, q_vals)
+    colnames(lms_mod)[-1] <- paste0("P", centiles)
+    
+    validate(
+      need(!is.null(lms_mod), "Centile prediction failed.")
+    )
+    
+    # ---- Pivot long for ggplot ----
+    pred_long <- pivot_longer(lms_mod, -age,
+                              names_to = "Percentile", values_to = "Score")
+    
+    
+    p <- ggplot() +
+      # 10–90 ribbon
+      geom_ribbon(data = lms_mod, aes(x = age, ymin = P10, ymax = P90),
+                  fill = "gray85", alpha = 0.3) +
       
-      ggsave(file, marrangeGrob(grobs = plots, ncol = 1, nrow = length(plots)), width = 8, height = 4 * length(plots))
+      # 50th percentile: thick black solid
+      geom_smooth(data = lms_mod, aes(x = age, y = P50),
+                  color = "black", size = 1.6, linetype = "solid") +
+      
+      # 10th & 90th percentiles: blue dashed
+      geom_smooth(data = lms_mod, aes(x = age, y = P10),
+                  color = "slateblue1", size = 1.1, linetype = "dashed") +
+      geom_smooth(data = lms_mod, aes(x = age, y = P90),
+                  color = "slateblue1", size = 1.1, linetype = "dashed") +
+      
+      # 25th & 75th percentiles: gray, lighter lines
+      geom_smooth(data = lms_mod, aes(x = age, y = P25),
+                  color = "snow3", size = 0.8, linetype = "solid") +
+      geom_smooth(data = lms_mod, aes(x = age, y = P75),
+                  color = "snow3", size = 0.8, linetype = "solid") +
+      
+      # Theme and labels
+      theme_minimal(base_size = 14) +
+      labs(
+        title = paste("Growth Chart for", input$domain_select),
+        x = "Age (months)",
+        y = "Bayley-4 Score"
+      )
+    # Add user input points
+    p <- p + geom_point(data = user_df,
+                        aes(x = Age, y = Score),
+                        color = "darkorange2", size = 3)
+    
+    # Add user input trajectory line
+    p <- p + geom_smooth(data = user_df,
+                       aes(x = Age, y = Score),
+                       color = "darkorange2", size = 1.2)
+    
+    p
     }
-  )
-}
+    
+)}
+
+  
 
 shinyApp(ui = ui, server = server)
