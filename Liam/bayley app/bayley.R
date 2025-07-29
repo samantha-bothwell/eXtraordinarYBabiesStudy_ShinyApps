@@ -1,10 +1,19 @@
 # live laugh love Shiny app
+# SHE'S DONE!!!!!
 
 library(plotly)
 library(shiny)
 library(tidyverse)
 library(ggplot2)
 library(gamlss)
+library(shinythemes)
+library(ggrepel)
+library(kableExtra)
+library(stringr)
+library(DT)
+library(gamlss.add)
+library(zoo)
+library(gridExtra)
 
 
 ### Datasets
@@ -97,7 +106,7 @@ ui <- fluidPage(
              column(12,plotlyOutput("indiv_perc")
              ),
              column(12,
-                    DTOutput("user_table"))
+                    DTOutput("milestones_table_output"))
            )
       )
     )
@@ -115,7 +124,7 @@ server <- function(input, output) {
   ))
   
   # Render user-submitted table
-  output$user_table <- renderDT({
+  output$milestones_table_output <- renderDT({
     
     display_data <- input_milestones_data() %>% 
       select(-Q25, -Q50, -Q75, -Q90, -color, -symbol) %>% # gets rid of percentiles in exportable plot
@@ -264,8 +273,7 @@ server <- function(input, output) {
                    )
           )
           
-        #milestone_input_plot
-}) # closes milestone plot
+  }) # closes milestone plot
 
 } # close server
 # Run the application 
