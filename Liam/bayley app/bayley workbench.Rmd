@@ -22,6 +22,7 @@ milestones <- readRDS("Milestones.RDS")
 composite <- readRDS("Bayley_Composite_scores.RDS")
 GSV <- readRDS("Bayley_GSV_scores.RDS")
 scaled <- readRDS("Bayley_Scaled_scores.RDS")
+norms <- read.csv("norms.csv")
 ```
 
 
