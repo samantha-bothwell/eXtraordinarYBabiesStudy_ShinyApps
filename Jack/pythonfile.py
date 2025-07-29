@@ -1,1 +1,7 @@
-pip install numpy
+import pandas as pd
+
+import numpy as np
+
+import matplotlib as mtp
+
+import pytorch as pyt
