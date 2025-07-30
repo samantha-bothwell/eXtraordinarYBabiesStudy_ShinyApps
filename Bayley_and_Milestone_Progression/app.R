@@ -166,7 +166,7 @@ ui <- fluidPage(
                                              selected = "No",
                                              inline = TRUE))),
                        
-                       plotOutput("dynamic_violin_plot", height = "1000px", width = "75%") # one plot that handles above inputs, and outputs a density plot based on score, by SCA condition
+                       uiOutput("dynamic_violin_ui") # one plot that handles above inputs, and outputs a density plot based on score, by SCA condition
                        
                        # tags$p(
                        # "This plot provides an overview of bayley scores for the overall eXtrodinarY babies study at CU Anschutz. This study conducts clinical research on X&Y chromosome variations to track their influence on developmental milestones. These plots demonstrate the distribution of Bayley 4 scores, subsetted into SCA conditions, across age and domains. Boxplots overlayed on the plots demonstrate general population mean and standard deviations. For more information on the eXtraordinarY babies study and CU Anschutz research",
@@ -225,9 +225,13 @@ ui <- fluidPage(
                          
                          # Show a plot of the generated distribution
                          mainPanel(
-                            fluidRow(column(12,
-                                            plotlyOutput("indiv_perc")),
-                            fluidRow(column(4, tags$img(src = "milestones_legend.jpg", height = "100px")),
+                            fluidRow(column(12, 
+                                            # Add vertical space before the plot
+                                            div(style = "margin-top: 30px;"),
+                                            
+                                            plotlyOutput("indiv_perc", height = "550px")),
+                                     
+                            fluidRow(column(4, tags$img(src = "milestones_legend.jpg", height = "75px")),
                                     column(8, h5("Figure 3: Individual Milestones plotted atop the general population data"))),
                             fluidRow(h3("Data:")),
                             fluidRow(column(12,
@@ -474,6 +478,21 @@ server <- function(input, output, session) {
   
   ### For Tab 1 ###
   
+  output$dynamic_violin_ui <- renderUI({
+    # Set height/width based on plot_choice
+    height <- switch(input$plot_choice,
+                     "Composite" = "667px",
+                     "Scaled" = "1000px",
+                     "GSV" = "1000px")
+    
+    width <- switch(input$plot_choice,
+                    "Composite" = "75%",
+                    "Scaled" = "75%",
+                    "GSV" = "75%")
+    
+    plotOutput("dynamic_violin_plot", height = height, width = width)
+  })
+  
   output$dynamic_violin_plot <- renderPlot({
     
     plot_base <- function(data) {
@@ -491,7 +510,8 @@ server <- function(input, output, session) {
           legend.text = element_text(size = 12),
           legend.title = element_text(size = 15),
           legend.box.spacing = unit(0.2, "cm"),
-          legend.margin = margin(t = 10, r = 20, b = 10, l = 20)
+          legend.margin = margin(t = 10, r = 20, b = 10, l = 20),
+          text = element_text(family = "Arial")
         ) + 
         guides(
           fill = guide_legend(order = 1, title.position = "top"),
@@ -624,7 +644,7 @@ server <- function(input, output, session) {
       white_spacer <- ggplot() + theme_void() + theme(plot.background = element_rect(fill = "white", color = NA))
       
       # Extract legend from p1
-      legend <- cowplot::get_legend(p1 + guides(fill = "none") )
+      legend <- cowplot::get_legend(p1)
       
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
@@ -730,8 +750,9 @@ server <- function(input, output, session) {
       if (input$overlay == "Yes") {
         overlay_geom <- list(
           geom_jitter(aes(name = "Age at Assessment (months)", fill = bsid_age_calc),
-                      shape = 21, color = "black", size = 2, alpha = 0.5),
-          scale_fill_gradient(low = "white", high = "black")
+                      shape = 21, color = "black", size = 3, 
+                      alpha = 0.9),
+          scale_fill_gradient(name = "Age at Assessment (Months)", low = "white", high = "black")
         )
         p1 <- p1 + ggnewscale::new_scale_fill() + overlay_geom
         p2 <- p2 + ggnewscale::new_scale_fill() + overlay_geom
@@ -856,7 +877,8 @@ server <- function(input, output, session) {
       if (input$overlay == "Yes") {
         overlay_geom <- list(
           geom_jitter(aes(name = "Age at Assessment (months)",fill = bsid_age_calc),
-                      shape = 21, color = "black", size = 2, alpha = 0.5),
+                      shape = 21, color = "black", size = 3, 
+                      alpha = 0.9),
           scale_fill_gradient(name = "Age at Assessment (months)", low = "white", high = "black"))
         
         p1 <- p1 + ggnewscale::new_scale_fill() + overlay_geom
@@ -885,9 +907,9 @@ server <- function(input, output, session) {
         # Stack legend and its text
         legend_with_text <- plot_grid(legend_text, 
                                       legend_shifted <- ggdraw() +
-                                        draw_grob(legend, x = 0, y = 0.1, width = 1, height = 1),  # adjust y as needed,
+                                        draw_grob(legend, x = 0, y = 0.05, width = 1, height = 1),  # adjust y as needed,
                                       ncol = 1,
-                                      rel_heights = c(1, 1))  # adjust spacing as needed
+                                      rel_heights = c(0.4, 1))  # adjust spacing as needed
         
         top_row <- plot_grid(
           white_spacer,         # empty space for centering
@@ -1017,10 +1039,12 @@ server <- function(input, output, session) {
                   color = "snow3", size = 0.8, linetype = "solid") +
       
       # Theme and labels
-      theme_minimal(base_size = 14) +
+      theme_bw(base_size = 22) +
+      theme(text = element_text(family = "Arial")) +
+      #theme(text = element_text(size = 20))
       labs(
-        title = paste("Growth Chart for", input$domain_select),
-        x = "Age (months)",
+        title = paste("Bayley", input$domain_select, "GSV Growth Curve"),
+        x = "Age at Assessment (months)",
         y = "Bayley-4 Score"
       )
     
@@ -1028,7 +1052,7 @@ server <- function(input, output, session) {
       p <- p+geom_point(data = filtered_data,
                         aes(x = bsid_age_calc, y = transformed_score),
                         inherit.aes = FALSE,
-                        alpha = 0.5, size = 1.5)
+                        alpha = 0.5, size = 3)
     }
     p
   })
@@ -1177,14 +1201,20 @@ server <- function(input, output, session) {
         sca_milestones$milestone <- factor(sca_milestones$milestone, levels = ordered_levels)
         indiv_dat$milestone <- factor(indiv_dat$milestone, levels = ordered_levels)
         
+        color = case_when(input$sca_condition == "All SCTs" ~ "lightblue", 
+                          input$sca_condition == "XXY" ~ "#fdb863", 
+                          input$sca_condition == "XYY" ~ "cyan3", 
+                          input$sca_condition == "XXX" ~ "#4B0082")
+        
         milestone_input_plot <- plot_ly(sca_milestones, 
                                         y = ~milestone, 
                                         x = ~Percentile, 
-                                        color = I("lightblue"),
+                                        color = I(color),
                                         type = "box", 
                                         boxpoints = FALSE,
                                         hoverinfo = "skip",
-                                        showlegend = F)
+                                        showlegend = F) %>%
+          layout(yaxis = list(tickfont = list(family = "Arial", size = 18)))
         
         # creates list of points to plot 
         user_points <- input_milestones_data()  
@@ -1209,9 +1239,10 @@ server <- function(input, output, session) {
         
         # Show the plot
         milestone_input_plot <- milestone_input_plot %>%
-          layout(xaxis = list(title = "Percentile", range = c(0, 100), titlefont = list(size=15)),
+          layout(xaxis = list(title = "Percentile", range = c(0, 100), titlefont = list(size=20)),
                  yaxis = list(title = " "),
-                 title = list(text="Individual Milestones Achieved", font = list(size = 18)),
+                 title = list(text="Individual Milestones Achieved", font = list(size = 20)),
+                 margin = list(t = 40),
                  shapes = list(
                    list(type = "rect", fillcolor = "rgba(255, 0, 0, 0.2)", 
                         line = list(color = "red", width = 0), x0 = 90, x1 = 100, y0 = 0, y1 = 1, xref = "x", yref = "paper")
@@ -1366,6 +1397,8 @@ server <- function(input, output, session) {
             x = "Age (months)",
             y = "Bayley-4 Score"
           )
+        
+        
         # Add user input points
         input_gamlss_plot <- input_gamlss_plot + geom_point(data = user_df,
                             aes(x = Age, y = Score),
