@@ -34,7 +34,6 @@ library(patchwork)
 library(cowplot)
 library(dplyr)
 
-
 ####### importing databases for plotting #####
 
   # Milestones data
@@ -43,9 +42,9 @@ library(dplyr)
   indiv_percentiles <- readRDS("Individual_Percentiles.RDS")
   
   # Bayley scores data
-  composite <- readRDS("Bayley_Composite_scores.rds")
-  GSV <- readRDS("Bayley_GSV_scores.rds")
-  scaled <- readRDS("Bayley_Scaled_scores.rds")
+  composite <- readRDS("Bayley_Composite_scores.RDS")
+  GSV <- readRDS("Bayley_GSV_scores.RDS")
+  scaled <- readRDS("Bayley_Scaled_scores.RDS")
 
 ##### Global Code: processing of datasets for plotting #####
 
@@ -100,7 +99,7 @@ library(dplyr)
       )
     
     # adds lines for reference types
-    ref_line_types <- c("Population Mean" = "solid", "Population 95% Conf. Int." = "dashed")
+    ref_line_types <- c("Population Mean" = "solid", "Population IQR" = "dashed")
     
     # function to calculate percentiles
     calc_percentile <- function(age_in, milestone_in){
@@ -125,7 +124,7 @@ library(dplyr)
         
         return(result_percentile)
     }
-    
+
 
 ##### Defining UI #####
 ui <- fluidPage(
@@ -136,7 +135,7 @@ ui <- fluidPage(
   # Title of Application
     fluidRow(
       column(10, 
-             h1("eXtraordinarY Babies Study : SCT Bayley Progression")  # Title on the left
+             h1("eXtraordinarY Babies Study : SCT Developmental Milestones")  # Title on the left
       ),
       column(2, 
              tags$img(src = "eBs_Logo.jpg", height = "100px", style = "float: right;")  # Image on the right
@@ -147,54 +146,11 @@ ui <- fluidPage(
   
   # Tabset Panel that defines each of the tabs in use
   tabsetPanel(id = "tabs",
-              tabPanel(
-                "Welcome!",
-                fluidRow(
-                  column(
-                    width = 7,
-                    offset = 1,
-                    h2("Welcome to the eXtraordinarY Babies Study Bayley Progression App"),
-                    br(),
-                    p("The eXtraordinarY Kids Clinic was launched in 2007 by Founder and Director, ",
-                      strong("Nicole Tartaglia, MD"), ". Dr. Tartaglia developed this unique interdisciplinary clinic team to address the medical, developmental, and psychological needs of children and adolescents with X&Y chromosome variations."),
-                    br(),
-                    p("This interactive application provides parents and clinicians a tool to monitor milestone development, through the ",
-                      strong("Bayley-III"), " and ", strong("Bayley-IV"), " assessments as well as specific developmental milestones, such as walking, running, cooing, babbling."),
-                    br(),
-                    p("This app is built using data obtained for the study up to ", strong("May 2025"), 
-                      " and is intended for use for children with a ", strong("Sex Chromosome Trisomy"), 
-                      ", between the ages of ", strong("0 and 4 years old"), "."),
-                    br(),
-                    p("We hope you enjoy it!"),
-                    br(),
-                    tags$a(
-                      href = "https://medschool.cuanschutz.edu/pediatrics/sections/developmental-pediatrics/extraordinary-kids-program",
-                      target = "_blank",
-                      class = "btn btn-info btn-lg",
-                      style = "color: white; font-weight: bold; margin-top: 10px;",
-                      icon("info-circle"), " Learn more about our program!"
-                    )
-                  ),
-                  column(
-                    width = 4,
-                    align = "center",
-                    img(
-                      src = "enrollment.jpg", 
-                      width = "100%", 
-                      alt = "Extraordinary Kids Clinic Team or Logo",
-                      style = "margin-top: 40px;"
-                    )
-                  )
-                )
-              ),
               
               # Tab 1: Welcome to the App/Overview Plot of Scaled/Composite/GSV of Study
-              tabPanel("Bayley Overview Plots",
+              tabPanel("Overview Plots",
                        
                        fluidRow(
-                         column(width = 9, offset = 0.1,
-                          h3(" Bayley Composite, Scaled, and GSV Score Distributions")),
-
                          column(4,
                                 selectInput("plot_choice", "Choose a Data Type:", # select the data type to be plotted
                                             choices = c("Composite", "Scaled", "GSV"))),
@@ -209,17 +165,19 @@ ui <- fluidPage(
                                              selected = "No",
                                              inline = TRUE))),
                        
-                       uiOutput("dynamic_violin_ui"),# one plot that handles above inputs, and outputs a density plot based on score, by SCA condition
+                       plotOutput("dynamic_violin_plot", height = "1000px", width = "75%") # one plot that handles above inputs, and outputs a density plot based on score, by SCA condition
                        
-                       fluidRow(
-                         column(12,tags$p('This plot provides an overview of Bayley-IV score distribution for the overall eXtraodinarY babies study at CU Anschutz. Users can choose to view overlayed general population 95% Confidence Intervals and/or point distributions of individuals in the study.')
+                       # tags$p(
+                       # "This plot provides an overview of bayley scores for the overall eXtrodinarY babies study at CU Anschutz. This study conducts clinical research on X&Y chromosome variations to track their influence on developmental milestones. These plots demonstrate the distribution of Bayley 4 scores, subsetted into SCA conditions, across age and domains. Boxplots overlayed on the plots demonstrate general population mean and standard deviations. For more information on the eXtraordinarY babies study and CU Anschutz research",
+                       # tags$a(href = "https://medschool.cuanschutz.edu/pediatrics/sections/developmental-pediatrics/extraordinary-kids-program/our-research", "click here", target = "_blank"),
+                       # "."))
                        
-                       ))), # end tab1
+                       ), # end tab1
               
                       
               
               # Tab 2: GAMLSS Growth Plots, based on existing data (static images)
-              tabPanel("GSV Growth Plots",
+              tabPanel("GAMLSS Growth Plots",
                        # user choices of GAMLSS plots
                        sidebarLayout(
                          sidebarPanel(width=3,
@@ -235,17 +193,15 @@ ui <- fluidPage(
                          mainPanel(
                            plotOutput("growth_plot", height = "600px"),
                            br(),
-                           p("Growth plot made with Bayley-IV GSV Scores using GAMLSS modeling. Plots can be seperated by Bayley Domain, 
-                           and SCT Condition, with the option to overlay raw data points. The lines represent the percentiles of the selected domain's milestones, 
-                           with the solid black line representing the 50th percentile, the gray line for the 25th and 75th percentile, and the dashed lines for
-                             the 10th and 90th percentile [for patients in the study].")
+                           p("Figure caption: This is a growth plot made with Bayley 4 GSV Scores using GAMLSS modeling. They can be seperated by Bayley Domain, 
+                           and SCT Condition. There is also an option to overlay raw data points. The solid black line represents the 50th percentile of those in the Bayley study, 
+                             the gray is the 25th and 75th percentile, and the dashed lines represent the 10th and 90th percentile.")
                                   ) # end mainPanel
                           ) # end sidebarLayout
                        ), # end tab2
               
               # Tab 3: Allows inputs of milestone data, and plots over the general population boxplot
               tabPanel("Input Milestones",
-                       titlePanel("Milestone Input Plots (Percentiles)"),
                        sidebarLayout(
                          sidebarPanel(width=3,
                                       selectInput("sca_condition", label = "Select SCT",
@@ -268,19 +224,11 @@ ui <- fluidPage(
                          
                          # Show a plot of the generated distribution
                          mainPanel(
-                            fluidRow(column(12, 
-                                            # Add vertical space before the plot
-                                            div(style = "margin-top: 30px;"),
-                                            
-                                            plotlyOutput("indiv_perc", height = "550px")),
-                                     
-                            fluidRow(column(4, 
-                                            tags$img(src = "Percentiles_legend.jpeg", height = "100px")), # add back in the plot
-                                     column(1,
-                                            br(),),
-                                              
-                                    column(7, h5("Individual Milestones plotted atop the general population data."))),
-                            fluidRow(h3("   Data:")),
+                            fluidRow(column(12,
+                                            plotlyOutput("indiv_perc")),
+                            fluidRow(column(4, tags$img(src = "milestones_legend.jpg", height = "100px")),
+                                    column(8, h5("Figure 3: Individual Milestones plotted atop the general population data"))),
+                            fluidRow(h3("Data:")),
                             fluidRow(column(12,
                                     DTOutput("milestones_table_output"))
                                      )
@@ -292,7 +240,7 @@ ui <- fluidPage(
               
               # Tab 4: GSV Scores Input, with Reactive Data Frame and Plot over study population percentile curves
               tabPanel("Input GSV Scores",
-                        titlePanel("Growth Input Charts (Bayley-IV Scores)"),
+                        titlePanel("Growth Input Charts (Bayley Scores)"),
                                 sidebarLayout(
                                   sidebarPanel(width = 3,
                                     selectInput("domain_select", "Select Domain:",
@@ -315,25 +263,11 @@ ui <- fluidPage(
                                     downloadButton("download_plot", "Download All Plots", class = "btn btn-success")
                                   ),
                           mainPanel(
-                            fluidRow(column(12, 
-                                            # Add vertical space before the plot
-                                            div(style = "margin-top: 30px;"),
-                                            
-                                            plotOutput("input_growth_plot")),
-                                     
-                                     fluidRow(column(12, 
-                                     h5("Plot shows user-generated line (pink) with GSV values, plotted over-top study population ranges, 
-                                     with the 10th to 90th percentile of cores represented by purple-dashed lines, the 50th percentile represented by the solid black line."))),
-                                     fluidRow(h3("Data:")),
-                                     fluidRow(column(12,
-                                                     DTOutput("GAMLSS_table"))
-                                     )
-                            )
-                            # plotOutput("input_growth_plot"),
-                            # br(),
-                            # p("Figure caption: Shows user-entered trajectory with study population ranges, from the 10th to 90th percentile in grey."),
-                            # br(),
-                            # DTOutput("GAMLSS_table")
+                            plotOutput("input_growth_plot"),
+                            br(),
+                            p("Figure caption: Shows user-entered trajectory with study population ranges, from the 10th to 90th percentile in grey."),
+                            br(),
+                            DTOutput("GAMLSS_table")
                           ) # end mainPanel
                         ) # end SidebarLayout
                        ), # end tab4
@@ -386,9 +320,9 @@ ui <- fluidPage(
                            with a mean of 500 but a standard deviation of 25.")
                                 ),
                          
-                         column(title = "eXtraorindarY Babies",
+                         column(title = "'eXtraorindarY' Babies",
                                 width = 4,
-                                h4("eXtraordinarY Babies Study"),
+                                h4("'eXtraordinarY' Babies Study"),
                                 p("A sex chromosome trisomy (SCT) is the presence of an additional sex chromosome—XXX, XXY, or XYY—rather than XX (female) and XY (male). 
                                   Roughly 1 out of 500 live births result in SCTs (Nielsen & Wohlert, 1991). Children born with SCTs experience developmental delays at a higher 
                                   rate than those without SCTs. Additionally, a recent study by Thompson et al, 20205, found  higher variation in the age of completion for milestones compared to 
@@ -409,20 +343,32 @@ ui <- fluidPage(
                            
                            p("The GSV scores used in the eXtraordinarY Babies Study come from the Third Edition and assume a normal distribution with a mean of 500 and standard deviation of 100. In 2019, BSID 
              switched to the Fourth Edition; for the sake of consistency, we converted our Bayley III scores to Bayley IV scores, which similarly assume a normal distribution with a mean of 500 
-             but a standard deviation of 25."),
-                          tags$hr(style = "border-top: 2px dashed #ccc; margin: 15px 0;"),
-
-                          p("Nielsen and Wohlert : Nielsen, J. & Wohlert, M. (1991). Chromosome abnormalities found among 34,910 newborn children: results from a 13‑year incidence study in Århus, Denmark.Human Genetics, 87, 81–83."),
-                          p("Thompson, et al : Thompson T, Bothwell S, Janusz J, Wilson R, Howell S, Davis S, Swenson K, Martin S, Kowal K, Ikomi C, Despradel M, Ross J, Tartaglia N. 
-                                                            Quantifying the Spectrum of Early Motor and Language Milestones in Sex Chromosome Trisomy. Pediatrics. 2025 Jul 24:e2024068773. doi: 10.1542/peds.2024-068773. Epub ahead of print. PMID: 40701561.")
-
-
-                         )
+             but a standard deviation of 25.")
+                         ),
+                         column(title = "eXtraorindarY' Babies",
+                                width = 4,
+                                h4("The eXtraordinarY Babies Study"),
+                                p("A sex chromosome trisomy (SCT) is the presence of an additional sex chromosome—XXX, XXY, or XYY—rather than XX (female) and XY (male). Roughly 1 out of 500 live births result in SCTs
+             (Nielsen & Wohlert, 1991). Children born with SCTs experience developmental delays at a higher rate than those without SCTs. A recent study by Thompson et al, 2025, found 
+             higher variation in the age of completion for milestones compared to the general pediatric population. As of July 2025, 298 children with an SCT enrolled in the eXtraordinarY Babies 
+             Study between the ages of 2 and 12 months and subsequently attended evaluations for the Bayley Scores of Infants and toddler Development (BSID), at the Children’s Hospital of Colorado 
+             and at Nemours Children’s Hospital of Thomas Jefferson University."),
+                                p("Evaluations were conducted at 2, 6, 12, 24, and 36 months, evaluating cognition, motor skills (fine and gross), and language (expressive and receptive) abilities. Observations at 2 months
+             were removed for GSV growth curve estimation due to the small sample size. Future analysis with more data points should include the 2 month period for more accurate estimation. "),
+# >>>>>>> Stashed changes
+                                tags$hr(style = "border-top: 2px dashed #ccc; margin: 15px 0;"),
+                                
+                                p("Citation for Nielsen and Wohlert : Nielsen, J. & Wohlert, M. (1991). Chromosome abnormalities found among 34,910 newborn children: results from a 13‑year incidence study in Århus, Denmark.Human Genetics, 87, 81–83."),
+                                p("Citation for Thompson, et al : Thompson T, Bothwell S, Janusz J, Wilson R, Howell S, Davis S, Swenson K, Martin S, Kowal K, Ikomi C, Despradel M, Ross J, Tartaglia N. 
+                                  Quantifying the Spectrum of Early Motor and Language Milestones in Sex Chromosome Trisomy. Pediatrics. 2025 Jul 24:e2024068773. doi: 10.1542/peds.2024-068773. Epub ahead of print. PMID: 40701561.")
+                               
+                                
+                                  ) 
                            ) # end fluidRow
                        ), # end tab5
               
               # Tab 6: Meet the Team
-              tabPanel("Meet the Biostats Team",
+              tabPanel("Meet the Team",
                        # Group image with caption at top
                        fluidRow(
                          column(12,
@@ -503,14 +449,14 @@ ui <- fluidPage(
                        # SAMANTHAS
                        fluidRow(
                          column(6,
-                                div(style = "text-align:center;", img(src = "Bothwell_Samantha.jpg", height = "200px"), h3("Samantha Bothwell, MS (she/her)"), 
-                                    p("Group Lead; Research Scientist"), 
+                                div(style = "text-align:center;", img(src = "Bothwell_Samantha.jpg", height = "200px"), h3("Samantha Bothwell (she/her)"), 
+                                    p("Group Lead Research Scientist"), 
                                     p("Samantha Bothwell is a biostatistician in the Department of Pediatrics at the University of Colorado. She has been working with the eXtraordinarY Babies Study team since 2023. She earned her Master's degree in Biostatistics in 2021 and is currently pursuing her PhD.
                                       Outside of work and school, she enjoys rock climbing, crocheting, hiking 14ers with her dog Maizie (though she says Maizie is faster than she is), and unwinding with a healthy dose of reality TV.")
                                 )
                          ),
                          column(6,
-                                div(style = "text-align:center;", img(src = "Roberts_Samantha.jpg", height = "200px"), h3("Samantha Roberts, MS, MPH (she/her)"), p("Group Lead; Research Scientist"),
+                                div(style = "text-align:center;", img(src = "Roberts_Samantha.jpg", height = "200px"), h3("Samantha Roberts (she/her)"), p("Group Lead Research Scientist"),
                                     p("Samantha Roberts is a biostatistician with the Center for Innovative Design and Analysis since 2021, first as a master's research assistant, then as a research scientist.
                                       She earned her Master's degree in Biostatistics in 2022 and her Master's degree in Public Health in 2012. When not working, she likes to read, hike and hang out with her two kids and husband.")
                                 )
@@ -526,21 +472,6 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   
   ### For Tab 1 ###
-  
-  output$dynamic_violin_ui <- renderUI({
-    # Set height/width based on plot_choice
-    height <- switch(input$plot_choice,
-                     "Composite" = "667px",
-                     "Scaled" = "1000px",
-                     "GSV" = "1000px")
-    
-    width <- switch(input$plot_choice,
-                    "Composite" = "75%",
-                    "Scaled" = "75%",
-                    "GSV" = "75%")
-    
-    plotOutput("dynamic_violin_plot", height = height, width = width)
-  })
   
   output$dynamic_violin_plot <- renderPlot({
     
@@ -559,8 +490,7 @@ server <- function(input, output, session) {
           legend.text = element_text(size = 12),
           legend.title = element_text(size = 15),
           legend.box.spacing = unit(0.2, "cm"),
-          legend.margin = margin(t = 10, r = 20, b = 10, l = 20),
-          text = element_text(family = "Arial")
+          legend.margin = margin(t = 10, r = 20, b = 10, l = 20)
         ) + 
         guides(
           fill = guide_legend(order = 1, title.position = "top"),
@@ -610,17 +540,16 @@ server <- function(input, output, session) {
       
       ref_box_data_composite <- x_map_comp %>%
         mutate(
-          lower = comp_ref_mean - 1.96*comp_ref_sd,
+          lower = comp_ref_mean - comp_ref_sd / 2,
           middle = comp_ref_mean,
-          upper = comp_ref_mean + 1.96*comp_ref_sd
+          upper = comp_ref_mean + comp_ref_sd / 2
         )
       
       p1 <- composite_long_filtered %>%
         filter(domain == "Cognitive") %>%
         mutate(sca_condition = factor(sca_condition, levels = ordered_groups_comp)) %>%
         plot_base() +
-        labs(title = "Cognitive") +
-        guides(fill = "none")
+        labs(title = "Cognitive")
       
       p2 <- composite_long_filtered %>%
         filter(domain == "Language") %>%
@@ -647,26 +576,23 @@ server <- function(input, output, session) {
           geom_segment(data = ref_box_data_composite,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = lower, yend = lower,
-                           linetype = "Population 95% Conf. Int."),
+                           linetype = "Population IQR"),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           geom_segment(data = ref_box_data_composite,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = upper, yend = upper,
-                           linetype = "Population 95% Conf. Int."),
+                           linetype = "Population IQR"),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           scale_linetype_manual(
-            name = paste0("Reference Lines \n(Mean = ", comp_ref_mean, ")"),
+            name = paste0("Reference Lines (Mean = ", comp_ref_mean, ")"),
             values = ref_line_types
           )
         )
-        p1 <- p1 + ref_geoms + 
-          scale_y_continuous(limits = c(30, 150), breaks = seq(30, 150, 30))
-        p2 <- p2 + ref_geoms + 
-          scale_y_continuous(limits = c(30, 150), breaks = seq(30, 150, 30))
-        p3 <- p3 + ref_geoms + 
-          scale_y_continuous(limits = c(30, 150), breaks = seq(30, 150, 30))
+        p1 <- p1 + ref_geoms
+        p2 <- p2 + ref_geoms
+        p3 <- p3 + ref_geoms
       }
       
       if (input$overlay == "Yes") {
@@ -674,8 +600,8 @@ server <- function(input, output, session) {
           geom_jitter(aes(fill = as.numeric(bsid_age_calc)),
                       shape = 21, 
                       color = "black", 
-                      size = 3, 
-                      alpha = 0.9),
+                      size = 2, 
+                      alpha = 0.5),
           scale_fill_gradient(
             name = "Age at Assessment (months)",
             low = "white",
@@ -689,24 +615,14 @@ server <- function(input, output, session) {
       }
       
       
-      # Make a blank spacer plot 
-      white_spacer <- ggplot() + theme_void() + theme(plot.background = element_rect(fill = "white", color = NA))
       
       # Extract legend from p1
       legend <- cowplot::get_legend(p1)
       
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
-    
       
-      top_row <- plot_grid(
-        white_spacer,  # Spacer to center p1
-        p1,           # Main plot
-        legend,       # Legend
-        ncol = 3,
-        rel_widths = c(1, 2, 1),  # Adjust to center p1 and avoid overlap
-        align = "h"
-      )
+      top_row <- cowplot::plot_grid(p1, legend, ncol = 2)
       
       
       bottom_row <- cowplot::plot_grid(p2, p3, ncol = 2)
@@ -727,9 +643,9 @@ server <- function(input, output, session) {
       
       ref_box_data_scaled <- x_map_scale %>%
         mutate(
-          lower = scale_ref_mean - 1.96*scale_ref_sd,
+          lower = scale_ref_mean - scale_ref_sd / 2,
           middle = scale_ref_mean,
-          upper = scale_ref_mean + 1.96*scale_ref_sd
+          upper = scale_ref_mean + scale_ref_sd / 2
         )
       
       p1 <- scaled_long_filtered %>%
@@ -775,13 +691,13 @@ server <- function(input, output, session) {
           geom_segment(data = ref_box_data_scaled,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = lower, yend = lower,
-                           linetype = "Population 95% Conf. Int."),
+                           linetype = "Population IQR"),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           geom_segment(data = ref_box_data_scaled,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = upper, yend = upper,
-                           linetype = "Population 95% Conf. Int."),
+                           linetype = "Population IQR"),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           scale_linetype_manual(
@@ -801,9 +717,8 @@ server <- function(input, output, session) {
       if (input$overlay == "Yes") {
         overlay_geom <- list(
           geom_jitter(aes(name = "Age at Assessment (months)", fill = bsid_age_calc),
-                      shape = 21, color = "black", size = 3, 
-                      alpha = 0.9),
-          scale_fill_gradient(name = "Age at Assessment (Months)", low = "white", high = "black")
+                      shape = 21, color = "black", size = 2, alpha = 0.5),
+          scale_fill_gradient(low = "white", high = "black")
         )
         p1 <- p1 + ggnewscale::new_scale_fill() + overlay_geom
         p2 <- p2 + ggnewscale::new_scale_fill() + overlay_geom
@@ -813,8 +728,6 @@ server <- function(input, output, session) {
       }
       
       
-      # Make a blank spacer plot 
-      white_spacer <- ggplot() + theme_void() + theme(plot.background = element_rect(fill = "white", color = NA))
       
       # Extract legend from p1
       legend <- cowplot::get_legend(p1)
@@ -822,13 +735,7 @@ server <- function(input, output, session) {
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
-      top_row <- plot_grid(
-        white_spacer,         # empty space for centering
-        p1,                    # your main plot
-        legend,                # the legend
-        ncol = 3,
-        rel_widths = c(1, 2, 1)  # adjust as needed to center p1
-      )
+      top_row <- cowplot::plot_grid(p1, legend, ncol = 2)
       
       
       middle_row <- cowplot::plot_grid(p2, p3, ncol = 2)
@@ -851,9 +758,9 @@ server <- function(input, output, session) {
       
       ref_box_data_gsv <- x_map_gsv %>%
         mutate(
-          lower = gsv_ref_mean - 1.96*gsv_ref_sd,
+          lower = gsv_ref_mean - gsv_ref_sd / 2,
           middle = gsv_ref_mean,
-          upper = gsv_ref_mean + 1.96*gsv_ref_sd
+          upper = gsv_ref_mean + gsv_ref_sd / 2
         )
       
       p1 <- new_gsv_long_rem %>%
@@ -890,46 +797,43 @@ server <- function(input, output, session) {
         labs(title = "Gross Motor") +
         theme(legend.position = "none")
       
-      #if (input$show_reference == "Yes") {
-        # Going to remove because they don't make sense for GSV without age
-        
-        # ref_geoms <- list(
-        #   geom_segment(data = ref_box_data_gsv,
-        #                aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
-        #                    y = middle, yend = middle,
-        #                    linetype = "Population Mean"),
-        #                inherit.aes = FALSE, color = "black", size = .75),
-        #   
-        #   geom_segment(data = ref_box_data_gsv,
-        #                aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
-        #                    y = lower, yend = lower,
-        #                    linetype = "Population 95% Conf. Int."),
-        #                inherit.aes = FALSE, color = "black", size = .5),
-        #   
-        #   geom_segment(data = ref_box_data_gsv,
-        #                aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
-        #                    y = upper, yend = upper,
-        #                    linetype = "Population 95% Conf. Int."),
-        #                inherit.aes = FALSE, color = "black", size = .5),
-        #   
-        #   scale_linetype_manual(
-        #     name = paste0("Reference Lines (Mean = ", gsv_ref_mean, ")"),
-        #     values = ref_line_types
-        #   )
-        #)
-        # p1 <- p1 + ref_geoms
-        # p2 <- p2 + ref_geoms
-        # p3 <- p3 + ref_geoms
-        # p4 <- p4 + ref_geoms
-        # p5 <- p5 + ref_geoms
-      #}
+      if (input$show_reference == "Yes") {
+        ref_geoms <- list(
+          geom_segment(data = ref_box_data_gsv,
+                       aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
+                           y = middle, yend = middle,
+                           linetype = "Population Mean"),
+                       inherit.aes = FALSE, color = "black", size = .75),
+          
+          geom_segment(data = ref_box_data_gsv,
+                       aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
+                           y = lower, yend = lower,
+                           linetype = "Population IQR"),
+                       inherit.aes = FALSE, color = "black", size = .5),
+          
+          geom_segment(data = ref_box_data_gsv,
+                       aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
+                           y = upper, yend = upper,
+                           linetype = "Population IQR"),
+                       inherit.aes = FALSE, color = "black", size = .5),
+          
+          scale_linetype_manual(
+            name = paste0("Reference Lines (Mean = ", gsv_ref_mean, ")"),
+            values = ref_line_types
+          )
+        )
+        p1 <- p1 + ref_geoms
+        p2 <- p2 + ref_geoms
+        p3 <- p3 + ref_geoms
+        p4 <- p4 + ref_geoms
+        p5 <- p5 + ref_geoms
+      }
       
       
       if (input$overlay == "Yes") {
         overlay_geom <- list(
           geom_jitter(aes(name = "Age at Assessment (months)",fill = bsid_age_calc),
-                      shape = 21, color = "black", size = 3, 
-                      alpha = 0.9),
+                      shape = 21, color = "black", size = 2, alpha = 0.5),
           scale_fill_gradient(name = "Age at Assessment (months)", low = "white", high = "black"))
         
         p1 <- p1 + ggnewscale::new_scale_fill() + overlay_geom
@@ -940,8 +844,6 @@ server <- function(input, output, session) {
       }
       
       
-      # Make a blank spacer plot 
-      white_spacer <- ggplot() + theme_void() + theme(plot.background = element_rect(fill = "white", color = NA))
       
       # Extract legend from p1
       legend <- cowplot::get_legend(p1)
@@ -949,38 +851,7 @@ server <- function(input, output, session) {
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
-      # Show text explaining no reference lines
-      if (input$show_reference == "Yes") {
-        legend_text <- cowplot::ggdraw() + 
-          draw_label("Population Norms are not computed as \nGSV scores increase non-linearly as a \nfunction of age",
-                     size = 16, hjust = 0, x = 0)
-        
-        # Stack legend and its text
-        legend_with_text <- plot_grid(legend_text, 
-                                      legend_shifted <- ggdraw() +
-                                        draw_grob(legend, x = 0, y = 0.05, width = 1, height = 1),  # adjust y as needed,
-                                      ncol = 1,
-                                      rel_heights = c(0.4, 1))  # adjust spacing as needed
-        
-        top_row <- plot_grid(
-          white_spacer,         # empty space for centering
-          p1,                    # your main plot
-          legend_with_text,                # the legend
-          ncol = 3,
-          rel_widths = c(1, 2, 1)  # adjust as needed to center p1
-        )
-
-      }else{ 
-        
-        top_row <- plot_grid(
-          white_spacer,         # empty space for centering
-          p1,                    # your main plot
-          legend,                # the legend
-          ncol = 3,
-          rel_widths = c(1, 2, 1)  # adjust as needed to center p1
-        )
-      
-      }
+      top_row <- cowplot::plot_grid(p1, legend, ncol = 2)
       
       middle_row <- cowplot::plot_grid(p2, p3, ncol = 2)
       bottom_row <- cowplot::plot_grid(p4, p5, ncol = 2)
@@ -1090,12 +961,10 @@ server <- function(input, output, session) {
                   color = "snow3", size = 0.8, linetype = "solid") +
       
       # Theme and labels
-      theme_bw(base_size = 22) +
-      theme(text = element_text(family = "Arial")) +
-      #theme(text = element_text(size = 20))
+      theme_minimal(base_size = 14) +
       labs(
-        title = paste("Bayley", input$domain_select, "GSV Growth Curve"),
-        x = "Age at Assessment (months)",
+        title = paste("Growth Chart for", input$domain_select),
+        x = "Age (months)",
         y = "Bayley-4 Score"
       )
     
@@ -1103,7 +972,7 @@ server <- function(input, output, session) {
       p <- p+geom_point(data = filtered_data,
                         aes(x = bsid_age_calc, y = transformed_score),
                         inherit.aes = FALSE,
-                        alpha = 0.5, size = 3)
+                        alpha = 0.5, size = 1.5)
     }
     p
   })
@@ -1132,46 +1001,9 @@ server <- function(input, output, session) {
                                    list(extend = 'pdf', filename = 'Milestones'),
                                    list(extend = 'print', title = 'Milestones')),
                                  lengthMenu = c(5, 10, 12)), 
-                  editable = TRUE,
                   class = 'display'
         )
       })
-      
-      # Initialize container
-      edited_data <- reactiveVal()
-      
-      # Populate once original data is available
-      observe({
-        req(input_milestones_data())
-        edited_data(input_milestones_data())
-      })
-      
-      # Capture edits
-      observeEvent(input$milestones_table_output_cell_edit, {
-        info <- input$milestones_table_output_cell_edit
-        df <- edited_data()
-        
-        row <- info$row
-        col <- info$col + 1  # convert from 0-based to 1-based
-        value <- info$value
-        colname <- names(df)[col]
-        
-        # Handle numeric conversion if needed
-        if (is.numeric(df[[colname]])) {
-          value <- as.numeric(value)
-        }
-        
-        df[row, col] <- value
-        edited_data(df)  # Save back
-      })
-      
-      # Use in plot
-      output$indiv_perc <- renderPlotly({
-        user_points <- edited_data()
-        # Continue with plot code using user_points
-      })
-      
-      
 
       # Observe when user clicks "Add Milestone"
       observeEvent(input$addPoints, {
@@ -1195,30 +1027,21 @@ server <- function(input, output, session) {
           combined <- combined %>% 
             rowwise() %>% 
             mutate(Percentile = calc_percentile(months_WhenAchieved, milestone)) %>%
-            # Make higher ages lower percentiles
-            mutate(Percentile = 100 - Percentile) %>%
             ungroup() %>% # fully no clue why I do this %>% 
             mutate(
               symbol = case_when( # adds different markers to plot based on percentile calculated
-                Percentile > 25 ~ "circle",
-                Percentile > 10 ~ "diamond",
+                Percentile < 75 ~ "circle",
+                Percentile < 90 ~ "diamond",
                 TRUE ~ "x"
               ),
               color = case_when(
-                Percentile > 25 ~ "green",
-                Percentile > 10 ~ "orange",
+                Percentile < 75 ~ "green",
+                Percentile < 90 ~ "orange",
                 TRUE ~ "red"
               )
             )
-          
-          
-          
-          # Replace or add logic
-          existing <- input_milestones_data()
-          existing <- existing[!existing$milestone %in% combined$milestone, ]  # remove any matching milestone
-          updated_data <- bind_rows(existing, combined)  # then add new/updated rows
+          updated_data <- bind_rows(input_milestones_data(), combined) # adds everything together
           input_milestones_data(updated_data)
-          
         } else{
           showNotification("Please fill in at least one milestone before plotting", type = "error") # throws error just in case
         }
@@ -1294,30 +1117,21 @@ server <- function(input, output, session) {
           arrange(median_percentile) %>%
           pull(milestone)
         
-        # Make lower percentiles indicate a delay
-        sca_milestones$Percentile = 100 - sca_milestones$Percentile
-        indiv_dat$Percentile = 100 - indiv_dat$Percentile
         # makes sure datasets are ordered  by percentiles
         sca_milestones$milestone <- factor(sca_milestones$milestone, levels = ordered_levels)
         indiv_dat$milestone <- factor(indiv_dat$milestone, levels = ordered_levels)
         
-        color = case_when(input$sca_condition == "All SCTs" ~ "lightblue", 
-                          input$sca_condition == "XXY" ~ "#fdb863", 
-                          input$sca_condition == "XYY" ~ "cyan3", 
-                          input$sca_condition == "XXX" ~ "#4B0082")
-        
         milestone_input_plot <- plot_ly(sca_milestones, 
                                         y = ~milestone, 
                                         x = ~Percentile, 
-                                        color = I(color),
+                                        color = I("lightblue"),
                                         type = "box", 
                                         boxpoints = FALSE,
                                         hoverinfo = "skip",
-                                        showlegend = F) %>%
-        layout(yaxis = list(tickfont = list(family = "Arial", size = 20)))
+                                        showlegend = F)
         
         # creates list of points to plot 
-        user_points <- edited_data()  
+        user_points <- input_milestones_data()  
         if (nrow(user_points)>0){
           # Fixed trace: milestone overlay uses dynamic symbols/colors
           milestone_input_plot <- milestone_input_plot %>%
@@ -1335,15 +1149,16 @@ server <- function(input, output, session) {
                       inherit = FALSE) 
         }
         
+        
+        
         # Show the plot
         milestone_input_plot <- milestone_input_plot %>%
-          layout(xaxis = list(title = "Percentile", range = c(0, 100), titlefont = list(size=20)),
+          layout(xaxis = list(title = "Percentile", range = c(0, 100), titlefont = list(size=15)),
                  yaxis = list(title = " "),
-                 title = list(text="Individual Milestones Achieved", font = list(size = 20)),
-                 margin = list(t = 40),
+                 title = list(text="Individual Milestones Achieved", font = list(size = 18)),
                  shapes = list(
                    list(type = "rect", fillcolor = "rgba(255, 0, 0, 0.2)", 
-                        line = list(color = "red", width = 0), x0 = 0, x1 = 10, y0 = 0, y1 = 1, xref = "x", yref = "paper")
+                        line = list(color = "red", width = 0), x0 = 90, x1 = 100, y0 = 0, y1 = 1, xref = "x", yref = "paper")
                  )
           )
         
@@ -1359,7 +1174,7 @@ server <- function(input, output, session) {
           Score = c(input$score1, input$score2, input$score3, input$score4)
         ) %>%
           filter(!is.na(Age), !is.na(Score)) %>%
-          mutate(Domain = input$domain_select)
+          mutate(domain = input$domain_select)
         
         global_user_data$df <- new_points
       })
@@ -1403,7 +1218,7 @@ server <- function(input, output, session) {
         updateNumericInput(session, "age4", value = NA)
         updateNumericInput(session, "score4", value = NA)
         
-        global_user_data$df <- data.frame(Age = numeric(), Score = numeric(), Domain = character())
+        global_user_data$df <- data.frame(Age = numeric(), Score = numeric(), domain = character())
       })
       
       
@@ -1411,22 +1226,13 @@ server <- function(input, output, session) {
         user_df <- global_user_data$df
         
         # Return nothing if not enough points
-        #if (nrow(user_df) <= 3) return(NULL)
+        if (nrow(user_df) <= 3) return(NULL)
         
         # Filtered data (local to renderPlot)
         filtered_data <- new_gsv_long_rem %>%
           filter(domain == input$domain_select) %>%
           dplyr::select(study_id_extraordinary, sca_condition, domain, bsid_age_calc, transformed_score) %>%
           filter(complete.cases(.))
-        
-        if (input$sct_select != "ALL") {
-          filtered_data <- filtered_data %>%
-            filter(sca_condition == input$sct_select)
-        }
-        
-        validate(
-          need(nrow(filtered_data) > 10, "Not enough data after filtering.")
-        )
         
         
         # Fit GAMLSS model
@@ -1437,22 +1243,22 @@ server <- function(input, output, session) {
           tau.formula = ~1,
           data = filtered_data,
           family = BCCG(),
-          control = gamlss.control(save.data = TRUE),   # <-- THIS FIX IS CRUCIAL
+          control = gamlss.control(save.data = TRUE),   
           trace = FALSE
         )
         
-        # ages to predict over 
+        # Predict percentiles
         age_seq <- seq(
           from = max(5, min(filtered_data$bsid_age_calc, na.rm = TRUE)),
           to = max(filtered_data$bsid_age_calc, na.rm = TRUE),
           length.out = 100
         )
         
-        
         model$call$data <- filtered_data
         
         # data 
         newdata <- data.frame(bsid_age_calc = age_seq)
+        
         
         # Get predicted distribution parameters from the model
         params <- predictAll(model, newdata = newdata)
@@ -1475,8 +1281,8 @@ server <- function(input, output, session) {
         pred_long <- pivot_longer(lms_mod, -age,
                                   names_to = "Percentile", values_to = "Score")
         
-        # ---- Plot ----
-        p <- ggplot() +
+        
+        input_gamlss_plot <- ggplot() +
           # 10–90 ribbon
           geom_ribbon(data = lms_mod, aes(x = age, ymin = P10, ymax = P90),
                       fill = "gray85", alpha = 0.3) +
@@ -1498,31 +1304,23 @@ server <- function(input, output, session) {
                       color = "snow3", size = 0.8, linetype = "solid") +
           
           # Theme and labels
-          theme_bw(base_size = 22) +
-          theme(text = element_text(family = "Arial")) +
-          #theme(text = element_text(size = 20))
+          theme_minimal(base_size = 14) +
           labs(
-            title = paste("Bayley", input$domain_select, "GSV Growth Curve"),
-            x = "Age at Assessment (months)",
-            y = "Bayley-IV Score"
+            title = paste("Growth Chart for", input$domain_select),
+            x = "Age (months)",
+            y = "Bayley-4 Score"
           )
+        # Add user input points
+        input_gamlss_plot <- input_gamlss_plot + geom_point(data = user_df,
+                            aes(x = Age, y = Score),
+                            color = "darkorange2", size = 3)
         
         # Add user input trajectory line
-        p <- p + geom_path(data = user_df,
-                           aes(x = Age, y = Score),
-                           color = "maroon2", size = 1.8)+
-          geom_smooth()
+        input_gamlss_plot <- input_gamlss_plot + geom_smooth(data = user_df,
+                             aes(x = Age, y = Score),
+                             color = "darkorange2", size = 1.2)
         
-        
-        #Add user input points
-        p <- p + geom_point(data = user_df,
-                            aes(x = Age, y = Score),
-                            color = "maroon1", size = 6)
-
-        
-        
-        p
-        
+        input_gamlss_plot
       })
       
       
