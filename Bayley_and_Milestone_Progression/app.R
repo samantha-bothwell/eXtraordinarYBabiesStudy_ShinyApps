@@ -126,6 +126,14 @@ library(dplyr)
         return(result_percentile)
     }
 
+    # adds legend to tab 4
+    legend_df <- data.frame(
+      label = c("0th–10th percentile", "10th–25th percentile", "25th–100th percentile"),
+      color = c("red", "orange", "green"),
+      shape = c(4, 18, 16) # 4 = X, 18 = diamond, 16 = circle
+    )
+    
+    
 
 ##### Defining UI #####
 ui <- fluidPage(
