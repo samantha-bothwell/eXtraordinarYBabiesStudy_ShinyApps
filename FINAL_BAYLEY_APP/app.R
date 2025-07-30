@@ -99,7 +99,7 @@ library(dplyr)
       )
     
     # adds lines for reference types
-    ref_line_types <- c("Population Mean" = "solid", "Population IQR" = "dashed")
+    ref_line_types <- c("Population Mean" = "solid", "Population 95% Conf. Int." = "dashed")
     
     # function to calculate percentiles
     calc_percentile <- function(age_in, milestone_in){
@@ -135,7 +135,7 @@ ui <- fluidPage(
   # Title of Application
     fluidRow(
       column(10, 
-             h1("eXtraordinarY Babies Study : SCT Developmental Milestones")  # Title on the left
+             h1("eXtraordinarY Babies Study : SCT Bayley Progression")  # Title on the left
       ),
       column(2, 
              tags$img(src = "eBs_Logo.jpg", height = "100px", style = "float: right;")  # Image on the right
@@ -280,25 +280,24 @@ ui <- fluidPage(
                            width = 4,
                            style = "border-right: 1px solid #ddd; padding-right: 15px;",
                            h4("GAMLSS"),
-<<<<<<< Updated upstream
-
+# <<<<<<< Updated upstream
                            
-                           p("GAMLSS enables the creation of distributional regression models using Generalized Additive Models (GAM). By adding 
+                           p("GAMLSS enables the creation of distributional regression models using Generalized Additive Models. By adding 
                            location (mean), scale (variance), and shape (skew and kurtosis) components to the GAM structure, 
                              GAMLSS supports the construction of distributional non-linear curves. A common use of GAMLSS is for growth curve construction, 
                              where whole distributions (10th, 25th, 50th, 75th, 90th) percentiles can be visualized."),
                            
-                           p("Bayley GSV (Growth Scale Values) scores, taken from the eXtraordinarY Babies Study, can be modeled similarly 
+                           p("Bayley GSV (Growth Scale Values) scores, taken from the 'eXtraordinarY Babies' study, can be modeled similarly 
                            to growth parameters like height and weight. We used the GAMLSS R-package to create percentile curves for the 
                              Bayley-IV GSV scores collected at regularly scheduled study visits."),
-=======
+# =======
                            p("GAMLSS enables the creation of distributional regression models using Generalized Additive Models (GAM). By adding location (mean), scale (variance), 
              and shape (skew and kurtosis) components to the GAM structure, GAMLSS supports the construction of distributional non-linear curves. A common use of GAMLSS 
              is for growth curve construction, where whole distributions (10th, 25th, 50th, 75th, and 90th) percentiles can be visualized."),
                            p("Bayley GSV (Growth Scale Values) scores, 
              taken from the eXtraordinarY Babies Study, can be modeled similarly to growth parameters like height and weight. We used the GAMLSS R-package to create percentile curves for the 
              Bayley-IV GSV scores collected at regularly scheduled study visits."),
->>>>>>> Stashed changes
+# >>>>>> Stashed changes
                            
                            tabPanel("Gross Motor",
                                     tags$img(src = "grossmotor.jpg",
@@ -308,21 +307,34 @@ ui <- fluidPage(
                          column(
                            width = 4, style = "border-right: 1px solid #ddd; padding-right: 15px;",
                            h4("Bayley Scores of Infant and Toddler Development"),
-<<<<<<< Updated upstream
-
+# <<<<<<< Updated upstream
                            
                            p("The National Library of Medicine estimates that one in six children experience developmental delays, (Balasundaram et al. 2022).  
                              Bayley Scores of Infant and Toddler Development (BSID) is the most widespread tool used to assess developmental growth in infant and toddlers, 
                              up to 24 months in age in discovering developmental delays. Cognition, language (expressive and receptive), motor skills (fine and gross), 
-                             socio-emotional behavior, and adaptive behavior are the key components that BSID evaluates. The steps of administering BSID are early identification, monitoring progress, research, 
+                             socio-emotional behavior, and adaptive behavior. The steps of administering BSID are early identification, monitoring progress, research, 
                              intervention planning, and outcome measurement. The administrator evaluates the growth of a child through specified milestones during an observational study."),
                            
-                           p("The GSV scores used in the eXtraordinarY Babies Study come from the Third Edition and assume a normal distribution with a mean of 500 and standard deviation of 100. 
+                           p("The GSV scores used in the 'eXtraordinarY' Babies Study come from the Third Edition and assume a Normal distribution with a mean of 500 and standard deviation of 100. 
                            In 2019, BSID switched to the Fourth Edition; for the sake of consistency, we converted our Bayley III scores to Bayley IV scores, which similarly assume a normal distribution 
                            with a mean of 500 but a standard deviation of 25.")
                                 ),
-                         column(title = "eXtraorindarY Babies",
-=======
+                         
+                         column(title = "'eXtraorindarY' Babies",
+                                width = 4,
+                                h4("'eXtraordinarY' Babies Study"),
+                                p("A sex chromosome trisomy (SCT) is the presence of an additional sex chromosome—XXX, XXY, or XYY—rather than XX (female) and XY (male). 
+                                  Roughly 1 out of 500 live births result in SCTs (Nielsen & Wohlert, 1991). Children born with SCTs experience developmental delays at a higher 
+                                  rate than those without SCTs. Additionally, a recent study by Thompson et al, 20205, found  higher variation in the age of completion for milestones compared to 
+                                  the general pediatric population. As of July 2025, 298 children with an SCT enrolled in the eXtraordinarY Babies Study between the ages of 2 and 12 months,
+                                  and subsequently attended evaluations for the Bayley Scores of Infants and toddler Development (BSID), at the Children’s Hospital of Colorado,
+                                  and at Nemours Children’s Hospital of Thomas Jefferson University. "),
+                                
+                                p("Evaluations were conducted at 2, 6, 12, 24, and 36 months, evaluating cognition, motor skills (fine and gross), and language (expressive and receptive) abilities. 
+                                  Observations at 2 months were removed for GSV growth curve estimation due to the small sample size. Future analysis with more data points should include the 2 month period 
+                                  for more accurate estimation. "),
+                                
+# =======
                            p("The National Library of Medicine estimates that one in six children experience developmental delays, (Balasundaram et al. 2022).  Bayley Scores of Infant and Toddler Development 
              (BSID) is the most widespread tool used to assess developmental growth in infant and toddlers, up to 24 months in age in discovering developmental delays. Cognition, language (expressive
                                                                                                                                                                                              and receptive), motor skills (fine and gross), socio-emotional behavior, and adaptive behavior scores are the fundamental components of
@@ -334,7 +346,6 @@ ui <- fluidPage(
              but a standard deviation of 25.")
                          ),
                          column(title = "eXtraorindarY' Babies",
->>>>>>> Stashed changes
                                 width = 4,
                                 h4("The eXtraordinarY Babies Study"),
                                 p("A sex chromosome trisomy (SCT) is the presence of an additional sex chromosome—XXX, XXY, or XYY—rather than XX (female) and XY (male). Roughly 1 out of 500 live births result in SCTs
@@ -344,7 +355,7 @@ ui <- fluidPage(
              and at Nemours Children’s Hospital of Thomas Jefferson University."),
                                 p("Evaluations were conducted at 2, 6, 12, 24, and 36 months, evaluating cognition, motor skills (fine and gross), and language (expressive and receptive) abilities. Observations at 2 months
              were removed for GSV growth curve estimation due to the small sample size. Future analysis with more data points should include the 2 month period for more accurate estimation. "),
-
+# >>>>>>> Stashed changes
                                 tags$hr(style = "border-top: 2px dashed #ccc; margin: 15px 0;"),
                                 
                                 p("Citation for Nielsen and Wohlert : Nielsen, J. & Wohlert, M. (1991). Chromosome abnormalities found among 34,910 newborn children: results from a 13‑year incidence study in Århus, Denmark.Human Genetics, 87, 81–83."),
@@ -377,8 +388,8 @@ ui <- fluidPage(
                            img(src = "Child_Chloe.jpeg", height = "150px", style = "display:block; margin:auto;")
                          ),
                          column(9, h4("Chloe Child (she/her)"), p("Chloe Child is a rising senior at Appalachian State University in Boone, North Carolina. 
-                                                                  She studies public health with minors in statistics and mathematics. Chloe also works as a Research Assistant at Appalachian State University's 
-                                                                  Public Health Department and as a Student Associate for Blue Cross Blue Shield of North Carolina. When not in school or working, Chloe enjoy hiking, rock climbing,
+                                                                  She studies Public Health with minors in Statistics and Mathematics. Chloe also works as a Research Assistant at Appalachian State University's 
+                                                                  Public Health Department and as a Student Associate for Blue Cross Blue Shield of North Carolina. When not in school or working, Chloe enjoy hiking, rock climbing, crocheting,
                                                                   weightlifting, and drawing. She joined the Colorado Summer Institute in Biostatistics (CoSIBS) because of a deep interest in the world of biostatistics,
                                                                   and wanted to expand upon her ability to apply statistics and data science to public health research.")
                          )
@@ -388,7 +399,7 @@ ui <- fluidPage(
                        fluidRow(
                          column(3,img(src = "Hallinan_Liam.jpeg", height = "150px", style = "display:block; margin:auto;")
                          ),
-                         column(9, h4("Liam Hallinan (he/him)"), p("Liam Hallinan is a rising senior at Colorado School of Mines. He is pursuoing a degree in Quantitative Biosciences and Engineering,
+                         column(9, h4("Liam Hallinan (he/him)"), p("Liam Hallinan is a rising senior at Colorado School of Mines. He is pursuing a degree in Quantitative Biosciences and Engineering,
                                                           with minors in Data Science, Public Affairs, and Biommedical Engineering. In school, Liam is active as a Lead Peer Mentor, helping
                                                           incoming students transition to college, and oversees the planning of school-wide orientation programming. Liam also serves as a Biology
                                                           2 Laboratory Teaching Assistant, helping students develop their foundational lab skills. Outside of academics, Liam is passionate
@@ -427,7 +438,7 @@ ui <- fluidPage(
                          column(3,
                            img(src = "Pressier_Jack.jpg", height = "150px", style = "display:block; margin:auto;")
                          ),
-                         column(9,h4("Jack Preisser (he/him)"), p("Jack Preisser is a rising senior majoring in statistics at Carleton College. He was born and raised in Chapel Hill, North Carolina along with 
+                         column(9,h4("John Preisser (he/him)"), p("Jack Preisser is a rising senior majoring in statistics at Carleton College. He was born and raised in Chapel Hill, North Carolina along with 
                                                                     his twin sister, Hannah. Jack enjoys running, hiking and other physical activities. He has enjoyed his time at the Colorado Summer Institute in Biostatistics (CoSIBS)
                                                                   because he has not studied public health through an in-depth manner prior to CoSIBS. ")
                          )
@@ -438,11 +449,16 @@ ui <- fluidPage(
                        # SAMANTHAS
                        fluidRow(
                          column(6,
-                                div(style = "text-align:center;", img(src = "lead1.jpg", height = "200px"), h3("Samantha Bothwell"), p("Group Lead")
+                                div(style = "text-align:center;", img(src = "Bothwell_Samantha.jpg", height = "200px"), h3("Samantha Bothwell (she/her)"), 
+                                    p("Group Lead Research Scientist"), 
+                                    p("Samantha Bothwell is a biostatistician in the Department of Pediatrics at the University of Colorado. She has been working with the eXtraordinarY Babies Study team since 2023. She earned her Master's degree in Biostatistics in 2021 and is currently pursuing her PhD.
+                                      Outside of work and school, she enjoys rock climbing, crocheting, hiking 14ers with her dog Maizie (though she says Maizie is faster than she is), and unwinding with a healthy dose of reality TV.")
                                 )
                          ),
                          column(6,
-                                div(style = "text-align:center;", img(src = "lead2.jpg", height = "200px"), h3("Samantha Roberts"), p("Group Lead")
+                                div(style = "text-align:center;", img(src = "Roberts_Samantha.jpg", height = "200px"), h3("Samantha Roberts (she/her)"), p("Group Lead Research Scientist"),
+                                    p("Samantha Roberts is a biostatistician with the Center for Innovative Design and Analysis since 2021, first as a master's research assistant, then as a research scientist.
+                                      She earned her Master's degree in Biostatistics in 2022 and her Master's degree in Public Health in 2012. When not working, she likes to read, hike and hang out with her two kids and husband.")
                                 )
                          )
                        ),
@@ -524,16 +540,17 @@ server <- function(input, output, session) {
       
       ref_box_data_composite <- x_map_comp %>%
         mutate(
-          lower = comp_ref_mean - comp_ref_sd / 2,
+          lower = comp_ref_mean - 1.96*comp_ref_sd,
           middle = comp_ref_mean,
-          upper = comp_ref_mean + comp_ref_sd / 2
+          upper = comp_ref_mean + 1.96*comp_ref_sd
         )
       
       p1 <- composite_long_filtered %>%
         filter(domain == "Cognitive") %>%
         mutate(sca_condition = factor(sca_condition, levels = ordered_groups_comp)) %>%
         plot_base() +
-        labs(title = "Cognitive")
+        labs(title = "Cognitive") +
+        guides(fill = "none")
       
       p2 <- composite_long_filtered %>%
         filter(domain == "Language") %>%
@@ -560,13 +577,13 @@ server <- function(input, output, session) {
           geom_segment(data = ref_box_data_composite,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = lower, yend = lower,
-                           linetype = "Population IQR"),
+                           linetype = "Population 95% Conf. Int."),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           geom_segment(data = ref_box_data_composite,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = upper, yend = upper,
-                           linetype = "Population IQR"),
+                           linetype = "Population 95% Conf. Int."),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           scale_linetype_manual(
@@ -574,9 +591,12 @@ server <- function(input, output, session) {
             values = ref_line_types
           )
         )
-        p1 <- p1 + ref_geoms
-        p2 <- p2 + ref_geoms
-        p3 <- p3 + ref_geoms
+        p1 <- p1 + ref_geoms + 
+          scale_y_continuous(limits = c(30, 150), breaks = seq(30, 150, 30))
+        p2 <- p2 + ref_geoms + 
+          scale_y_continuous(limits = c(30, 150), breaks = seq(30, 150, 30))
+        p3 <- p3 + ref_geoms + 
+          scale_y_continuous(limits = c(30, 150), breaks = seq(30, 150, 30))
       }
       
       if (input$overlay == "Yes") {
@@ -599,14 +619,22 @@ server <- function(input, output, session) {
       }
       
       
+      # Make a blank spacer plot 
+      white_spacer <- ggplot() + theme_void() + theme(plot.background = element_rect(fill = "white", color = NA))
       
       # Extract legend from p1
-      legend <- cowplot::get_legend(p1)
+      legend <- cowplot::get_legend(p1 + guides(fill = "none") )
       
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
-      top_row <- cowplot::plot_grid(p1, legend, ncol = 2, rel_widths = c(1, 0.25))
+      top_row <- plot_grid(
+        white_spacer,         # empty space for centering
+        p1,                    # your main plot
+        legend,                # the legend
+        ncol = 3,
+        rel_widths = c(1, 2, 1)  # adjust as needed to center p1
+      )
       
       
       bottom_row <- cowplot::plot_grid(p2, p3, ncol = 2)
@@ -627,9 +655,9 @@ server <- function(input, output, session) {
       
       ref_box_data_scaled <- x_map_scale %>%
         mutate(
-          lower = scale_ref_mean - scale_ref_sd / 2,
+          lower = scale_ref_mean - 1.96*scale_ref_sd,
           middle = scale_ref_mean,
-          upper = scale_ref_mean + scale_ref_sd / 2
+          upper = scale_ref_mean + 1.96*scale_ref_sd
         )
       
       p1 <- scaled_long_filtered %>%
@@ -675,13 +703,13 @@ server <- function(input, output, session) {
           geom_segment(data = ref_box_data_scaled,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = lower, yend = lower,
-                           linetype = "Population IQR"),
+                           linetype = "Population 95% Conf. Int."),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           geom_segment(data = ref_box_data_scaled,
                        aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
                            y = upper, yend = upper,
-                           linetype = "Population IQR"),
+                           linetype = "Population 95% Conf. Int."),
                        inherit.aes = FALSE, color = "black", size = .5),
           
           scale_linetype_manual(
@@ -712,6 +740,8 @@ server <- function(input, output, session) {
       }
       
       
+      # Make a blank spacer plot 
+      white_spacer <- ggplot() + theme_void() + theme(plot.background = element_rect(fill = "white", color = NA))
       
       # Extract legend from p1
       legend <- cowplot::get_legend(p1)
@@ -719,7 +749,13 @@ server <- function(input, output, session) {
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
-      top_row <- cowplot::plot_grid(p1, legend, ncol = 2, rel_widths = c(1, 0.25))
+      top_row <- plot_grid(
+        white_spacer,         # empty space for centering
+        p1,                    # your main plot
+        legend,                # the legend
+        ncol = 3,
+        rel_widths = c(1, 2, 1)  # adjust as needed to center p1
+      )
       
       
       middle_row <- cowplot::plot_grid(p2, p3, ncol = 2)
@@ -742,9 +778,9 @@ server <- function(input, output, session) {
       
       ref_box_data_gsv <- x_map_gsv %>%
         mutate(
-          lower = gsv_ref_mean - gsv_ref_sd / 2,
+          lower = gsv_ref_mean - 1.96*gsv_ref_sd,
           middle = gsv_ref_mean,
-          upper = gsv_ref_mean + gsv_ref_sd / 2
+          upper = gsv_ref_mean + 1.96*gsv_ref_sd
         )
       
       p1 <- new_gsv_long_rem %>%
@@ -781,37 +817,39 @@ server <- function(input, output, session) {
         labs(title = "Gross Motor") +
         theme(legend.position = "none")
       
-      if (input$show_reference == "Yes") {
-        ref_geoms <- list(
-          geom_segment(data = ref_box_data_gsv,
-                       aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
-                           y = middle, yend = middle,
-                           linetype = "Population Mean"),
-                       inherit.aes = FALSE, color = "black", size = .75),
-          
-          geom_segment(data = ref_box_data_gsv,
-                       aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
-                           y = lower, yend = lower,
-                           linetype = "Population IQR"),
-                       inherit.aes = FALSE, color = "black", size = .5),
-          
-          geom_segment(data = ref_box_data_gsv,
-                       aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
-                           y = upper, yend = upper,
-                           linetype = "Population IQR"),
-                       inherit.aes = FALSE, color = "black", size = .5),
-          
-          scale_linetype_manual(
-            name = paste0("Reference Lines (Mean = ", gsv_ref_mean, ")"),
-            values = ref_line_types
-          )
-        )
-        p1 <- p1 + ref_geoms
-        p2 <- p2 + ref_geoms
-        p3 <- p3 + ref_geoms
-        p4 <- p4 + ref_geoms
-        p5 <- p5 + ref_geoms
-      }
+      #if (input$show_reference == "Yes") {
+        # Going to remove because they don't make sense for GSV without age
+        
+        # ref_geoms <- list(
+        #   geom_segment(data = ref_box_data_gsv,
+        #                aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
+        #                    y = middle, yend = middle,
+        #                    linetype = "Population Mean"),
+        #                inherit.aes = FALSE, color = "black", size = .75),
+        #   
+        #   geom_segment(data = ref_box_data_gsv,
+        #                aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
+        #                    y = lower, yend = lower,
+        #                    linetype = "Population 95% Conf. Int."),
+        #                inherit.aes = FALSE, color = "black", size = .5),
+        #   
+        #   geom_segment(data = ref_box_data_gsv,
+        #                aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
+        #                    y = upper, yend = upper,
+        #                    linetype = "Population 95% Conf. Int."),
+        #                inherit.aes = FALSE, color = "black", size = .5),
+        #   
+        #   scale_linetype_manual(
+        #     name = paste0("Reference Lines (Mean = ", gsv_ref_mean, ")"),
+        #     values = ref_line_types
+        #   )
+        #)
+        # p1 <- p1 + ref_geoms
+        # p2 <- p2 + ref_geoms
+        # p3 <- p3 + ref_geoms
+        # p4 <- p4 + ref_geoms
+        # p5 <- p5 + ref_geoms
+      #}
       
       
       if (input$overlay == "Yes") {
@@ -828,6 +866,8 @@ server <- function(input, output, session) {
       }
       
       
+      # Make a blank spacer plot 
+      white_spacer <- ggplot() + theme_void() + theme(plot.background = element_rect(fill = "white", color = NA))
       
       # Extract legend from p1
       legend <- cowplot::get_legend(p1)
@@ -835,7 +875,38 @@ server <- function(input, output, session) {
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
-      top_row <- cowplot::plot_grid(p1, legend, ncol = 2, rel_widths = c(1, 0.25))
+      # Show text explaining no reference lines
+      if (input$show_reference == "Yes") {
+        legend_text <- cowplot::ggdraw() + 
+          draw_label("Population Norms are not computed as \nGSV scores increase non-linearly as a \nfunction of age",
+                     size = 16, hjust = 0, x = 0)
+        
+        # Stack legend and its text
+        legend_with_text <- plot_grid(legend_text, 
+                                      legend_shifted <- ggdraw() +
+                                        draw_grob(legend, x = 0, y = 0.1, width = 1, height = 1),  # adjust y as needed,
+                                      ncol = 1,
+                                      rel_heights = c(1, 1))  # adjust spacing as needed
+        
+        top_row <- plot_grid(
+          white_spacer,         # empty space for centering
+          p1,                    # your main plot
+          legend_with_text,                # the legend
+          ncol = 3,
+          rel_widths = c(1, 2, 1)  # adjust as needed to center p1
+        )
+
+      }else{ 
+        
+        top_row <- plot_grid(
+          white_spacer,         # empty space for centering
+          p1,                    # your main plot
+          legend,                # the legend
+          ncol = 3,
+          rel_widths = c(1, 2, 1)  # adjust as needed to center p1
+        )
+      
+      }
       
       middle_row <- cowplot::plot_grid(p2, p3, ncol = 2)
       bottom_row <- cowplot::plot_grid(p4, p5, ncol = 2)
