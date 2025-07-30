@@ -153,15 +153,15 @@ ui <- fluidPage(
                   column(
                     width = 7,
                     offset = 1,
-                    h2("Welcome to the eXtraordinarY Babies Study Bayley Progression App"),
+                    h2("Welcome to the eXtraordinarY Babies Study Bayley and Milestone Progression App"),
                     br(),
                     p("The eXtraordinarY Kids Clinic was launched in 2007 by Founder and Director, ",
                       strong("Nicole Tartaglia, MD"), ". Dr. Tartaglia developed this unique interdisciplinary clinic team to address the medical, developmental, and psychological needs of children and adolescents with X&Y chromosome variations."),
                     br(),
-                    p("This interactive application provides parents and clinicians a tool to monitor milestone development, through the ",
-                      strong("Bayley-III"), " and ", strong("Bayley-IV"), " assessments as well as specific developmental milestones, such as walking, running, cooing, babbling."),
+                    p("This interactive application provides a tool for parents and clinicians to monitor milestone development. Milestone achievement is assessed ",
+                      " through the",  strong("Bayley-III"), " and ", strong("Bayley-IV"), " assessments as well as specific developmental milestones, such as walking, running, cooing, babbling."),
                     br(),
-                    p("This app is built using data obtained for the study up to ", strong("May 2025"), 
+                    p("This app was built using data obtained for the study up to ", strong("January 2025"), 
                       " and is intended for use for children with a ", strong("Sex Chromosome Trisomy"), 
                       ", between the ages of ", strong("0 and 4 years old"), "."),
                     br(),
@@ -178,11 +178,13 @@ ui <- fluidPage(
                   column(
                     width = 4,
                     align = "center",
+                    br(),
+                    h3("Enrollment"),
                     img(
-                      src = "enrollment.jpg", 
-                      width = "100%", 
+                      src = "sct_pie.jpg", 
+                      width = "60%", 
                       alt = "Extraordinary Kids Clinic Team or Logo",
-                      style = "margin-top: 40px;"
+                      style = "margin-top: 10px;"
                     )
                   )
                 )
@@ -251,7 +253,7 @@ ui <- fluidPage(
                                       selectInput("sca_condition", label = "Select SCT",
                                                   choices = c("All SCTs", unique(milestones$sca_condition)), 
                                                   selected = "All SCTs"),
-                                      div(h3("Input Age Milestone was Achieved: (in months)"), 
+                                      div(h4("Input Age (Months) Milestone was Achieved : "), 
                                           tagList(
                                             lapply(milestones_list, function(milestone) {
                                               numericInput(
@@ -1122,6 +1124,22 @@ server <- function(input, output, session) {
       # Render user-submitted table
       output$milestones_table_output <- renderDT({
         
+        df <- input_milestones_data()
+        
+        if (nrow(df) == 0) {
+          empty_df <- tibble::tibble(
+            Milestone = character(0),
+            `Age Milestone Achieved (months)` = numeric(0),
+            Percentile = numeric(0)
+          )
+          
+          return(DT::datatable(empty_df,
+                               options = list(dom = 't'),
+                               rownames = FALSE
+          ))
+        }
+        
+        
         display_data <- input_milestones_data() %>% 
           select(-Q25, -Q50, -Q75, -Q90, -color, -symbol) %>% # gets rid of percentiles in exportable plot
           rename('Age Milestone Achieved (months)' = months_WhenAchieved) %>%
@@ -1342,7 +1360,7 @@ server <- function(input, output, session) {
         milestone_input_plot <- milestone_input_plot %>%
           layout(xaxis = list(title = "Percentile", range = c(0, 100), titlefont = list(size=20)),
                  yaxis = list(title = " "),
-                 title = list(text="Individual Milestones Achieved", font = list(size = 20)),
+                 title = list(text="Individual Milestones Achievement Percentiles", font = list(size = 20)),
                  margin = list(t = 40),
                  shapes = list(
                    list(type = "rect", fillcolor = "rgba(255, 0, 0, 0.2)", 
