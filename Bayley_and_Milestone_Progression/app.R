@@ -147,11 +147,54 @@ ui <- fluidPage(
   
   # Tabset Panel that defines each of the tabs in use
   tabsetPanel(id = "tabs",
+              tabPanel(
+                "Welcome!",
+                fluidRow(
+                  column(
+                    width = 7,
+                    offset = 1,
+                    h2("Welcome to the eXtraordinarY Babies Study Bayley Progression App"),
+                    br(),
+                    p("The eXtraordinarY Kids Clinic was launched in 2007 by Founder and Director, ",
+                      strong("Nicole Tartaglia, MD"), ". Dr. Tartaglia developed this unique interdisciplinary clinic team to address the medical, developmental, and psychological needs of children and adolescents with X&Y chromosome variations."),
+                    br(),
+                    p("This interactive application provides parents and clinicians a tool to monitor milestone development, through the ",
+                      strong("Bayley-III"), " and ", strong("Bayley-IV"), " assessments as well as specific developmental milestones, such as walking, running, cooing, babbling."),
+                    br(),
+                    p("This app is built using data obtained for the study up to ", strong("May 2025"), 
+                      " and is intended for use for children with a ", strong("Sex Chromosome Trisomy"), 
+                      ", between the ages of ", strong("0 and 4 years old"), "."),
+                    br(),
+                    p("We hope you enjoy it!"),
+                    br(),
+                    tags$a(
+                      href = "https://medschool.cuanschutz.edu/pediatrics/sections/developmental-pediatrics/extraordinary-kids-program",
+                      target = "_blank",
+                      class = "btn btn-info btn-lg",
+                      style = "color: white; font-weight: bold; margin-top: 10px;",
+                      icon("info-circle"), " Learn more about our program!"
+                    )
+                  ),
+                  column(
+                    width = 4,
+                    align = "center",
+                    img(
+                      src = "enrollment.jpg", 
+                      width = "100%", 
+                      alt = "Extraordinary Kids Clinic Team or Logo",
+                      style = "margin-top: 40px;"
+                    )
+                  )
+                )
+              ),
               
               # Tab 1: Welcome to the App/Overview Plot of Scaled/Composite/GSV of Study
-              tabPanel("Overview Plots",
+              tabPanel("Bayley Overview Plots",
                        
                        fluidRow(
+                         column(width = 9, offset = 0.1,
+                          h3(" Bayley Composite, Scaled, and GSV Score Distributions")),
+
                          column(4,
                                 selectInput("plot_choice", "Choose a Data Type:", # select the data type to be plotted
                                             choices = c("Composite", "Scaled", "GSV"))),
@@ -178,7 +221,7 @@ ui <- fluidPage(
                       
               
               # Tab 2: GAMLSS Growth Plots, based on existing data (static images)
-              tabPanel("GAMLSS Growth Plots",
+              tabPanel("GSV Growth Plots",
                        # user choices of GAMLSS plots
                        sidebarLayout(
                          sidebarPanel(width=3,
@@ -203,6 +246,7 @@ ui <- fluidPage(
               
               # Tab 3: Allows inputs of milestone data, and plots over the general population boxplot
               tabPanel("Input Milestones",
+                       titlePanel("Milestone Input Plots (Percentiles)"),
                        sidebarLayout(
                          sidebarPanel(width=3,
                                       selectInput("sca_condition", label = "Select SCT",
@@ -337,9 +381,9 @@ ui <- fluidPage(
                            with a mean of 500 but a standard deviation of 25.")
                                 ),
                          
-                         column(title = "'eXtraorindarY' Babies",
+                         column(title = "eXtraorindarY Babies",
                                 width = 4,
-                                h4("'eXtraordinarY' Babies Study"),
+                                h4("eXtraordinarY Babies Study"),
                                 p("A sex chromosome trisomy (SCT) is the presence of an additional sex chromosome—XXX, XXY, or XYY—rather than XX (female) and XY (male). 
                                   Roughly 1 out of 500 live births result in SCTs (Nielsen & Wohlert, 1991). Children born with SCTs experience developmental delays at a higher 
                                   rate than those without SCTs. Additionally, a recent study by Thompson et al, 20205, found  higher variation in the age of completion for milestones compared to 
@@ -360,27 +404,15 @@ ui <- fluidPage(
                            
                            p("The GSV scores used in the eXtraordinarY Babies Study come from the Third Edition and assume a normal distribution with a mean of 500 and standard deviation of 100. In 2019, BSID 
              switched to the Fourth Edition; for the sake of consistency, we converted our Bayley III scores to Bayley IV scores, which similarly assume a normal distribution with a mean of 500 
-             but a standard deviation of 25.")
-                         ),
-                         column(title = "eXtraorindarY' Babies",
-                                width = 4,
-                                h4("The eXtraordinarY Babies Study"),
-                                p("A sex chromosome trisomy (SCT) is the presence of an additional sex chromosome—XXX, XXY, or XYY—rather than XX (female) and XY (male). Roughly 1 out of 500 live births result in SCTs
-             (Nielsen & Wohlert, 1991). Children born with SCTs experience developmental delays at a higher rate than those without SCTs. A recent study by Thompson et al, 2025, found 
-             higher variation in the age of completion for milestones compared to the general pediatric population. As of July 2025, 298 children with an SCT enrolled in the eXtraordinarY Babies 
-             Study between the ages of 2 and 12 months and subsequently attended evaluations for the Bayley Scores of Infants and toddler Development (BSID), at the Children’s Hospital of Colorado 
-             and at Nemours Children’s Hospital of Thomas Jefferson University."),
-                                p("Evaluations were conducted at 2, 6, 12, 24, and 36 months, evaluating cognition, motor skills (fine and gross), and language (expressive and receptive) abilities. Observations at 2 months
-             were removed for GSV growth curve estimation due to the small sample size. Future analysis with more data points should include the 2 month period for more accurate estimation. "),
-# >>>>>>> Stashed changes
-                                tags$hr(style = "border-top: 2px dashed #ccc; margin: 15px 0;"),
-                                
-                                p("Citation for Nielsen and Wohlert : Nielsen, J. & Wohlert, M. (1991). Chromosome abnormalities found among 34,910 newborn children: results from a 13‑year incidence study in Århus, Denmark.Human Genetics, 87, 81–83."),
-                                p("Citation for Thompson, et al : Thompson T, Bothwell S, Janusz J, Wilson R, Howell S, Davis S, Swenson K, Martin S, Kowal K, Ikomi C, Despradel M, Ross J, Tartaglia N. 
-                                  Quantifying the Spectrum of Early Motor and Language Milestones in Sex Chromosome Trisomy. Pediatrics. 2025 Jul 24:e2024068773. doi: 10.1542/peds.2024-068773. Epub ahead of print. PMID: 40701561.")
-                               
-                                
-                                  ) 
+             but a standard deviation of 25."),
+                          tags$hr(style = "border-top: 2px dashed #ccc; margin: 15px 0;"),
+
+                          p("Nielsen and Wohlert : Nielsen, J. & Wohlert, M. (1991). Chromosome abnormalities found among 34,910 newborn children: results from a 13‑year incidence study in Århus, Denmark.Human Genetics, 87, 81–83."),
+                          p("Thompson, et al : Thompson T, Bothwell S, Janusz J, Wilson R, Howell S, Davis S, Swenson K, Martin S, Kowal K, Ikomi C, Despradel M, Ross J, Tartaglia N. 
+                                                            Quantifying the Spectrum of Early Motor and Language Milestones in Sex Chromosome Trisomy. Pediatrics. 2025 Jul 24:e2024068773. doi: 10.1542/peds.2024-068773. Epub ahead of print. PMID: 40701561.")
+
+
+                         )
                            ) # end fluidRow
                        ), # end tab5
               
