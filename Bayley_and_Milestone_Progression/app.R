@@ -323,7 +323,7 @@ ui <- fluidPage(
                                      
                                      fluidRow(column(12, 
                                      h5("Plot shows user-generated line (pink) with GSV values, plotted over-top study population ranges, 
-                                     with the 10th to 90th percentile of cores represented by purple-dashed lines, the 50th percentile represented by the solid black line."))),
+                                     with the 10th to 90th percentile of cases represented by purple-dashed lines, and the 50th percentile represented by the solid black line."))),
                                      fluidRow(h3("Data:")),
                                      fluidRow(column(12,
                                                      DTOutput("GAMLSS_table"))
