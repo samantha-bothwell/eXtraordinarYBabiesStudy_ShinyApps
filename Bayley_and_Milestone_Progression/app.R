@@ -425,7 +425,7 @@ ui <- fluidPage(
                        ), # end tab5
               
               # Tab 6: Meet the Team
-              tabPanel("Meet the Team",
+              tabPanel("Meet the Biostats Team",
                        # Group image with caption at top
                        fluidRow(
                          column(12,
@@ -1211,8 +1211,13 @@ server <- function(input, output, session) {
                 TRUE ~ "red"
               )
             )
-          updated_data <- bind_rows(input_milestones_data(), combined) # adds everything together
+          
+          # Replace or add logic
+          existing <- input_milestones_data()
+          existing <- existing[!existing$milestone %in% combined$milestone, ]  # remove any matching milestone
+          updated_data <- bind_rows(existing, combined)  # then add new/updated rows
           input_milestones_data(updated_data)
+          
         } else{
           showNotification("Please fill in at least one milestone before plotting", type = "error") # throws error just in case
         }
@@ -1307,7 +1312,7 @@ server <- function(input, output, session) {
                                         type = "box", 
                                         boxpoints = FALSE,
                                         hoverinfo = "skip",
-                                        showlegend = T) %>%
+                                        showlegend = F) %>%
         layout(yaxis = list(tickfont = list(family = "Arial", size = 18)))
         
         # creates list of points to plot 
