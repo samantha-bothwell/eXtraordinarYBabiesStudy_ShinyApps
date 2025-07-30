@@ -125,14 +125,6 @@ library(dplyr)
         
         return(result_percentile)
     }
-
-    # adds legend to tab 4
-    legend_df <- data.frame(
-      label = c("0th–10th percentile", "10th–25th percentile", "25th–100th percentile"),
-      color = c("red", "orange", "green"),
-      shape = c(4, 18, 16) # 4 = X, 18 = diamond, 16 = circle
-    )
-    
     
 
 ##### Defining UI #####
@@ -243,9 +235,10 @@ ui <- fluidPage(
                          mainPanel(
                            plotOutput("growth_plot", height = "600px"),
                            br(),
-                           p("Figure caption: This is a growth plot made with Bayley 4 GSV Scores using GAMLSS modeling. They can be seperated by Bayley Domain, 
-                           and SCT Condition. There is also an option to overlay raw data points. The solid black line represents the 50th percentile of those in the Bayley study, 
-                             the gray is the 25th and 75th percentile, and the dashed lines represent the 10th and 90th percentile.")
+                           p("Growth plot made with Bayley 4 GSV Scores using GAMLSS modeling. Plots can be seperated by Bayley Domain, 
+                           and SCT Condition, with the option to overlay raw data points. The lines represent the percentiles of the selected domain's milestones, 
+                           with the solid black line representing the 50th percentile, the gray line for the 25th and 75th percentile, and the dashed lines for
+                             the 10th and 90th percentile [for patients in the study].")
                                   ) # end mainPanel
                           ) # end sidebarLayout
                        ), # end tab2
@@ -281,9 +274,13 @@ ui <- fluidPage(
                                             
                                             plotlyOutput("indiv_perc", height = "550px")),
                                      
-                            fluidRow(column(4, tags$img(src = "milestones_legend.jpg", height = "100px")),
-                                    column(8, h5("Figure 3: Individual Milestones plotted atop the general population data"))),
-                            fluidRow(h3("Data:")),
+                            fluidRow(column(4, 
+                                            tags$img(src = "Percentiles_legend.jpeg", height = "100px")), # add back in the plot
+                                     column(1,
+                                            br(),),
+                                              
+                                    column(7, h5("Individual Milestones plotted atop the general population data."))),
+                            fluidRow(h3("   Data:")),
                             fluidRow(column(12,
                                     DTOutput("milestones_table_output"))
                                      )
@@ -324,7 +321,9 @@ ui <- fluidPage(
                                             
                                             plotOutput("input_growth_plot")),
                                      
-                                     fluidRow(column(12, h5("Figure 4: Shows user-entered trajectory with study population ranges, from the 10th to 90th percentile in grey."))),
+                                     fluidRow(column(12, 
+                                     h5("Plot shows user-generated line [orange solid] with GSV values, plotted over-top study population ranges, 
+                                     with the 10th to 90th percentile of cores represented by purple-dashed lines, the 50th percentile represented by the solid black line."))),
                                      fluidRow(h3("Data:")),
                                      fluidRow(column(12,
                                                      DTOutput("GAMLSS_table"))
@@ -1212,6 +1211,8 @@ server <- function(input, output, session) {
               )
             )
           
+          
+          
           # Replace or add logic
           existing <- input_milestones_data()
           existing <- existing[!existing$milestone %in% combined$milestone, ]  # remove any matching milestone
@@ -1333,8 +1334,6 @@ server <- function(input, output, session) {
                       hoverinfo = "text",
                       inherit = FALSE) 
         }
-        
-        
         
         # Show the plot
         milestone_input_plot <- milestone_input_plot %>%
