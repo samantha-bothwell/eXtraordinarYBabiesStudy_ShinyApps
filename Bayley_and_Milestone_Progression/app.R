@@ -275,7 +275,7 @@ ui <- fluidPage(
                                             
                                             plotlyOutput("indiv_perc", height = "550px")),
                                      
-                            fluidRow(column(4, tags$img(src = "milestones_legend.jpg", height = "75px")),
+                            fluidRow(column(4, tags$img(src = "milestones_legend.jpg", height = "100px")),
                                     column(8, h5("Figure 3: Individual Milestones plotted atop the general population data"))),
                             fluidRow(h3("Data:")),
                             fluidRow(column(12,
@@ -1188,16 +1188,18 @@ server <- function(input, output, session) {
           combined <- combined %>% 
             rowwise() %>% 
             mutate(Percentile = calc_percentile(months_WhenAchieved, milestone)) %>%
+            # Make higher ages lower percentiles
+            mutate(Percentile = 100 - Percentile) %>%
             ungroup() %>% # fully no clue why I do this %>% 
             mutate(
               symbol = case_when( # adds different markers to plot based on percentile calculated
-                Percentile < 75 ~ "circle",
-                Percentile < 90 ~ "diamond",
+                Percentile > 25 ~ "circle",
+                Percentile > 10 ~ "diamond",
                 TRUE ~ "x"
               ),
               color = case_when(
-                Percentile < 75 ~ "green",
-                Percentile < 90 ~ "orange",
+                Percentile > 25 ~ "green",
+                Percentile > 10 ~ "orange",
                 TRUE ~ "red"
               )
             )
@@ -1278,6 +1280,9 @@ server <- function(input, output, session) {
           arrange(median_percentile) %>%
           pull(milestone)
         
+        # Make lower percentiles indicate a delay
+        sca_milestones$Percentile = 100 - sca_milestones$Percentile
+        indiv_dat$Percentile = 100 - indiv_dat$Percentile
         # makes sure datasets are ordered  by percentiles
         sca_milestones$milestone <- factor(sca_milestones$milestone, levels = ordered_levels)
         indiv_dat$milestone <- factor(indiv_dat$milestone, levels = ordered_levels)
@@ -1294,7 +1299,7 @@ server <- function(input, output, session) {
                                         type = "box", 
                                         boxpoints = FALSE,
                                         hoverinfo = "skip",
-                                        showlegend = F) %>%
+                                        showlegend = T) %>%
         layout(yaxis = list(tickfont = list(family = "Arial", size = 18)))
         
         # creates list of points to plot 
@@ -1326,7 +1331,7 @@ server <- function(input, output, session) {
                  margin = list(t = 40),
                  shapes = list(
                    list(type = "rect", fillcolor = "rgba(255, 0, 0, 0.2)", 
-                        line = list(color = "red", width = 0), x0 = 90, x1 = 100, y0 = 0, y1 = 1, xref = "x", yref = "paper")
+                        line = list(color = "red", width = 0), x0 = 0, x1 = 10, y0 = 0, y1 = 1, xref = "x", yref = "paper")
                  )
           )
         
