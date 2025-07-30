@@ -280,6 +280,7 @@ ui <- fluidPage(
                            width = 4,
                            style = "border-right: 1px solid #ddd; padding-right: 15px;",
                            h4("GAMLSS"),
+<<<<<<< Updated upstream
 
                            
                            p("GAMLSS enables the creation of distributional regression models using Generalized Additive Models (GAM). By adding 
@@ -290,6 +291,14 @@ ui <- fluidPage(
                            p("Bayley GSV (Growth Scale Values) scores, taken from the eXtraordinarY Babies Study, can be modeled similarly 
                            to growth parameters like height and weight. We used the GAMLSS R-package to create percentile curves for the 
                              Bayley-IV GSV scores collected at regularly scheduled study visits."),
+=======
+                           p("GAMLSS enables the creation of distributional regression models using Generalized Additive Models (GAM). By adding location (mean), scale (variance), 
+             and shape (skew and kurtosis) components to the GAM structure, GAMLSS supports the construction of distributional non-linear curves. A common use of GAMLSS 
+             is for growth curve construction, where whole distributions (10th, 25th, 50th, 75th, and 90th) percentiles can be visualized."),
+                           p("Bayley GSV (Growth Scale Values) scores, 
+             taken from the eXtraordinarY Babies Study, can be modeled similarly to growth parameters like height and weight. We used the GAMLSS R-package to create percentile curves for the 
+             Bayley-IV GSV scores collected at regularly scheduled study visits."),
+>>>>>>> Stashed changes
                            
                            tabPanel("Gross Motor",
                                     tags$img(src = "grossmotor.jpg",
@@ -299,6 +308,7 @@ ui <- fluidPage(
                          column(
                            width = 4, style = "border-right: 1px solid #ddd; padding-right: 15px;",
                            h4("Bayley Scores of Infant and Toddler Development"),
+<<<<<<< Updated upstream
 
                            
                            p("The National Library of Medicine estimates that one in six children experience developmental delays, (Balasundaram et al. 2022).  
@@ -312,6 +322,19 @@ ui <- fluidPage(
                            with a mean of 500 but a standard deviation of 25.")
                                 ),
                          column(title = "eXtraorindarY Babies",
+=======
+                           p("The National Library of Medicine estimates that one in six children experience developmental delays, (Balasundaram et al. 2022).  Bayley Scores of Infant and Toddler Development 
+             (BSID) is the most widespread tool used to assess developmental growth in infant and toddlers, up to 24 months in age in discovering developmental delays. Cognition, language (expressive
+                                                                                                                                                                                             and receptive), motor skills (fine and gross), socio-emotional behavior, and adaptive behavior scores are the fundamental components of
+                                                                                                                                                                                             BSID. The steps of administering BSID are early identification, monitoring progress, research, intervention
+             planning, and outcome measurement. The administrator evaluates the growth of a child through specified milestones during an observational study."),
+                           
+                           p("The GSV scores used in the eXtraordinarY Babies Study come from the Third Edition and assume a normal distribution with a mean of 500 and standard deviation of 100. In 2019, BSID 
+             switched to the Fourth Edition; for the sake of consistency, we converted our Bayley III scores to Bayley IV scores, which similarly assume a normal distribution with a mean of 500 
+             but a standard deviation of 25.")
+                         ),
+                         column(title = "eXtraorindarY' Babies",
+>>>>>>> Stashed changes
                                 width = 4,
                                 h4("The eXtraordinarY Babies Study"),
                                 p("A sex chromosome trisomy (SCT) is the presence of an additional sex chromosome—XXX, XXY, or XYY—rather than XX (female) and XY (male). Roughly 1 out of 500 live births result in SCTs
