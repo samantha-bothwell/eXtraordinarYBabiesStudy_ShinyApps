@@ -237,7 +237,7 @@ ui <- fluidPage(
                          mainPanel(
                            plotOutput("growth_plot", height = "600px"),
                            br(),
-                           p("Growth plot made with Bayley 4 GSV Scores using GAMLSS modeling. Plots can be seperated by Bayley Domain, 
+                           p("Growth plot made with Bayley-IV GSV Scores using GAMLSS modeling. Plots can be seperated by Bayley Domain, 
                            and SCT Condition, with the option to overlay raw data points. The lines represent the percentiles of the selected domain's milestones, 
                            with the solid black line representing the 50th percentile, the gray line for the 25th and 75th percentile, and the dashed lines for
                              the 10th and 90th percentile [for patients in the study].")
@@ -294,7 +294,7 @@ ui <- fluidPage(
               
               # Tab 4: GSV Scores Input, with Reactive Data Frame and Plot over study population percentile curves
               tabPanel("Input GSV Scores",
-                        titlePanel("Growth Input Charts (Bayley Scores)"),
+                        titlePanel("Growth Input Charts (Bayley-IV Scores)"),
                                 sidebarLayout(
                                   sidebarPanel(width = 3,
                                     selectInput("domain_select", "Select Domain:",
@@ -324,7 +324,7 @@ ui <- fluidPage(
                                             plotOutput("input_growth_plot")),
                                      
                                      fluidRow(column(12, 
-                                     h5("Plot shows user-generated line [orange solid] with GSV values, plotted over-top study population ranges, 
+                                     h5("Plot shows user-generated line (pink) with GSV values, plotted over-top study population ranges, 
                                      with the 10th to 90th percentile of cores represented by purple-dashed lines, the 50th percentile represented by the solid black line."))),
                                      fluidRow(h3("Data:")),
                                      fluidRow(column(12,
@@ -1314,7 +1314,7 @@ server <- function(input, output, session) {
                                         boxpoints = FALSE,
                                         hoverinfo = "skip",
                                         showlegend = F) %>%
-        layout(yaxis = list(tickfont = list(family = "Arial", size = 18)))
+        layout(yaxis = list(tickfont = list(family = "Arial", size = 20)))
         
         # creates list of points to plot 
         user_points <- edited_data()  
@@ -1359,7 +1359,7 @@ server <- function(input, output, session) {
           Score = c(input$score1, input$score2, input$score3, input$score4)
         ) %>%
           filter(!is.na(Age), !is.na(Score)) %>%
-          mutate(domain = input$domain_select)
+          mutate(Domain = input$domain_select)
         
         global_user_data$df <- new_points
       })
@@ -1403,7 +1403,7 @@ server <- function(input, output, session) {
         updateNumericInput(session, "age4", value = NA)
         updateNumericInput(session, "score4", value = NA)
         
-        global_user_data$df <- data.frame(Age = numeric(), Score = numeric(), domain = character())
+        global_user_data$df <- data.frame(Age = numeric(), Score = numeric(), Domain = character())
       })
       
       
@@ -1504,19 +1504,22 @@ server <- function(input, output, session) {
           labs(
             title = paste("Bayley", input$domain_select, "GSV Growth Curve"),
             x = "Age at Assessment (months)",
-            y = "Bayley-4 Score"
+            y = "Bayley-IV Score"
           )
+        
+        # Add user input trajectory line
+        p <- p + geom_path(data = user_df,
+                           aes(x = Age, y = Score),
+                           color = "maroon2", size = 1.8)+
+          geom_smooth()
         
         
         #Add user input points
         p <- p + geom_point(data = user_df,
                             aes(x = Age, y = Score),
-                            color = "darkorange2", size = 3)
+                            color = "maroon1", size = 6)
 
-        # Add user input trajectory line
-        p <- p + geom_path(data = user_df,
-                             aes(x = Age, y = Score),
-                             color = "darkorange2", size = 1.2)
+        
         
         p
         
