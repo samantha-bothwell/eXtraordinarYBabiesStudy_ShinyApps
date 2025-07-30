@@ -34,6 +34,7 @@ library(patchwork)
 library(cowplot)
 library(dplyr)
 
+
 ####### importing databases for plotting #####
 
   # Milestones data
@@ -42,9 +43,9 @@ library(dplyr)
   indiv_percentiles <- readRDS("Individual_Percentiles.RDS")
   
   # Bayley scores data
-  composite <- readRDS("Bayley_Composite_scores.RDS")
-  GSV <- readRDS("Bayley_GSV_scores.RDS")
-  scaled <- readRDS("Bayley_Scaled_scores.RDS")
+  composite <- readRDS("Bayley_Composite_scores.rds")
+  GSV <- readRDS("Bayley_GSV_scores.rds")
+  scaled <- readRDS("Bayley_Scaled_scores.rds")
 
 ##### Global Code: processing of datasets for plotting #####
 
