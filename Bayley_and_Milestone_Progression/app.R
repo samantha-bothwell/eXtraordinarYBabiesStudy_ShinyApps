@@ -322,8 +322,11 @@ ui <- fluidPage(
                                             plotOutput("input_growth_plot")),
                                      
                                      fluidRow(column(12, 
-                                     h5("Plot shows user-generated line (pink) with GSV values, plotted over-top study population ranges, 
-                                     with the 10th to 90th percentile of cases represented by purple-dashed lines, and the 50th percentile represented by the solid black line."))),
+                                     h5("Generalized Additive Model with Linearity, Shape,
+                                          and Size (GAMLSS) plot with user-generated (pink) line with
+                                          GSV scores, plotted over-top study population ranges, with
+                                          10th-90th percentiles represented by purple-dashed lines and
+                                          50th percentile represented by solid-black line."))),
                                      fluidRow(h3("Data:")),
                                      fluidRow(column(12,
                                                      DTOutput("GAMLSS_table"))
