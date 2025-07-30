@@ -817,37 +817,39 @@ server <- function(input, output, session) {
         labs(title = "Gross Motor") +
         theme(legend.position = "none")
       
-      if (input$show_reference == "Yes") {
-        ref_geoms <- list(
-          geom_segment(data = ref_box_data_gsv,
-                       aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
-                           y = middle, yend = middle,
-                           linetype = "Population Mean"),
-                       inherit.aes = FALSE, color = "black", size = .75),
-          
-          geom_segment(data = ref_box_data_gsv,
-                       aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
-                           y = lower, yend = lower,
-                           linetype = "Population 95% Conf. Int."),
-                       inherit.aes = FALSE, color = "black", size = .5),
-          
-          geom_segment(data = ref_box_data_gsv,
-                       aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
-                           y = upper, yend = upper,
-                           linetype = "Population 95% Conf. Int."),
-                       inherit.aes = FALSE, color = "black", size = .5),
-          
-          scale_linetype_manual(
-            name = paste0("Reference Lines (Mean = ", gsv_ref_mean, ")"),
-            values = ref_line_types
-          )
-        )
-        p1 <- p1 + ref_geoms
-        p2 <- p2 + ref_geoms
-        p3 <- p3 + ref_geoms
-        p4 <- p4 + ref_geoms
-        p5 <- p5 + ref_geoms
-      }
+      #if (input$show_reference == "Yes") {
+        # Going to remove because they don't make sense for GSV without age
+        
+        # ref_geoms <- list(
+        #   geom_segment(data = ref_box_data_gsv,
+        #                aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
+        #                    y = middle, yend = middle,
+        #                    linetype = "Population Mean"),
+        #                inherit.aes = FALSE, color = "black", size = .75),
+        #   
+        #   geom_segment(data = ref_box_data_gsv,
+        #                aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
+        #                    y = lower, yend = lower,
+        #                    linetype = "Population 95% Conf. Int."),
+        #                inherit.aes = FALSE, color = "black", size = .5),
+        #   
+        #   geom_segment(data = ref_box_data_gsv,
+        #                aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
+        #                    y = upper, yend = upper,
+        #                    linetype = "Population 95% Conf. Int."),
+        #                inherit.aes = FALSE, color = "black", size = .5),
+        #   
+        #   scale_linetype_manual(
+        #     name = paste0("Reference Lines (Mean = ", gsv_ref_mean, ")"),
+        #     values = ref_line_types
+        #   )
+        #)
+        # p1 <- p1 + ref_geoms
+        # p2 <- p2 + ref_geoms
+        # p3 <- p3 + ref_geoms
+        # p4 <- p4 + ref_geoms
+        # p5 <- p5 + ref_geoms
+      #}
       
       
       if (input$overlay == "Yes") {
@@ -873,13 +875,38 @@ server <- function(input, output, session) {
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
-      top_row <- plot_grid(
-        white_spacer,         # empty space for centering
-        p1,                    # your main plot
-        legend,                # the legend
-        ncol = 3,
-        rel_widths = c(1, 2, 1)  # adjust as needed to center p1
-      )
+      # Show text explaining no reference lines
+      if (input$show_reference == "Yes") {
+        legend_text <- cowplot::ggdraw() + 
+          draw_label("Population Norms are not computed as \nGSV scores increase non-linearly as a \nfunction of age",
+                     size = 16, hjust = 0, x = 0)
+        
+        # Stack legend and its text
+        legend_with_text <- plot_grid(legend_text, 
+                                      legend_shifted <- ggdraw() +
+                                        draw_grob(legend, x = 0, y = 0.1, width = 1, height = 1),  # adjust y as needed,
+                                      ncol = 1,
+                                      rel_heights = c(1, 1))  # adjust spacing as needed
+        
+        top_row <- plot_grid(
+          white_spacer,         # empty space for centering
+          p1,                    # your main plot
+          legend_with_text,                # the legend
+          ncol = 3,
+          rel_widths = c(1, 2, 1)  # adjust as needed to center p1
+        )
+
+      }else{ 
+        
+        top_row <- plot_grid(
+          white_spacer,         # empty space for centering
+          p1,                    # your main plot
+          legend,                # the legend
+          ncol = 3,
+          rel_widths = c(1, 2, 1)  # adjust as needed to center p1
+        )
+      
+      }
       
       middle_row <- cowplot::plot_grid(p2, p3, ncol = 2)
       bottom_row <- cowplot::plot_grid(p4, p5, ncol = 2)
