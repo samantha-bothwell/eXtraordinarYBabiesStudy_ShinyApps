@@ -605,8 +605,8 @@ server <- function(input, output, session) {
           geom_jitter(aes(fill = as.numeric(bsid_age_calc)),
                       shape = 21, 
                       color = "black", 
-                      size = 2, 
-                      alpha = 0.5),
+                      size = 3, 
+                      alpha = 0.9),
           scale_fill_gradient(
             name = "Age at Assessment (months)",
             low = "white",
