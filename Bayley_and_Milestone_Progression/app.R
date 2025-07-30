@@ -268,11 +268,23 @@ ui <- fluidPage(
                                     downloadButton("download_plot", "Download All Plots", class = "btn btn-success")
                                   ),
                           mainPanel(
-                            plotOutput("input_growth_plot"),
-                            br(),
-                            p("Figure caption: Shows user-entered trajectory with study population ranges, from the 10th to 90th percentile in grey."),
-                            br(),
-                            DTOutput("GAMLSS_table")
+                            fluidRow(column(12, 
+                                            # Add vertical space before the plot
+                                            div(style = "margin-top: 30px;"),
+                                            
+                                            plotOutput("input_growth_plot")),
+                                     
+                                     fluidRow(column(12, h5("Figure 4: Shows user-entered trajectory with study population ranges, from the 10th to 90th percentile in grey."))),
+                                     fluidRow(h3("Data:")),
+                                     fluidRow(column(12,
+                                                     DTOutput("GAMLSS_table"))
+                                     )
+                            )
+                            # plotOutput("input_growth_plot"),
+                            # br(),
+                            # p("Figure caption: Shows user-entered trajectory with study population ranges, from the 10th to 90th percentile in grey."),
+                            # br(),
+                            # DTOutput("GAMLSS_table")
                           ) # end mainPanel
                         ) # end SidebarLayout
                        ), # end tab4
@@ -454,14 +466,14 @@ ui <- fluidPage(
                        # SAMANTHAS
                        fluidRow(
                          column(6,
-                                div(style = "text-align:center;", img(src = "Bothwell_Samantha.jpg", height = "200px"), h3("Samantha Bothwell (she/her)"), 
-                                    p("Group Lead Research Scientist"), 
+                                div(style = "text-align:center;", img(src = "Bothwell_Samantha.jpg", height = "200px"), h3("Samantha Bothwell, MS (she/her)"), 
+                                    p("Group Lead; Research Scientist"), 
                                     p("Samantha Bothwell is a biostatistician in the Department of Pediatrics at the University of Colorado. She has been working with the eXtraordinarY Babies Study team since 2023. She earned her Master's degree in Biostatistics in 2021 and is currently pursuing her PhD.
                                       Outside of work and school, she enjoys rock climbing, crocheting, hiking 14ers with her dog Maizie (though she says Maizie is faster than she is), and unwinding with a healthy dose of reality TV.")
                                 )
                          ),
                          column(6,
-                                div(style = "text-align:center;", img(src = "Roberts_Samantha.jpg", height = "200px"), h3("Samantha Roberts (she/her)"), p("Group Lead Research Scientist"),
+                                div(style = "text-align:center;", img(src = "Roberts_Samantha.jpg", height = "200px"), h3("Samantha Roberts, MS, MPH (she/her)"), p("Group Lead; Research Scientist"),
                                     p("Samantha Roberts is a biostatistician with the Center for Innovative Design and Analysis since 2021, first as a master's research assistant, then as a research scientist.
                                       She earned her Master's degree in Biostatistics in 2022 and her Master's degree in Public Health in 2012. When not working, she likes to read, hike and hang out with her two kids and husband.")
                                 )
@@ -1081,9 +1093,46 @@ server <- function(input, output, session) {
                                    list(extend = 'pdf', filename = 'Milestones'),
                                    list(extend = 'print', title = 'Milestones')),
                                  lengthMenu = c(5, 10, 12)), 
+                  editable = TRUE,
                   class = 'display'
         )
       })
+      
+      # Initialize container
+      edited_data <- reactiveVal()
+      
+      # Populate once original data is available
+      observe({
+        req(input_milestones_data())
+        edited_data(input_milestones_data())
+      })
+      
+      # Capture edits
+      observeEvent(input$milestones_table_output_cell_edit, {
+        info <- input$milestones_table_output_cell_edit
+        df <- edited_data()
+        
+        row <- info$row
+        col <- info$col + 1  # convert from 0-based to 1-based
+        value <- info$value
+        colname <- names(df)[col]
+        
+        # Handle numeric conversion if needed
+        if (is.numeric(df[[colname]])) {
+          value <- as.numeric(value)
+        }
+        
+        df[row, col] <- value
+        edited_data(df)  # Save back
+      })
+      
+      # Use in plot
+      output$indiv_perc <- renderPlotly({
+        user_points <- edited_data()
+        # Continue with plot code using user_points
+      })
+      
+      
 
       # Observe when user clicks "Add Milestone"
       observeEvent(input$addPoints, {
@@ -1214,10 +1263,10 @@ server <- function(input, output, session) {
                                         boxpoints = FALSE,
                                         hoverinfo = "skip",
                                         showlegend = F) %>%
-          layout(yaxis = list(tickfont = list(family = "Arial", size = 18)))
+        layout(yaxis = list(tickfont = list(family = "Arial", size = 18)))
         
         # creates list of points to plot 
-        user_points <- input_milestones_data()  
+        user_points <- edited_data()  
         if (nrow(user_points)>0){
           # Fixed trace: milestone overlay uses dynamic symbols/colors
           milestone_input_plot <- milestone_input_plot %>%
@@ -1313,13 +1362,22 @@ server <- function(input, output, session) {
         user_df <- global_user_data$df
         
         # Return nothing if not enough points
-        if (nrow(user_df) <= 3) return(NULL)
+        #if (nrow(user_df) <= 3) return(NULL)
         
         # Filtered data (local to renderPlot)
         filtered_data <- new_gsv_long_rem %>%
           filter(domain == input$domain_select) %>%
           dplyr::select(study_id_extraordinary, sca_condition, domain, bsid_age_calc, transformed_score) %>%
           filter(complete.cases(.))
+        
+        if (input$sct_select != "ALL") {
+          filtered_data <- filtered_data %>%
+            filter(sca_condition == input$sct_select)
+        }
+        
+        validate(
+          need(nrow(filtered_data) > 10, "Not enough data after filtering.")
+        )
         
         
         # Fit GAMLSS model
@@ -1330,22 +1388,22 @@ server <- function(input, output, session) {
           tau.formula = ~1,
           data = filtered_data,
           family = BCCG(),
-          control = gamlss.control(save.data = TRUE),   
+          control = gamlss.control(save.data = TRUE),   # <-- THIS FIX IS CRUCIAL
           trace = FALSE
         )
         
-        # Predict percentiles
+        # ages to predict over 
         age_seq <- seq(
           from = max(5, min(filtered_data$bsid_age_calc, na.rm = TRUE)),
           to = max(filtered_data$bsid_age_calc, na.rm = TRUE),
           length.out = 100
         )
         
+        
         model$call$data <- filtered_data
         
         # data 
         newdata <- data.frame(bsid_age_calc = age_seq)
-        
         
         # Get predicted distribution parameters from the model
         params <- predictAll(model, newdata = newdata)
@@ -1368,8 +1426,8 @@ server <- function(input, output, session) {
         pred_long <- pivot_longer(lms_mod, -age,
                                   names_to = "Percentile", values_to = "Score")
         
-        
-        input_gamlss_plot <- ggplot() +
+        # ---- Plot ----
+        p <- ggplot() +
           # 10–90 ribbon
           geom_ribbon(data = lms_mod, aes(x = age, ymin = P10, ymax = P90),
                       fill = "gray85", alpha = 0.3) +
@@ -1391,25 +1449,28 @@ server <- function(input, output, session) {
                       color = "snow3", size = 0.8, linetype = "solid") +
           
           # Theme and labels
-          theme_minimal(base_size = 14) +
+          theme_bw(base_size = 22) +
+          theme(text = element_text(family = "Arial")) +
+          #theme(text = element_text(size = 20))
           labs(
-            title = paste("Growth Chart for", input$domain_select),
-            x = "Age (months)",
+            title = paste("Bayley", input$domain_select, "GSV Growth Curve"),
+            x = "Age at Assessment (months)",
             y = "Bayley-4 Score"
           )
         
         
-        # Add user input points
-        input_gamlss_plot <- input_gamlss_plot + geom_point(data = user_df,
+        #Add user input points
+        p <- p + geom_point(data = user_df,
                             aes(x = Age, y = Score),
                             color = "darkorange2", size = 3)
-        
+
         # Add user input trajectory line
-        input_gamlss_plot <- input_gamlss_plot + geom_smooth(data = user_df,
+        p <- p + geom_path(data = user_df,
                              aes(x = Age, y = Score),
                              color = "darkorange2", size = 1.2)
         
-        input_gamlss_plot
+        p
+        
       })
       
       
