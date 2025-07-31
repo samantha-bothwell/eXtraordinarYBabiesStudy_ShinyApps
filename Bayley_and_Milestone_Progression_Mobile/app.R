@@ -739,14 +739,14 @@ server <- function(input, output, session) {
       p2 <- scaled_long_filtered %>%
         filter(domain == "Receptive Communication") %>%
         mutate(sca_condition = factor(sca_condition, levels = ordered_groups_scale)) %>%
-        plot_base() + labs(title = "Receptive Communication") +
+        plot_base() + labs(title = "Receptive \nCommunication") +
         theme(legend.position = "none")
       
       p3 <- scaled_long_filtered %>%
         filter(domain == "Expressive Communication") %>%
         mutate(sca_condition = factor(sca_condition, levels = ordered_groups_scale)) %>%
         plot_base() + 
-        labs(title = "Expressive Communication") + 
+        labs(title = "Expressive \nCommunication") + 
         theme(legend.position = "none")
       
       p4 <- scaled_long_filtered %>%
@@ -867,14 +867,14 @@ server <- function(input, output, session) {
         filter(domain == "Receptive Communication") %>%
         mutate(sca_condition = factor(sca_condition, levels = ordered_groups_gsv)) %>%
         plot_base() +
-        labs(title = "Receptive Communication") +
+        labs(title = "Receptive \nCommunication") +
         theme(legend.position = "none")
       
       p3 <- new_gsv_long_rem %>%
         filter(domain == "Expressive Communication") %>%
         mutate(sca_condition = factor(sca_condition, levels = ordered_groups_gsv)) %>%
         plot_base() +
-        labs(title = "Expressive Communication") +
+        labs(title = "Expressive \nCommunication") +
         theme(legend.position = "none")
       
       p4 <- new_gsv_long_rem %>%
