@@ -224,7 +224,7 @@ ui <- fluidPage(
                            
                          ), # end sidebarPanel
                          mainPanel(
-                           plotOutput("growth_plot", height = "600px"),
+                           plotOutput("growth_plot", height = "400px"),
                            br(),
                            p("Growth plot made with Bayley-IV GSV Scores using GAMLSS modeling. Plots can be seperated by Bayley Domain, 
                            and SCT Condition, with the option to overlay raw data points. The lines represent the percentiles of the selected domain's milestones, 
@@ -258,27 +258,35 @@ ui <- fluidPage(
                                           ))),
                          
                          # Show a plot of the generated distribution
+                         # Show a plot of the generated distribution
                          mainPanel(
-                            fluidRow(column(12, 
-                                            # Add vertical space before the plot
-                                            div(style = "margin-top: 30px;"),
-                                            
-                                            plotlyOutput("indiv_perc", height = "550px")),
-                                     
-                            fluidRow(column(4, 
-                                            tags$img(src = "Percentiles_legend.jpeg", height = "70px")), # add back in the plot
-                                     column(1,
-                                            br()),
-                                              
-                                    column(7, h5("Individual Milestones plotted atop the general population data."))),
-                            fluidRow(h3("   Data:")),
-                            fluidRow(column(12,
-                                    DTOutput("milestones_table_output"))
-                                     )
-                                   )
+                           fluidRow(column(12, 
+                                           # Add vertical space before the plot
+                                           div(style = "margin-top: 30px;"),
+                                           
+                                           plotlyOutput("indiv_perc", height = "550px")),
+                                    
+                                    fluidRow(column(12, tags$p("Individual Milestones plotted atop the general population data."), style = "text-align: center; padding: 20px;"),
+                                             column(12,
+                                                    br(),),
+                                             column(12,
+                                                    tags$div(
+                                                      tags$img(
+                                                        src = "Percentiles_legend.jpeg",
+                                                        style = "max-width: 40%; height: auto;"
+                                                      ),
+                                                      style = "text-align: center;"
+                                                    )
+                                             )), # add back in the plot
+
+                                    fluidRow(column(12, tags$p("Data:", style = "font-weight: bold; margin-top: 20px; padding: 20px;"))),
+                                    fluidRow(column(12,
+                                                    DTOutput("milestones_table_output"))
+                                    )
                            )
                          )
-                       ), # end tab3 
+                       )
+              ), # end tab3 
          
               
               # Tab 4: GSV Scores Input, with Reactive Data Frame and Plot over study population percentile curves
@@ -310,15 +318,10 @@ ui <- fluidPage(
                                             # Add vertical space before the plot
                                             div(style = "margin-top: 30px;"),
                                             
-                                            plotOutput("input_growth_plot")),
+                                            plotOutput("input_growth_plot", height = "400px")),
                                      
-                                     fluidRow(column(12, 
-                                     h5("Generalized Additive Model with Linearity, Shape,
-                                          and Size (GAMLSS) plot with user-generated (pink) line with
-                                          GSV scores, plotted over-top study population ranges, with
-                                          10th-90th percentiles represented by purple-dashed lines and
-                                          50th percentile represented by solid-black line."))),
-                                     fluidRow(h3("Data:")),
+                                     fluidRow(column(12, tags$p("Generalized Additive Model with Linearity, Shape, and Size (GAMLSS) plot with user-generated (pink) line with GSV scores, plotted over-top study population ranges, with 10th-90th percentiles represented by purple-dashed lines and 50th percentile represented by solid-black line.", style = "padding: 20px;"))),
+                                     fluidRow(column(12, tags$p("Data:", style = "font-weight: bold; margin-top: 20px; padding: 20px;"))),
                                      fluidRow(column(12,
                                                      DTOutput("GAMLSS_table"))
                                      )
@@ -527,9 +530,9 @@ server <- function(input, output, session) {
   output$dynamic_violin_ui <- renderUI({
     # Set height based on plot_choice
     height <- switch(input$plot_choice,
-                     "Composite" = "700px",
-                     "Scaled" = "1000px",
-                     "GSV" = "1000px")
+                     "Composite" = "600px",
+                     "Scaled" = "830px",
+                     "GSV" = "830px")
     
     div(
       style = "width: 100%; overflow-x: auto;",
@@ -711,7 +714,7 @@ server <- function(input, output, session) {
         bottom_row,         # p2 + p3
         legend,
         ncol = 1,
-        rel_heights = c(1, 1, 0.6)  # Make all rows equal height
+        rel_heights = c(1, 1, 0.7)  # Make all rows equal height
       )
       
       print(final_plot)
@@ -837,7 +840,7 @@ server <- function(input, output, session) {
         bottom_row,         # p4 + p5
         legend,
         ncol = 1,
-        rel_heights = c(1, 1, 1, 0.6)  # Make all rows equal height
+        rel_heights = c(1, 1, 1, 0.7)  # Make all rows equal height
       )
       
       print(final_plot)
@@ -946,7 +949,7 @@ server <- function(input, output, session) {
         bottom_row,         # p4 + p5
         legend,
         ncol = 1,
-        rel_heights = c(1, 1, 1, 0.6)  # Make all rows equal height
+        rel_heights = c(1, 1, 1, 0.7)  # Make all rows equal height
       )
       
       print(final_plot) 
@@ -1046,8 +1049,7 @@ server <- function(input, output, session) {
                   color = "snow3", size = 0.8, linetype = "solid") +
       
       # Theme and labels
-      theme_bw(base_size = 22) +
-      theme(text = element_text(family = "Arial")) +
+      theme_bw() +
       #theme(text = element_text(size = 20))
       labs(
         title = paste("Bayley", input$domain_select, "GSV Growth Curve"),
@@ -1285,8 +1287,7 @@ server <- function(input, output, session) {
                                         type = "box", 
                                         boxpoints = FALSE,
                                         hoverinfo = "skip",
-                                        showlegend = F) %>%
-        layout(yaxis = list(tickfont = list(family = "Arial", size = 20)))
+                                        showlegend = F) 
         
         # creates list of points to plot 
         user_points <- edited_data()  
@@ -1298,7 +1299,7 @@ server <- function(input, output, session) {
                       y = ~milestone,
                       type = "scatter",
                       mode = "markers",
-                      marker = list(size=20,
+                      marker = list(size=15,
                                     symbol = ~symbol,
                                     color = ~color),
                       text = ~paste("Input Milestone<br> Age(months):", round(months_WhenAchieved, 1),
@@ -1309,9 +1310,9 @@ server <- function(input, output, session) {
         
         # Show the plot
         milestone_input_plot <- milestone_input_plot %>%
-          layout(xaxis = list(title = "Percentile", range = c(0, 100), titlefont = list(size=20)),
+          layout(xaxis = list(title = "Percentile", range = c(0, 100)),
                  yaxis = list(title = " "),
-                 title = list(text="Individual Milestones Achievement Percentiles", font = list(size = 20)),
+                 title = list(text="Individual Milestones \nAchievement Percentiles"),
                  margin = list(t = 40),
                  shapes = list(
                    list(type = "rect", fillcolor = "rgba(255, 0, 0, 0.2)", 
@@ -1470,8 +1471,7 @@ server <- function(input, output, session) {
                       color = "snow3", size = 0.8, linetype = "solid") +
           
           # Theme and labels
-          theme_bw(base_size = 22) +
-          theme(text = element_text(family = "Arial")) +
+          theme_bw() +
           #theme(text = element_text(size = 20))
           labs(
             title = paste("Bayley", input$domain_select, "GSV Growth Curve"),
