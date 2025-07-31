@@ -135,14 +135,22 @@ ui <- fluidPage(
   theme = shinytheme("flatly"),
   
   # Title of Application
-    fluidRow(
-      column(10, 
-             h1("eXtraordinarY Babies Study : SCT Bayley Progression")  # Title on the left
-      ),
-      column(2, 
-             tags$img(src = "eBs_Logo.jpg", height = "100px", style = "float: right;")  # Image on the right
-      )
-    ), # end titlePage section
+  fluidRow(
+    column(10, 
+           h1("eXtraordinarY Babies Study : SCT Bayley Progression", style = "margin-top: 60px;")  # Title on the left
+    ),
+    column(2, 
+           tags$img(src = "eBs_Logo.jpg", height = "100px", style = "float: right;"),  # Image on the right
+           br(),
+           tags$a(
+             href = "https://sjbothwell.shinyapps.io/bayley_and_milestone_progression_mobile/",
+             target = "_blank",
+             class = "btn btn-primary",
+             style = "float: right; margin-top: 10px;",
+             "View Mobile Version"
+           )
+    )
+  ), # end titlePage section
   
   # Conditional panel for carrying across tabs
   
@@ -280,7 +288,7 @@ ui <- fluidPage(
                             fluidRow(column(4, 
                                             tags$img(src = "Percentiles_legend.jpeg", height = "100px")), # add back in the plot
                                      column(1,
-                                            br(),),
+                                            br()),
                                               
                                     column(7, h5("Individual Milestones plotted atop the general population data."))),
                             fluidRow(h3("   Data:")),

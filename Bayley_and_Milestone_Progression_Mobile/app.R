@@ -149,7 +149,16 @@ ui <- fluidPage(
   fluidRow(
     column(12, 
            h1("eXtraordinarY Babies Study : SCT Bayley Progression", style = "text-align: center;"),
-           tags$img(src = "eBs_Logo.jpg", height = "100px", style = "display: block; margin: 0 auto;")
+           tags$img(src = "eBs_Logo.jpg", height = "100px", style = "display: block; margin: 0 auto;"),
+           div(
+             style = "text-align: center; margin-top: 10px;",
+             tags$a(
+               href = "https://sjbothwell.shinyapps.io/bayley_and_milestone_progression/",
+               target = "_blank",
+               class = "btn btn-primary",
+               "View Desktop Version"
+             )
+           )
     )
   ), # end titlePage section
   
