@@ -442,7 +442,7 @@ ui <- fluidPage(
                          column(12,
                            div(style = "text-align: center;",
                              tags$img(src = "Group_pic.jpg", height = "300px", style = "max-width: 100%; border-radius: 10px;"),
-                             tags$figcaption("The team, from left to right:.", 
+                             tags$figcaption("The team, from left to right: Chloe Child, Jenna Jimenez, Jack Pressier, Liam Hallinan, Madeline Murphy, and Samantha Bothwell", 
                                              style = "font-size: 14px; color: #555; margin-top: 10px;")
                                  )
                               )
