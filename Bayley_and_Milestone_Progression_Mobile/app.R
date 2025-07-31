@@ -134,15 +134,24 @@ ui <- fluidPage(
   # Set theme of app
   theme = shinytheme("flatly"),
   
+  tags$head(
+    tags$meta(name = "viewport", content = "width=device-width, initial-scale=1"),
+    tags$style(HTML("@media only screen and (max-width: 768px) {
+      h1, h2, h3, h4 { font-size: 1.3em; }
+      .container-fluid { padding: 10px; }
+      .shiny-input-container { font-size: 14px; }
+      .btn { font-size: 14px; padding: 10px 15px; }
+      img { max-width: 100%; height: auto; }
+    }"))
+  ),
+  
   # Title of Application
-    fluidRow(
-      column(10, 
-             h1("eXtraordinarY Babies Study : SCT Bayley Progression")  # Title on the left
-      ),
-      column(2, 
-             tags$img(src = "eBs_Logo.jpg", height = "100px", style = "float: right;")  # Image on the right
-      )
-    ), # end titlePage section
+  fluidRow(
+    column(12, 
+           h1("eXtraordinarY Babies Study : SCT Bayley Progression", style = "text-align: center;"),
+           tags$img(src = "eBs_Logo.jpg", height = "100px", style = "display: block; margin: 0 auto;")
+    )
+  ), # end titlePage section
   
   # Conditional panel for carrying across tabs
   
@@ -152,41 +161,26 @@ ui <- fluidPage(
                 "Welcome!",
                 fluidRow(
                   column(
-                    width = 7,
-                    offset = 1,
+                    width = 12,
                     h2("Welcome to the eXtraordinarY Babies Study Bayley and Milestone Progression App"),
-                    br(),
                     p("The eXtraordinarY Kids Clinic was launched in 2007 by Founder and Director, ",
                       strong("Nicole Tartaglia, MD"), ". Dr. Tartaglia developed this unique interdisciplinary clinic team to address the medical, developmental, and psychological needs of children and adolescents with X&Y chromosome variations."),
-                    br(),
                     p("This interactive application provides a tool for parents and clinicians to monitor milestone development. Milestone achievement is assessed ",
                       " through the",  strong("Bayley-III"), " and ", strong("Bayley-IV"), " assessments as well as specific developmental milestones, such as walking, running, cooing, babbling."),
-                    br(),
                     p("This app was built using data obtained for the study up to ", strong("January 2025"), 
                       " and is intended for use for children with a ", strong("Sex Chromosome Trisomy"), 
                       ", between the ages of ", strong("0 and 4 years old"), "."),
-                    br(),
                     p("We hope you enjoy it!"),
-                    br(),
                     tags$a(
                       href = "https://medschool.cuanschutz.edu/pediatrics/sections/developmental-pediatrics/extraordinary-kids-program",
                       target = "_blank",
                       class = "btn btn-info btn-lg",
                       style = "color: white; font-weight: bold; margin-top: 10px;",
                       icon("info-circle"), " Learn more about our program!"
-                    )
-                  ),
-                  column(
-                    width = 4,
-                    align = "center",
-                    br(),
+                    ), 
+                    br(), br(),
                     h3("Enrollment"),
-                    img(
-                      src = "sct_pie.jpg", 
-                      width = "60%", 
-                      alt = "Extraordinary Kids Clinic Team or Logo",
-                      style = "margin-top: 10px;"
-                    )
+                    img(src = "sct_pie.jpg", width = "50%", style = "display: block; margin: 0 auto;")
                   )
                 )
               ),
@@ -195,31 +189,25 @@ ui <- fluidPage(
               tabPanel("Bayley Overview Plots",
                        
                        fluidRow(
-                         column(width = 9, offset = 0.1,
-                          h3(" Bayley Composite, Scaled, and GSV Score Distributions")),
-
-                         column(4,
+                         column(12, h3(" Bayley Composite, Scaled, and GSV Score Distributions")),
+                         column(12,
                                 selectInput("plot_choice", "Choose a Data Type:", # select the data type to be plotted
                                             choices = c("Composite", "Scaled", "GSV"))),
-                         column(4,
+                         column(12,
                                 radioButtons("show_reference", "Show Population Reference Lines:", # option to reference lines of IQR and Mean
                                              choices = list("No", "Yes"),
                                              selected = "No",
                                              inline = TRUE)),
-                         column(4,
+                         column(12,
                                 radioButtons("overlay", "Overlay All Data Points:", # option to add data points on top of plots
                                              choices = list("No", "Yes"), 
                                              selected = "No",
-                                             inline = TRUE))),
+                                             inline = TRUE)),
+                         column(12, uiOutput("dynamic_violin_ui")),# one plot that handles above inputs, and outputs a density plot based on score, by SCA condition
+                         column(12,tags$p('This plot provides an overview of Bayley-IV score distribution for the overall eXtraodinarY babies study at CU Anschutz. Users can choose to view overlayed general population 95% Confidence Intervals and/or point distributions of individuals in the study.'))
                        
-                       uiOutput("dynamic_violin_ui"),# one plot that handles above inputs, and outputs a density plot based on score, by SCA condition
-                       
-                       fluidRow(
-                         column(12,tags$p('This plot provides an overview of Bayley-IV score distribution for the overall eXtraodinarY babies study at CU Anschutz. Users can choose to view overlayed general population 95% Confidence Intervals and/or point distributions of individuals in the study.')
-                       
-                       ))), # end tab1
+                       )), # end tab1
               
-                      
               
               # Tab 2: GAMLSS Growth Plots, based on existing data (static images)
               tabPanel("GSV Growth Plots",
@@ -248,7 +236,7 @@ ui <- fluidPage(
               
               # Tab 3: Allows inputs of milestone data, and plots over the general population boxplot
               tabPanel("Input Milestones",
-                       titlePanel("SCT Bayley and Milestone Progression"),
+                       titlePanel("SCT Bayley Progression and Milestones"),
                        sidebarLayout(
                          sidebarPanel(width=3,
                                       selectInput("sca_condition", label = "Select SCT",
@@ -278,9 +266,9 @@ ui <- fluidPage(
                                             plotlyOutput("indiv_perc", height = "550px")),
                                      
                             fluidRow(column(4, 
-                                            tags$img(src = "Percentiles_legend.jpeg", height = "100px")), # add back in the plot
+                                            tags$img(src = "Percentiles_legend.jpeg", height = "70px")), # add back in the plot
                                      column(1,
-                                            br(),),
+                                            br()),
                                               
                                     column(7, h5("Individual Milestones plotted atop the general population data."))),
                             fluidRow(h3("   Data:")),
@@ -526,7 +514,10 @@ ui <- fluidPage(
                        br(), hr(), br()
                 ) # tend tab 6
             ) # end tabset Panel
-)# end UI
+)
+
+
+
 
 ##### Defining Server logic #####
 server <- function(input, output, session) {
@@ -534,19 +525,18 @@ server <- function(input, output, session) {
   ### For Tab 1 ###
   
   output$dynamic_violin_ui <- renderUI({
-    # Set height/width based on plot_choice
+    # Set height based on plot_choice
     height <- switch(input$plot_choice,
-                     "Composite" = "667px",
+                     "Composite" = "700px",
                      "Scaled" = "1000px",
                      "GSV" = "1000px")
     
-    width <- switch(input$plot_choice,
-                    "Composite" = "75%",
-                    "Scaled" = "75%",
-                    "GSV" = "75%")
-    
-    plotOutput("dynamic_violin_plot", height = height, width = width)
+    div(
+      style = "width: 100%; overflow-x: auto;",
+      plotOutput("dynamic_violin_plot", height = height, width = "100%")
+    )
   })
+  
   
   output$dynamic_violin_plot <- renderPlot({
     
@@ -556,14 +546,14 @@ server <- function(input, output, session) {
         scale_fill_manual(name = "SCA Condition", values = c("XXY" = "#fdb863", "XYY" = "cyan3", "XXX" = "#4B0082")) +
         ggnewscale::new_scale_fill() +
         labs(x = NULL, y = "Score") +
-        theme_bw(base_size = 18) +
+        theme_bw() +
         theme(
           axis.text.x = element_text(angle = 45, hjust = 1),
           legend.position = "right",
           legend.direction = "vertical",
           legend.box = "vertical",
-          legend.text = element_text(size = 12),
-          legend.title = element_text(size = 15),
+          #legend.text = element_text(size = 12),
+          #legend.title = element_text(size = 15),
           legend.box.spacing = unit(0.2, "cm"),
           legend.margin = margin(t = 10, r = 20, b = 10, l = 20),
           text = element_text(family = "Arial")
@@ -625,8 +615,7 @@ server <- function(input, output, session) {
         filter(domain == "Cognitive") %>%
         mutate(sca_condition = factor(sca_condition, levels = ordered_groups_comp)) %>%
         plot_base() +
-        labs(title = "Cognitive") +
-        guides(fill = "none")
+        labs(title = "Cognitive") 
       
       p2 <- composite_long_filtered %>%
         filter(domain == "Language") %>%
@@ -663,7 +652,7 @@ server <- function(input, output, session) {
                        inherit.aes = FALSE, color = "black", size = .5),
           
           scale_linetype_manual(
-            name = paste0("Reference Lines \n(Mean = ", comp_ref_mean, ")"),
+            name = paste0("Reference Lines (Mean = ", comp_ref_mean, ")"),
             values = ref_line_types
           )
         )
@@ -699,18 +688,18 @@ server <- function(input, output, session) {
       white_spacer <- ggplot() + theme_void() + theme(plot.background = element_rect(fill = "white", color = NA))
       
       # Extract legend from p1
-      legend <- cowplot::get_legend(p1)
+      legend <- cowplot::get_legend(p1 + theme(legend.direction = "horizontal", legend.box = "vertical"))
       
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
     
       
       top_row <- plot_grid(
-        white_spacer,  # Spacer to center p1
+        white_spacer,
         p1,           # Main plot
-        legend,       # Legend
+        white_spacer,
         ncol = 3,
-        rel_widths = c(1, 2, 1),  # Adjust to center p1 and avoid overlap
+        rel_widths = c(1, 3, 1),  # Adjust to center p1 and avoid overlap
         align = "h"
       )
       
@@ -718,10 +707,11 @@ server <- function(input, output, session) {
       bottom_row <- cowplot::plot_grid(p2, p3, ncol = 2)
       
       final_plot <- cowplot::plot_grid(
-        top_row,            # p1 + legend
+        top_row,            # p1
         bottom_row,         # p2 + p3
+        legend,
         ncol = 1,
-        rel_heights = c(1, 1, 1)  # Make all rows equal height
+        rel_heights = c(1, 1, 0.6)  # Make all rows equal height
       )
       
       print(final_plot)
@@ -823,17 +813,18 @@ server <- function(input, output, session) {
       white_spacer <- ggplot() + theme_void() + theme(plot.background = element_rect(fill = "white", color = NA))
       
       # Extract legend from p1
-      legend <- cowplot::get_legend(p1)
+      legend <- cowplot::get_legend(p1 + theme(legend.direction = "horizontal", legend.box = "vertical"))
       
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
       
       top_row <- plot_grid(
-        white_spacer,         # empty space for centering
-        p1,                    # your main plot
-        legend,                # the legend
+        white_spacer,
+        p1,           # Main plot
+        white_spacer,
         ncol = 3,
-        rel_widths = c(1, 2, 1)  # adjust as needed to center p1
+        rel_widths = c(1, 3, 1),  # Adjust to center p1 and avoid overlap
+        align = "h"
       )
       
       
@@ -841,11 +832,12 @@ server <- function(input, output, session) {
       bottom_row <- cowplot::plot_grid(p4, p5, ncol = 2)
       
       final_plot <- final_plot <- cowplot::plot_grid(
-        top_row,            # p1 + legend
+        top_row,            # p1
         middle_row,         # p2 + p3
         bottom_row,         # p4 + p5
+        legend,
         ncol = 1,
-        rel_heights = c(1, 1, 1)  # Make all rows equal height
+        rel_heights = c(1, 1, 1, 0.6)  # Make all rows equal height
       )
       
       print(final_plot)
@@ -896,39 +888,6 @@ server <- function(input, output, session) {
         labs(title = "Gross Motor") +
         theme(legend.position = "none")
       
-      #if (input$show_reference == "Yes") {
-        # Going to remove because they don't make sense for GSV without age
-        
-        # ref_geoms <- list(
-        #   geom_segment(data = ref_box_data_gsv,
-        #                aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
-        #                    y = middle, yend = middle,
-        #                    linetype = "Population Mean"),
-        #                inherit.aes = FALSE, color = "black", size = .75),
-        #   
-        #   geom_segment(data = ref_box_data_gsv,
-        #                aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
-        #                    y = lower, yend = lower,
-        #                    linetype = "Population 95% Conf. Int."),
-        #                inherit.aes = FALSE, color = "black", size = .5),
-        #   
-        #   geom_segment(data = ref_box_data_gsv,
-        #                aes(x = x_numeric - 0.2, xend = x_numeric + 0.2,
-        #                    y = upper, yend = upper,
-        #                    linetype = "Population 95% Conf. Int."),
-        #                inherit.aes = FALSE, color = "black", size = .5),
-        #   
-        #   scale_linetype_manual(
-        #     name = paste0("Reference Lines (Mean = ", gsv_ref_mean, ")"),
-        #     values = ref_line_types
-        #   )
-        #)
-        # p1 <- p1 + ref_geoms
-        # p2 <- p2 + ref_geoms
-        # p3 <- p3 + ref_geoms
-        # p4 <- p4 + ref_geoms
-        # p5 <- p5 + ref_geoms
-      #}
       
       
       if (input$overlay == "Yes") {
@@ -950,53 +909,44 @@ server <- function(input, output, session) {
       white_spacer <- ggplot() + theme_void() + theme(plot.background = element_rect(fill = "white", color = NA))
       
       # Extract legend from p1
-      legend <- cowplot::get_legend(p1)
+      legend <- cowplot::get_legend(p1 + theme(legend.direction = "horizontal", legend.box = "vertical"))
       
       # Remove legend from p1 plot itself to avoid duplication
       p1 <- p1 + theme(legend.position = "none")
+      
+      top_row <- plot_grid(
+        white_spacer,
+        p1,           # Main plot
+        white_spacer,
+        ncol = 3,
+        rel_widths = c(1, 3, 1),  # Adjust to center p1 and avoid overlap
+        align = "h"
+      )
       
       # Show text explaining no reference lines
       if (input$show_reference == "Yes") {
         legend_text <- cowplot::ggdraw() + 
           draw_label("Population Norms are not computed as \nGSV scores increase non-linearly as a \nfunction of age",
-                     size = 16, hjust = 0, x = 0)
+                     hjust = 0, x = 0)
         
         # Stack legend and its text
-        legend_with_text <- plot_grid(legend_text, 
+        legend <- plot_grid(legend_text, 
                                       legend_shifted <- ggdraw() +
                                         draw_grob(legend, x = 0, y = 0.05, width = 1, height = 1),  # adjust y as needed,
                                       ncol = 1,
                                       rel_heights = c(0.4, 1))  # adjust spacing as needed
-        
-        top_row <- plot_grid(
-          white_spacer,         # empty space for centering
-          p1,                    # your main plot
-          legend_with_text,                # the legend
-          ncol = 3,
-          rel_widths = c(1, 2, 1)  # adjust as needed to center p1
-        )
-
-      }else{ 
-        
-        top_row <- plot_grid(
-          white_spacer,         # empty space for centering
-          p1,                    # your main plot
-          legend,                # the legend
-          ncol = 3,
-          rel_widths = c(1, 2, 1)  # adjust as needed to center p1
-        )
-      
       }
       
       middle_row <- cowplot::plot_grid(p2, p3, ncol = 2)
       bottom_row <- cowplot::plot_grid(p4, p5, ncol = 2)
       
       final_plot <- cowplot::plot_grid(
-        top_row,            # p1 + legend
+        top_row,            # p1
         middle_row,         # p2 + p3
         bottom_row,         # p4 + p5
+        legend,
         ncol = 1,
-        rel_heights = c(1, 1, 1)  # Make all rows equal height
+        rel_heights = c(1, 1, 1, 0.6)  # Make all rows equal height
       )
       
       print(final_plot) 
