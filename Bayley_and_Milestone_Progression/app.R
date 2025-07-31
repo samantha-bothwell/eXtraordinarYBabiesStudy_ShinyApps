@@ -286,7 +286,7 @@ ui <- fluidPage(
                                             plotlyOutput("indiv_perc", height = "550px")),
                                      
                             fluidRow(column(4, 
-                                            tags$img(src = "Percentiles_legend.jpeg", height = "100px")), # add back in the plot
+                                            tags$img(src = "Percentiles_legend.jpg", height = "100px")), # add back in the plot
                                      column(1,
                                             br()),
                                               
