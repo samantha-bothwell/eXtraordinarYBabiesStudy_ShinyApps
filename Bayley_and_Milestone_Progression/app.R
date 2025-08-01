@@ -233,7 +233,10 @@ ui <- fluidPage(
               
               # Tab 3: Allows inputs of milestone data, and plots over the general population boxplot
               tabPanel("Input Milestones",
-                       titlePanel("SCT Bayley and Milestone Progression"),
+                       # div(h2("Working on coding Bug. Will be operational soon!!", 
+                       #        style = "color: red; font-weight: bold; text-align: center;")),
+                       
+                       h2("Milestone Percentiles"),
                        sidebarLayout(
                          sidebarPanel(width=3,
                                       selectInput("sca_condition", label = "Select SCT",
@@ -1099,6 +1102,8 @@ server <- function(input, output, session) {
     p
   })
   
+  
+  
   ### For Tab 3 ###
       input_milestones_data <- reactiveVal(data.frame(# creates reactive dataFrame that takes in the user inputs of milestone values
         milestone = character(),
@@ -1146,10 +1151,8 @@ server <- function(input, output, session) {
       
       # function to calculate percentiles
       calc_percentile <- function(age_in, milestone_in){
-        # set seed an initialize parameters
-        set.seed(2025)
-        percentiles <- c(0.1, 0.25, 0.5, 0.75, 0.9)
         
+        # Determine reference for percentiles
         if(input$sca_condition == "All SCTs"){
           perc_dat <- indiv_percentiles
           
@@ -1161,7 +1164,8 @@ server <- function(input, output, session) {
         # Set up the the quantile function 
         #result_percentile <- round(100*(1 - ecdf_func(age_in)))
         
-        percentile_for_new <- round(100*sum(perc_dat$Age[perc_dat$milestone == milestone_in] <= age_in, na.rm = T) / length(perc_dat$Age[perc_dat$milestone == milestone_in]))
+        #percentile_for_new <- round((1 - sum(perc_dat$Age[perc_dat$milestone == milestone_in] <= age_in, na.rm = T) / length(perc_dat$Age[perc_dat$milestone == milestone_in]))*100)
+        percentile_for_new <- round((rank(-c(age_in, perc_dat$Age[perc_dat$milestone == milestone_in]), na.last = "keep") / (sum(!is.na(perc_dat$Age[perc_dat$milestone == milestone_in])) + 1) * 100)[1])
         
         return(percentile_for_new)
       }
