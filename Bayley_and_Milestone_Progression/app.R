@@ -103,29 +103,6 @@ library(shinyMobile)
     # adds lines for reference types
     ref_line_types <- c("Population Mean" = "solid", "Population 95% Conf. Int." = "dashed")
     
-    # function to calculate percentiles
-    calc_percentile <- function(age_in, milestone_in){
-        # set seed an initialize parameters
-        set.seed(2024)
-        percentiles <- c(0.25, 0.5, 0.75, 0.9)
-        
-        # Pull the gen pop quantile values from the dataset
-        values = c(genpop$Q25[genpop$milestone == milestone_in],
-                   genpop$Q50[genpop$milestone == milestone_in],
-                   genpop$Q75[genpop$milestone == milestone_in],
-                   genpop$Q90[genpop$milestone == milestone_in])
-        
-        # Set up the the quantile function 
-        quantile_function <- approxfun(percentiles, values, method = "linear", rule = 2)
-        
-        n_samples = 1000
-        simulated_ages <- quantile_function(runif(n_samples))
-        
-        ecdf_func <- ecdf(simulated_ages)
-        result_percentile <- round(100*ecdf_func(age_in))
-        
-        return(result_percentile)
-    }
     
 
 ##### Defining UI #####
@@ -1167,6 +1144,28 @@ server <- function(input, output, session) {
         )
       })
       
+      # function to calculate percentiles
+      calc_percentile <- function(age_in, milestone_in){
+        # set seed an initialize parameters
+        set.seed(2025)
+        percentiles <- c(0.1, 0.25, 0.5, 0.75, 0.9)
+        
+        if(input$sca_condition == "All SCTs"){
+          perc_dat <- indiv_percentiles
+          
+        }else{
+          perc_dat <- indiv_percentiles %>% filter(sca_condition == input$sca_condition)
+          
+        }
+        
+        # Set up the the quantile function 
+        #result_percentile <- round(100*(1 - ecdf_func(age_in)))
+        
+        percentile_for_new <- round(100*sum(perc_dat$Age[perc_dat$milestone == milestone_in] <= age_in, na.rm = T) / length(perc_dat$Age[perc_dat$milestone == milestone_in]))
+        
+        return(percentile_for_new)
+      }
+      
       # Initialize container
       edited_data <- reactiveVal()
       
@@ -1226,7 +1225,7 @@ server <- function(input, output, session) {
             rowwise() %>% 
             mutate(Percentile = calc_percentile(months_WhenAchieved, milestone)) %>%
             # Make higher ages lower percentiles
-            mutate(Percentile = 100 - Percentile) %>%
+            # mutate(Percentile = Percentile) %>%
             ungroup() %>% # fully no clue why I do this %>% 
             mutate(
               symbol = case_when( # adds different markers to plot based on percentile calculated
@@ -1324,9 +1323,10 @@ server <- function(input, output, session) {
           arrange(median_percentile) %>%
           pull(milestone)
         
-        # Make lower percentiles indicate a delay
-        sca_milestones$Percentile = 100 - sca_milestones$Percentile
-        indiv_dat$Percentile = 100 - indiv_dat$Percentile
+        # currently, lower percentiles mean higher age
+        sca_milestones$Percentile = sca_milestones$Percentile
+        indiv_dat$Percentile = indiv_dat$Percentile
+        
         # makes sure datasets are ordered  by percentiles
         sca_milestones$milestone <- factor(sca_milestones$milestone, levels = ordered_levels)
         indiv_dat$milestone <- factor(indiv_dat$milestone, levels = ordered_levels)
@@ -1335,6 +1335,7 @@ server <- function(input, output, session) {
                           input$sca_condition == "XXY" ~ "#fdb863", 
                           input$sca_condition == "XYY" ~ "cyan3", 
                           input$sca_condition == "XXX" ~ "#4B0082")
+        
         
         milestone_input_plot <- plot_ly(sca_milestones, 
                                         y = ~milestone, 
