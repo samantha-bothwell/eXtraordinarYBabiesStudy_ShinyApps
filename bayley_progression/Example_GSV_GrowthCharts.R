@@ -5,11 +5,13 @@
 
 rm(list = ls())
 
+library(tidyverse)
+
 
 gsv <- readRDS("/Volumes/Shared/Shared Projects/Bothwell/Peds ENDO/SCA Studies/eXtraordinarYBabiesStudy_ShinyApps/bayley_progression/Bayley_GSV_scores.rds")
 
 ## Plot it
-ggplot(gsv, aes(x = bsid_age_calc, y = bsid_gsv_cog)) + 
+ggplot(gsv, aes(x = bsid_age_calc, y = bsid_gsv_rc)) + 
   geom_point() + 
   geom_smooth(se = F)
 
