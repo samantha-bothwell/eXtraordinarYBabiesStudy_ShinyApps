@@ -111,6 +111,8 @@ ui <- fluidPage(
   # Set theme of app
   theme = shinytheme("flatly"),
   
+  titlePanel("SCT Bayley and Milestone Development"),
+  
   # Title of Application
   fluidRow(
     column(10, 
@@ -283,7 +285,7 @@ ui <- fluidPage(
               
               # Tab 4: GSV Scores Input, with Reactive Data Frame and Plot over study population percentile curves
               tabPanel("Input GSV Scores",
-                        titlePanel("Growth Input Charts (Bayley-IV Scores)"),
+                        h2("Growth Input Charts (Bayley-IV Scores)"),
                                 sidebarLayout(
                                   sidebarPanel(width = 3,
                                     selectInput("domain_select", "Select Domain:",
@@ -334,7 +336,7 @@ ui <- fluidPage(
               
               # Tab 5: Background Information and References
               tabPanel("Background/References",
-                       titlePanel("Methodology"),
+                       h2("Methodology"),
                        fluidRow(
                          column(
                            width = 4,
@@ -422,7 +424,7 @@ ui <- fluidPage(
                          column(12,
                            div(style = "text-align: center;",
                              tags$img(src = "Group_pic.jpg", height = "300px", style = "max-width: 100%; border-radius: 10px;"),
-                             tags$figcaption("The team, from left to right: Chloe Child, Jenna Jimenez, Jack Pressier, Liam Hallinan, Madeline Murphy, and Samantha Bothwell", 
+                             tags$figcaption("The team, from left to right: Chloe Child, Jenna Jimenez, Jack Preisser, Liam Hallinan, Madeline Murphy, and Samantha Bothwell", 
                                              style = "font-size: 14px; color: #555; margin-top: 10px;")
                                  )
                               )
@@ -486,7 +488,7 @@ ui <- fluidPage(
                          column(3,
                            img(src = "Pressier_Jack.jpg", height = "150px", style = "display:block; margin:auto;")
                          ),
-                         column(9,h4("John Preisser (he/him)"), p("Jack Preisser is a rising senior majoring in statistics at Carleton College. He was born and raised in Chapel Hill, North Carolina along with 
+                         column(9,h4("Jack Preisser (he/him)"), p("Jack Preisser is a rising senior majoring in statistics at Carleton College. He was born and raised in Chapel Hill, North Carolina along with 
                                                                     his twin sister, Hannah. Jack enjoys running, hiking and other physical activities. He has enjoyed his time at the Colorado Summer Institute in Biostatistics (CoSIBS)
                                                                   because he has not studied public health through an in-depth manner prior to CoSIBS. ")
                          )

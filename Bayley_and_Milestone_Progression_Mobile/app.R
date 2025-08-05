@@ -245,6 +245,9 @@ ui <- fluidPage(
               
               # Tab 3: Allows inputs of milestone data, and plots over the general population boxplot
               tabPanel("Input Milestones",
+                       div(h2("Working on coding bug. Please view on Desktop version as that is correct. This will be operational soon!!", 
+                               style = "color: red; font-weight: bold; text-align: center;")),
+                       
                        titlePanel("SCT Bayley Progression and Milestones"),
                        sidebarLayout(
                          sidebarPanel(width=3,
@@ -434,7 +437,7 @@ ui <- fluidPage(
                          column(12,
                            div(style = "text-align: center;",
                              tags$img(src = "Group_pic.jpg", height = "300px", style = "max-width: 100%; border-radius: 10px;"),
-                             tags$figcaption("The team, from left to right: Chloe Child, Jenna Jimenez, Jack Pressier, Liam Hallinan, Madeline Murphy, and Samantha Bothwell", 
+                             tags$figcaption("The team, from left to right: Chloe Child, Jenna Jimenez, Jack Preisser, Liam Hallinan, Madeline Murphy, and Samantha Bothwell", 
                                              style = "font-size: 14px; color: #555; margin-top: 10px;")
                                  )
                               )
@@ -498,7 +501,7 @@ ui <- fluidPage(
                          column(3,
                            img(src = "Pressier_Jack.jpg", height = "150px", style = "display:block; margin:auto;")
                          ),
-                         column(9,h4("John Preisser (he/him)"), p("Jack Preisser is a rising senior majoring in statistics at Carleton College. He was born and raised in Chapel Hill, North Carolina along with 
+                         column(9,h4("Jack Preisser (he/him)"), p("Jack Preisser is a rising senior majoring in statistics at Carleton College. He was born and raised in Chapel Hill, North Carolina along with 
                                                                     his twin sister, Hannah. Jack enjoys running, hiking and other physical activities. He has enjoyed his time at the Colorado Summer Institute in Biostatistics (CoSIBS)
                                                                   because he has not studied public health through an in-depth manner prior to CoSIBS. ")
                          )
