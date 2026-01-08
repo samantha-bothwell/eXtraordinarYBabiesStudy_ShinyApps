@@ -397,19 +397,11 @@ ui <- fluidPage(
                                   for more accurate estimation. "),
                                 
 # =======
-                           p("The National Library of Medicine estimates that one in six children experience developmental delays, (Balasundaram et al. 2022).  Bayley Scores of Infant and Toddler Development 
-             (BSID) is the most widespread tool used to assess developmental growth in infant and toddlers, up to 24 months in age in discovering developmental delays. Cognition, language (expressive
-                                                                                                                                                                                             and receptive), motor skills (fine and gross), socio-emotional behavior, and adaptive behavior scores are the fundamental components of
-                                                                                                                                                                                             BSID. The steps of administering BSID are early identification, monitoring progress, research, intervention
-             planning, and outcome measurement. The administrator evaluates the growth of a child through specified milestones during an observational study."),
                            
-                           p("The GSV scores used in the eXtraordinarY Babies Study come from the Third Edition and assume a normal distribution with a mean of 500 and standard deviation of 100. In 2019, BSID 
-             switched to the Fourth Edition; for the sake of consistency, we converted our Bayley III scores to Bayley IV scores, which similarly assume a normal distribution with a mean of 500 
-             but a standard deviation of 25."),
                           tags$hr(style = "border-top: 2px dashed #ccc; margin: 15px 0;"),
 
-                          p("Nielsen and Wohlert : Nielsen, J. & Wohlert, M. (1991). Chromosome abnormalities found among 34,910 newborn children: results from a 13‑year incidence study in Århus, Denmark.Human Genetics, 87, 81–83."),
-                          p("Thompson, et al : Thompson T, Bothwell S, Janusz J, Wilson R, Howell S, Davis S, Swenson K, Martin S, Kowal K, Ikomi C, Despradel M, Ross J, Tartaglia N. 
+                          p("Nielsen, J. & Wohlert, M. (1991). Chromosome abnormalities found among 34,910 newborn children: results from a 13‑year incidence study in Århus, Denmark.Human Genetics, 87, 81–83."),
+                          p("Thompson T, Bothwell S, Janusz J, Wilson R, Howell S, Davis S, Swenson K, Martin S, Kowal K, Ikomi C, Despradel M, Ross J, Tartaglia N. 
                                                             Quantifying the Spectrum of Early Motor and Language Milestones in Sex Chromosome Trisomy. Pediatrics. 2025 Jul 24:e2024068773. doi: 10.1542/peds.2024-068773. Epub ahead of print. PMID: 40701561.")
 
 
