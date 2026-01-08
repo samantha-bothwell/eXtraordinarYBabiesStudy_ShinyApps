@@ -149,7 +149,7 @@ ui <- fluidPage(
                     p("This interactive application provides a tool for parents and clinicians to monitor milestone development. Milestone achievement is assessed ",
                       " through the",  strong("Bayley-III"), " and ", strong("Bayley-IV"), " assessments as well as specific developmental milestones, such as walking, running, cooing, babbling."),
                     br(),
-                    p("This app was built using data obtained for the study up to ", strong("January 2025"), 
+                    p("This app was built using data obtained for the study up to ", strong("January 2026"), 
                       " and is intended for use for children with a ", strong("Sex Chromosome Trisomy"), 
                       ", between the ages of ", strong("0 and 4 years old"), "."),
                     br(),
@@ -272,7 +272,7 @@ ui <- fluidPage(
                                      column(1,
                                             br()),
                                               
-                                    column(7, h5("Individual Milestones plotted atop the general population data."))),
+                                    column(7, h5("Individual Milestones plotted atop SCT percentiles calculated from the eXtraordinarY Babies Study cohort."))),
                             fluidRow(h3("   Data:")),
                             fluidRow(column(12,
                                     DTOutput("milestones_table_output"))
@@ -352,13 +352,6 @@ ui <- fluidPage(
                            p("Bayley GSV (Growth Scale Values) scores, taken from the 'eXtraordinarY Babies' study, can be modeled similarly 
                            to growth parameters like height and weight. We used the GAMLSS R-package to create percentile curves for the 
                              Bayley-IV GSV scores collected at regularly scheduled study visits."),
-# =======
-                           p("GAMLSS enables the creation of distributional regression models using Generalized Additive Models (GAM). By adding location (mean), scale (variance), 
-             and shape (skew and kurtosis) components to the GAM structure, GAMLSS supports the construction of distributional non-linear curves. A common use of GAMLSS 
-             is for growth curve construction, where whole distributions (10th, 25th, 50th, 75th, and 90th) percentiles can be visualized."),
-                           p("Bayley GSV (Growth Scale Values) scores, 
-             taken from the eXtraordinarY Babies Study, can be modeled similarly to growth parameters like height and weight. We used the GAMLSS R-package to create percentile curves for the 
-             Bayley-IV GSV scores collected at regularly scheduled study visits."),
 # >>>>>> Stashed changes
                            
                            tabPanel("Gross Motor",
