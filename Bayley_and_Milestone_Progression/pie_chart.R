@@ -1,6 +1,6 @@
 library(ggplot2)
 
-milestones_sum <- Milestones %>% group_by(sca_condition) %>% summarise(N = n())
+milestones_sum <- milestones %>% group_by(sca_condition) %>% summarise(N = n())
 
 # Add proportions and cumulative positions for the labels
 milestones_sum$fraction <- milestones_sum$N / sum(milestones_sum$N)
@@ -18,5 +18,5 @@ ggplot(milestones_sum, aes(ymax = ymax, ymin = ymin, xmax = 4, xmin = 2.65, fill
   theme_void() +
   theme(legend.position = "none") +
   labs(title = "Donut Plot of SCA Conditions") +
-  scale_fill_manual(values = c("#4B0082", "#fdb863", "cyan3"))
+  scale_fill_manual(values = c("#fdb863", "cyan3", "#4B0082"))
 
