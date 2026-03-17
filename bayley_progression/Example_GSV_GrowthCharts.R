@@ -12,9 +12,9 @@ gsv <- readRDS("/Volumes/Shared/Shared Projects/Bothwell/Peds ENDO/SCA Studies/e
 
 ## Plot it
 ggplot(gsv, aes(x = bsid_age_calc, y = bsid_gsv_cog)) + 
-  geom_point() + 
-  geom_smooth(se = F) + 
-  theme_bw(base_size = 18) + 
+  geom_point(alpha = 0.4, size = 4) + 
+  geom_smooth(se = F, size = 3) + 
+  theme_bw(base_size = 25) + 
   labs(x = "Age (Months)", y = "Bayley Cognition GSV")
 
 ## Remove NA values 
@@ -81,19 +81,19 @@ colnames(lms_cog)[-1] <- paste0("P", centiles)
 
 ## Plot it
 ggplot(gsv_nona_cog, aes(x = bsid_age_calc, y = bsid_gsv_cog4)) + 
-  geom_point() + 
+  geom_point(alpha = 0.4, size = 4) + 
   geom_smooth(data = lms_cog, aes(x = age, y = P5)) +  
   geom_smooth(data = lms_cog, aes(x = age, y = P25)) + 
   geom_smooth(data = lms_cog, aes(x = age, y = P50)) + 
   geom_smooth(data = lms_cog, aes(x = age, y = P75)) +  
   geom_smooth(data = lms_cog, aes(x = age, y = P95)) + 
-  theme_bw(base_size = 18) + 
+  theme_bw(base_size = 25) + 
   labs(x = "Age (Months)", y = "Bayley Cognition GSV") + 
-  annotate("text", x = 42.5, y = 530, label = "5th", size = 5, color = "blue3") + 
-  annotate("text", x = 42.5, y = 536, label = "25th", size = 5, color = "blue3") + 
-  annotate("text", x = 42.5, y = 539, label = "50th", size = 5, color = "blue3") + 
-  annotate("text", x = 42.5, y = 542, label = "75th", size = 5, color = "blue3") + 
-  annotate("text", x = 42.5, y = 545.5, label = "95th", size = 5, color = "blue3")
+  annotate("text", x = 42.5, y = 530, label = "5th", size = 5, color = "blue3", fontface = "bold") + 
+  annotate("text", x = 42.5, y = 536, label = "25th", size = 5, color = "blue3", fontface = "bold") + 
+  annotate("text", x = 42.5, y = 539, label = "50th", size = 5, color = "blue3", fontface = "bold") + 
+  annotate("text", x = 42.5, y = 542, label = "75th", size = 5, color = "blue3", fontface = "bold") + 
+  annotate("text", x = 42.5, y = 545.5, label = "95th", size = 5, color = "blue3", fontface = "bold")
 
 
 
